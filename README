@@ -1,0 +1,8 @@
+This is the main project for the Galactic API. It uses the SharedLibraries project as a central place to put built DLLs and access third-party libraries necessary for the project but not availble via NuGet.
+
+This repository should generally be placed at the same level in the directory structure as the SharedLibraries project.
+
+For example:
+
+If you place the SharedLibraries project in: C:\Users\Username\Documents\Visual Studio 2013\Projects\SharedLibraries
+then this project should be placed in: C:\Users\Username\Documents\Visual Studio 2013\Projects\Galactic
