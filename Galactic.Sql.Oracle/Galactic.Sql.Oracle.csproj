@@ -33,18 +33,18 @@
     <DocumentationFile>bin\Release\Galactic.Sql.Oracle.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Oracle.DataAccess">
-      <HintPath>..\..\SharedLibraries\Release\Oracle\ODP.NET\2.x\x64\Oracle.DataAccess.dll</HintPath>
+    <Reference Include="Oracle.DataAccess, Version=4.112.3.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\odp.net.x64.112.3.20\lib\net40\Oracle.DataAccess.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Versioning\AutoAssemblyVersion.cs">
+      <Link>AutoAssemblyVersion.cs</Link>
+    </Compile>
     <Compile Include="OracleStoredProcedure.cs" />
     <Compile Include="OracleUtility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -58,6 +58,9 @@
       <Project>{bafd7d99-d809-439e-ad60-aa4073533d88}</Project>
       <Name>Galactic.Sql</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -31,21 +31,21 @@
     <DocumentationFile>bin\Release\Galactic.SharePoint.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.SharePoint.Client">
-      <HintPath>..\..\SharedLibraries\Release\SharePoint\2010\Microsoft.SharePoint.Client.dll</HintPath>
+    <Reference Include="Microsoft.SharePoint.Client, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.SharePoint.Client.14.0.4762.1000\lib\Microsoft.SharePoint.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.SharePoint.Client.Runtime">
-      <HintPath>..\..\SharedLibraries\Release\SharePoint\2010\Microsoft.SharePoint.Client.Runtime.dll</HintPath>
+    <Reference Include="Microsoft.SharePoint.Client.Runtime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.SharePoint.Client.14.0.4762.1000\lib\Microsoft.SharePoint.Client.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Versioning\AutoAssemblyVersion.cs">
+      <Link>AutoAssemblyVersion.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SharePointClient.cs" />
     <Compile Include="SharePointDocument.cs" />
@@ -64,6 +64,9 @@
       <Project>{f4453732-46d4-4e66-aa0a-31743139704c}</Project>
       <Name>Galactic.EventLog</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

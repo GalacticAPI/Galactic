@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{874E1B42-6802-4976-B15A-73C4DD5CFDEB}</ProjectGuid>
+    <ProjectGuid>{3888C314-10D1-44FA-B3CC-3E27DF532DBE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Galactic.Calendar.iCalendar</RootNamespace>
-    <AssemblyName>Galactic.Calendar.iCalendar</AssemblyName>
+    <RootNamespace>Versioning</RootNamespace>
+    <AssemblyName>Versioning</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -28,48 +28,36 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Galactic.Calendar.iCalendar.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DDay.iCal">
-      <HintPath>..\packages\DDay.iCal.1.0.2.575\lib\DDay.iCal.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Versioning\AutoAssemblyVersion.cs">
-      <Link>AutoAssemblyVersion.cs</Link>
-    </Compile>
-    <Compile Include="iCalendarUtility.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Galactic.Calendar\Galactic.Calendar.csproj">
-      <Project>{22b09af9-9ef5-4624-b884-8e59302e3437}</Project>
-      <Name>Galactic.Calendar</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Galactic.Configuration\Galactic.Configuration.csproj">
-      <Project>{544a08d2-50dc-43cf-847e-f922261477b4}</Project>
-      <Name>Galactic.Configuration</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Galactic.EventLog\Galactic.EventLog.csproj">
-      <Project>{f4453732-46d4-4e66-aa0a-31743139704c}</Project>
-      <Name>Galactic.EventLog</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
+    <None Include="AutoAssemblyVersion.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AutoAssemblyVersion.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AutoAssemblyVersion.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AutoAssemblyVersion.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>call "$(SolutionDir)PostBuild.bat" "$(SolutionDir)" $(SolutionName) $(ProjectName) $(ConfigurationName) "$(TargetPath)" $(TargetFileName)</PostBuildEvent>
-  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
@@ -77,4 +65,15 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <!-- Get the Visual Studio version – defaults to 10: -->
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <!-- Keep the next element all on one line: -->
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(VSToolsPath)\TextTemplating\Microsoft.TextTemplating.targets" />
+  <PropertyGroup>
+    <TransformOnBuild>true</TransformOnBuild>
+    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
+  </PropertyGroup>
 </Project>

@@ -6,3 +6,15 @@ For example:
 
 If you place the SharedLibraries project in: C:\Users\Username\Documents\Visual Studio 2013\Projects\SharedLibraries
 then this project should be placed in: C:\Users\Username\Documents\Visual Studio 2013\Projects\Galactic
+
+-------------------------------------------------------------------------------
+Build Requirements:
+
+To accomodate automatic assembly versioning, this solution requires that the following be installed:
+
+Microsoft Visual Studio 2013 SDK - http://www.microsoft.com/en-us/download/details.aspx?id=40758
+
+Modeling SDK for Visual Studio 2013 - http://www.microsoft.com/en-us/download/details.aspx?id=40754
+
+If they are not installed, automatic assembly versioning will not work, but the solution should otherwise
+build normally.
