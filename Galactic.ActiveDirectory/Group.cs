@@ -205,7 +205,7 @@ namespace Galactic.ActiveDirectory
                 {
                     dns.Add(principal.DistinguishedName);
                 }
-                return SetAttribute("member", new object[] { dns.ToArray() });
+                return SetAttribute("member", dns.ToArray());
             }
             else
             {
