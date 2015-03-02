@@ -15,5 +15,4 @@ mkdir "..\SharedLibraries\%ConfigurationName%\%SolutionName%"
 REM Copy the built DLL to the SharedLibraries directory
 copy %TargetPath% "..\SharedLibraries\%ConfigurationName%\%SolutionName%\%TargetFileName%"
 REM Copy the built XML Documentation file to the ShareLibraries directory if this is a Release build
-if %ConfigurationName%==Release mkdir "..\SharedLibraries\Documentation\%SolutionName%"
-if %ConfigurationName%==Release copy "%SolutionDir:~1,-1%%ProjectName%\bin\%ConfigurationName%\%TargetFileName:~0,-4%.xml" "..\SharedLibraries\Documentation\%SolutionName%\%TargetFileName:~0,-4%.xml"
+if %ConfigurationName%==Release copy "%SolutionDir:~1,-1%%ProjectName%\bin\%ConfigurationName%\%TargetFileName:~0,-4%.xml" "..\SharedLibraries\Release\%SolutionName%\%TargetFileName:~0,-4%.xml"
