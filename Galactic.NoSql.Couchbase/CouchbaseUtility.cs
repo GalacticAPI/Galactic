@@ -4,6 +4,7 @@ using Couchbase;
 using Couchbase.Configuration;
 using Enyim.Caching.Memcached;
 using System;
+using System.Dynamic;
 using System.IO;
 
 namespace Galactic.NoSql.Couchbase
@@ -43,6 +44,8 @@ namespace Galactic.NoSql.Couchbase
 
         /// <summary>
         /// Creates a utility object that can be used to perform operations against a Couchbase server.
+        /// Note:
+        /// Uses the authentication and bucket information from the supplied configuration item.
         /// </summary>
         /// <param name="configurationFolderPath">The path to the folder containing the encrypted configuration file containing information required to establish the connection to the server.</param>
         /// <param name="configurationItemName">The name of configuration item containing the information required to connect to the server. (Typically it's filename without the extension.)</param>
@@ -109,17 +112,17 @@ namespace Galactic.NoSql.Couchbase
         /// </summary>
         /// <param name="id">The id of the document to add or replace.</param>
         /// <param name="document">The document to add or replace.</param>
-        /// <returns>True if the document was added or replaced, false otherwise.</returns>
-        public override bool AddOrReplace(string id, object document)
+        /// <returns>The id of the document if it was added or replaced, null otherwise.</returns>
+        public override string AddOrReplace(string id, ExpandoObject document)
         {
             if (!string.IsNullOrWhiteSpace(id) && document != null)
             {
                 var result = client.ExecuteStore(StoreMode.Set, id, document);
-                return result.Success;
+                return id;
             }
             else
             {
-                return false;
+                return null;
             }
         }
 
@@ -154,11 +157,10 @@ namespace Galactic.NoSql.Couchbase
         /// </summary>
         /// <param name="id">The id of the document to retrieve.</param>
         /// <returns>The document with the specified id, or null if there was an error, or the id does not exist.</returns>
-        public override object Get(string id)
+        public override dynamic Get(string id)
         {
             if (!string.IsNullOrWhiteSpace(id))
             {
-                //return client.Get(id);
                 var result = client.ExecuteGet(id);
                 if (result.Success)
                 {

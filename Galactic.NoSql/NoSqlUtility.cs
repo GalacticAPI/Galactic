@@ -1,5 +1,6 @@
 ﻿using Galactic.EventLog;
 using System;
+using System.Dynamic;
 
 namespace Galactic.NoSql
 {
@@ -23,8 +24,8 @@ namespace Galactic.NoSql
         /// </summary>
         /// <param name="id">The id of the document to add or replace.</param>
         /// <param name="document">The document to add or replace.</param>
-        /// <returns>True if the document was added or replaced, false otherwise.</returns>
-        public abstract bool AddOrReplace(string id, object document);
+        /// <returns>The id of the document if it was added or replaced, null otherwise.</returns>
+        public abstract string AddOrReplace(string id, ExpandoObject document);
 
         /// <summary>
         /// Deletes the specified id and it's associated document from the database.
@@ -38,7 +39,7 @@ namespace Galactic.NoSql
         /// </summary>
         /// <param name="id">The id of the document to retrieve.</param>
         /// <returns>The document with the specified id, or null if there was an error, or the id does not exist.</returns>
-        public abstract object Get(string id);
+        public abstract dynamic Get(string id);
 
         /// <summary>
         /// Logs an exception to the event log.

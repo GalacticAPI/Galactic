@@ -8,9 +8,9 @@
 
 using System.Reflection;
 
-[assembly: AssemblyVersion("1.0.0.<#= this.RevisionNumber #>")]
-[assembly: AssemblyFileVersion("1.0.0.<#= this.RevisionNumber #>")]
+[assembly: AssemblyVersion("1.1.0.<#= this.RevisionNumber #>")]
+[assembly: AssemblyFileVersion("1.1.0.<#= this.RevisionNumber #>")]
 <#+
 	// Set the default date to the date of the last minor version.
-    int RevisionNumber = (int)(DateTime.UtcNow - new DateTime(2015,1,28)).TotalDays;
+    int RevisionNumber = (int)(DateTime.UtcNow - new DateTime(2015,3,16)).TotalDays;
 #>
