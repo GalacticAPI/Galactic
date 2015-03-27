@@ -24,21 +24,21 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The subject matter of the content.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "about")]
         public Thing About;
 
         /// <summary>
         /// Indicates that the resource is compatible with the referenced accessibility
         /// API (WebSchemas wiki lists possible values).
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "accessibilityAPI")]
         public string AccessibilityAPI;
 
         /// <summary>
         /// Identifies input methods that are sufficient to fully control the described
         /// resource (WebSchemas wiki lists possible values).
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "accessibilityControl")]
         public string AccessibilityControl;
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// supported enhancements for accessibility (WebSchemas wiki lists possible
         /// values).
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "accessibilityFeature")]
         public string AccessibilityFeature;
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// to some users. Related to WCAG 2.0 guideline 2.3 (WebSchemas wiki lists
         /// possible values).
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "accessibilityHazard")]
         public string AccessibilityHazard;
 
         /*
@@ -74,7 +74,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// A secondary title of the CreativeWork.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "alternativeHeadline")]
         public string AlternativeHeadline;
 
         /*
@@ -102,7 +102,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// An award won by this person or for this creative work. Supersedes awards.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "award")]
         public string Award;
 
         /*
@@ -117,7 +117,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// received. This is most applicable to works published in Web sites with commenting
         /// system; additional comments may exist elsewhere.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "commentCount")]
         public int CommentCount = 0;
 
         /*
@@ -130,37 +130,37 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// Official rating of a piece of content—for example,'MPAA PG-13'.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "contentRating")]
         public string ContentRating;
 
         /// <summary>
         /// The year during which the claimed copyright for the CreativeWork was first asserted.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "copyrightYear")]
         public double CopyrightYear;
 
         /// <summary>
         /// The date on which the CreativeWork was created.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "dateCreated")]
         public DateTime DateCreated;
 
         /// <summary>
         /// The date on which the CreativeWork was most recently modified.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "dateModified")]
         public DateTime DateModified;
 
         /// <summary>
         /// Date of first broadcast/publication.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name= "datePublished")]
         public DateTime DatePublished;
 
         /// <summary>
         /// A link to the page containing the comments of the CreativeWork.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "discussionUrl")]
         public Uri DiscussionUrl;
 
         /*
@@ -181,7 +181,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// The purpose of a work in the context of education; for example, 'assignment',
         /// 'group work'.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "educationalUse")]
         public string EducationalUse;
 
         /*
@@ -196,85 +196,85 @@ namespace Galactic.Microdata.SchemaOrg
         /// A creative work that this work is an example/instance/realization/derivation of.
         /// Inverse property: workExample.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "exampleOfWork")]
         public CreativeWork ExampleOfWork;
 
         /// <summary>
         /// Genre of the creative work or group.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "genre")]
         public string Genre;
 
         /// <summary>
         /// Indicates a CreativeWork that is (in some sense) a part of this CreativeWork.
         /// Inverse property: isPartOf.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "hasPart")]
         public CreativeWork HasPart;
 
         /// <summary>
         /// Headline of the article.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "headline")]
         public string Headline;
 
         /// <summary>
         /// The language of the content. please use one of the language codes from the IETF BCP 47 standard.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "inLanguage")]
         public string InLanguage;
 
         /// <summary>
         /// A count of a specific user interactions with this item—for example, 20 UserLikes, 5 UserComments,
         /// or 300 UserDownloads. The user interaction type should be one of the sub types of UserInteraction.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "interactionCount")]
         public string InteractionCount;
 
         /// <summary>
         /// The predominant mode of learning supported by the learning resource. Acceptable values are 'active',
         /// 'expositive', or 'mixed'.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "interactivityText")]
         public string InteractivityText;
 
         /// <summary>
         /// A resource that was used in the creation of this resource. This term can be repeated for multiple
         /// sources. For example, http://example.com/great-multiplication-intro.html.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "isBasedOnUrl")]
         public Uri IsBasedOnUrl;
 
         /// <summary>
         /// Indicates whether this content is family friendly.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "isFamilyFriendly")]
         public bool IsFamilyFriendly;
 
         /// <summary>
         /// Indicates a CreativeWork that this CreativeWork is (in some sense) part of.
         /// Inverse property: hasPart.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "isPartOf")]
         public CreativeWork IsPartOf;
 
         /// <summary>
         /// Keywords or tags used to describe this content. Multiple entries in a keywords list are typically delimited
         /// by commas.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "keywords")]
         public string Keywords;
 
         /// <summary>
         /// The predominant type or kind characterizing the learning resource. For example, 'presentation', 'handout'.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "learningResourceType")]
         public string LearningResourceType;
 
         /// <summary>
         /// Indicates that the CreativeWork contains a reference to, but is not necessarily about a concept.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "mentions")]
         public Thing Mentions;
 
         /*
@@ -295,7 +295,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// Link to page describing the editorial principles of the organization primarily responsible for the creation of the CreativeWork.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "publishingPrinciples")]
         public Uri PublishingPrinciples;
 
         /*
@@ -330,32 +330,32 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The textual content of this CreativeWork.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "text")]
         public string Text;
 
         /// <summary>
         /// A thumbnail image relevant to the Thing.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "thumbnailUrl")]
         public Uri ThumbnailUrl;
 
         /// <summary>
         /// Approximate or typical time it takes to work with or through this learning resource for the typical
         /// intended target audience, e.g. 'P30M', 'P1H25M'.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "timeRequired")]
         public TimeSpan TimeRequired;
 
         /// <summary>
         /// The typical expected age range, e.g. '7-9', '11-'.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "typicalAgeRange")]
         public string TypicalAgeRange;
 
         /// <summary>
         /// The version of the CreativeWork embodied by a specified resource.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "version")]
         public double Version;
 
         /*
@@ -369,7 +369,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// Example/instance/realization/derivation of the concept of this creative work. eg. The paperback edition, first edition, or eBook.
         /// Inverse property: exampleOfWork.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "workExample")]
         public CreativeWork WorkExample;
 
         // ----- PROPERTIES -----
@@ -380,7 +380,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// equivalent to this and may be used interchangeably.
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "author")]
         public dynamic Author
         {
             get; 
@@ -392,7 +392,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// web page, scholarly article, etc.
         /// Expected Types: string or CreativeWork.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "citation")]
         public dynamic Citation
         {
             get; 
@@ -404,7 +404,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// Comments, typically from users, on this CreativeWork.
         /// Expected Types: Comment or UserComments
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "comment")]
         public dynamic Comment
         {
             get;
@@ -415,7 +415,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// A secondary contributor to the CreativeWork.
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "contributor")]
         public dynamic Contributor
         {
             get;
@@ -426,7 +426,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// The party holding the legal copyright to the CreativeWork.
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "copyrightHolder")]
         public dynamic CopyrightHolder
         {
             get;
@@ -438,7 +438,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// Author property for CreativeWork.
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "creator")]
         public dynamic Creator
         {
             get;
@@ -448,26 +448,23 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public override string ItemType { get { return "CreativeWork"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public override string ItemTypeDescription { get { return "The most generic kind of creative work, including books, movies, photographs, software programs, etc."; } }
 
         /// <summary>
         /// The URL of the type definition on Schema.org.
         /// </summary>
-        [DataMember]
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/CreativeWork"); } }
 
         /// <summary>
         /// A license document that applies to this content, typically indicated by URL.
         /// Expected Types: CreativeWork or Uri.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "license")]
         public dynamic License
         {
             get;
@@ -478,7 +475,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// The position of an item in a series or sequence of items.
         /// Expected Types: string or int.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "position")]
         public dynamic Position
         {
             get;
@@ -490,7 +487,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// series etc.).
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "producer")]
         public dynamic Producer
         {
             get;
@@ -503,7 +500,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// A provider may also serve as the seller. Supersedes carrier.
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "provider")]
         public dynamic Provider
         {
             get;
@@ -515,7 +512,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// differences and technical requirements of a target market.
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "translator")]
         public dynamic Translator
         {
             get;

@@ -22,19 +22,19 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The location where the NewsArticle was produced.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "dateline")]
         public string Dateline;
 
         /// <summary>
         /// The number of the column in which the NewsArticle appears in the print edition.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "printColumn")]
         public string PrintColumn;
 
         /// <summary>
         /// The edition of the print product in which the NewsArticle appears.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "printEdition")]
         public string PrintEdition;
 
         /// <summary>
@@ -42,14 +42,14 @@ namespace Galactic.Microdata.SchemaOrg
         /// which the article is found. Please note that this field is intended for the exact
         /// page name (e.g. A5, B18).
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "printPage")]
         public string PrintPage;
 
         /// <summary>
         /// If this NewsArticle appears in print, this field indicates the print section in
         /// which the article appeared.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "printSection")]
         public string PrintSection;
 
         // ----- PROPERTIES -----
@@ -57,19 +57,16 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public override string ItemType { get { return "NewsArticle"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public override string ItemTypeDescription { get { return "A news article."; } }
 
         /// <summary>
         /// The URL of the type definition on Schema.org.
         /// </summary>
-        [DataMember]
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/NewsArticle"); } }
 
         // ----- CONSTRUCTORS -----

@@ -24,7 +24,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// Indicates the current disposition of the Action.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "actionStatus")]
         public ActionStatusType ActionStatus;
 
         /// <summary>
@@ -35,20 +35,20 @@ namespace Galactic.Microdata.SchemaOrg
         /// startTime/endTime, even when describing dates with times. This situation may be
         /// clarified in future revisions.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "endTime")]
         public DateTime EndTime;
 
         /// <summary>
         /// For failed actions, more information on the cause of the failure.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "error")]
         public Thing Error;
 
         /// <summary>
         /// The object that helped the agent perform the action. e.g. John wrote a book with
         /// *a pen*.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "instrument")]
         public Thing Instrument;
 
         /// <summary>
@@ -56,13 +56,13 @@ namespace Galactic.Microdata.SchemaOrg
         /// Also known as the semantic roles patient, affected or undergoer (which change
         /// their state) or theme (which doesn't). e.g. John read *a book*.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "object")]
         public Thing Object;
 
         /// <summary>
         /// The result produced in the action. e.g. John wrote *a book*.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "result")]
         public Thing Result;
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// startTime/endTime, even when describing dates with times. This situation may be
         /// clarified in future revisions.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "startTime")]
         public DateTime StartTime;
         
         /*
@@ -90,7 +90,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// *John* wrote a book.
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "agent")]
         public dynamic Agent
         {
             get;
@@ -101,7 +101,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// The location of the event, organization or action.
         /// Expected Types: Place or PostalAddress.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "location")]
         public dynamic Location
         {
             get;
@@ -111,19 +111,16 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public override string ItemType { get { return "Action"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public override string ItemTypeDescription { get { return "An action performed by a direct agent and indirect participants upon a direct object. Optionally happens at a location with the help of an inanimate instrument. The execution of the action may produce a result. Specific action sub-type documentation specifies the exact expectation of each argument/role."; } }
 
         /// <summary>
         /// The URL of the type definition on Schema.org.
         /// </summary>
-        [DataMember]
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/Action"); } }
 
         /// <summary>
@@ -131,7 +128,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// a book with *Steve*.
         /// Expected Types: Person or Organization.
         /// </summary>
-        [DataMember]
+        [DataMember(EmitDefaultValue = false, Name = "participant")]
         public dynamic Participant
         {
             get;

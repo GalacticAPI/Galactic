@@ -21,25 +21,25 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The caption for this object.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "caption")]
         public string Caption;
 
         /// <summary>
         /// exif data for this object.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "exifData")]
         public string ExifData;
 
         /// <summary>
         /// Indicates whether this image is representative of the content of the page.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "representativeOfPage")]
         public bool RepresentativeOfPage;
 
         /// <summary>
         /// Thumbnail image for an image or video.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "thumbnail")]
         public ImageObject Thumbnail;
 
         // ----- PROPERTIES -----
@@ -47,13 +47,11 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public override string ItemType { get { return "ImageObject"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public override string ItemTypeDescription { get { return "An image file."; } }
 
         /// <summary>

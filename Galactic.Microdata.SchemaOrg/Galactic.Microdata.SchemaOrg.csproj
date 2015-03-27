@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\Galactic.Microdata.SchemaOrg.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -49,6 +50,8 @@
     <Compile Include="Article.cs" />
     <Compile Include="CreativeWork.cs" />
     <Compile Include="EntryPoint.cs" />
+    <Compile Include="Event.cs" />
+    <Compile Include="EventStatusType.cs" />
     <Compile Include="ImageObject.cs" />
     <Compile Include="Intangible.cs" />
     <Compile Include="MediaObject.cs" />

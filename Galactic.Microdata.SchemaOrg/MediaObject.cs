@@ -24,32 +24,32 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// A NewsArticle associated with the Media Object.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "associatedArticle")]
         public NewsArticle AssociatedArticle;
 
         /// <summary>
         /// The bitrate of the media object.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "bitrate")]
         public string Bitrate;
 
         /// <summary>
         /// File size in (mega/kilo) bytes.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "contentSize")]
         public string ContentSize;
 
         /// <summary>
         /// Actual bytes of the media object, for example the image file or video file.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "contentUrl")]
         public Uri ContentUrl;
 
         /// <summary>
         /// The duration of the item (movie, audio recording, event, etc.) in ISO 8601
         /// date format.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "duration")]
         public TimeSpan Duration;
 
         /// <summary>
@@ -57,31 +57,31 @@ namespace Galactic.Microdata.SchemaOrg
         /// information in the src element of an embed tag and should not be the same as
         /// the content of the loc tag.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "embedUrl")]
         public Uri EmbedUrl;
 
         /// <summary>
         /// The CreativeWork encoded by this media object.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "encodesCreativeWork")]
         public CreativeWork EncodesCreativeWork;
 
         /// <summary>
         /// mp3, mpeg4, etc.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "encodingFormat")]
         public string EncodingFormat;
 
         /// <summary>
         /// Date the content expires and is no longer useful or available. Useful for videos.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "expires")]
         public DateTime Expires;
 
         /// <summary>
         /// Player type required—for example, Flash or Silverlight.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "playerType")]
         public string PlayerType;
 
         /*
@@ -111,13 +111,13 @@ namespace Galactic.Microdata.SchemaOrg
         /// Indicates if use of the media require a subscription (either paid or free). Allowed
         /// values are true or false (note that an earlier version had 'yes', 'no').
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "requiresSubscription")]
         public bool RequiresSubscription;
 
         /// <summary>
         /// Date when this media object was uploaded to this site.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "uploadTime")]
         public DateTime UploadTime;
         
         // ----- PROPERTIES -----
@@ -126,7 +126,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// The height of the item.
         /// Expected Types: Quantitative Value or string.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "height")]
         public dynamic Height
         {
             get;
@@ -136,26 +136,23 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public override string ItemType { get { return "MediaObject"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public override string ItemTypeDescription { get { return "An image, video, or audio object embedded in a web page. Note that a creative work may have many media objects associated with it on the same web page. For example, a page about a single song (MusicRecording) may have a music video (VideoObject), and a high and low bandwidth audio stream (2 AudioObject's)."; } }
 
         /// <summary>
         /// The URL of the type definition on Schema.org.
         /// </summary>
-        [DataMember]
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/MediaObject"); } }
 
         /// <summary>
         /// The width of the item.
         /// Expected Types: Quantitative Value or string.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "width")]
         public dynamic Width
         {
             get;

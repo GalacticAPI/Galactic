@@ -28,23 +28,23 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The supported content type(s) for an EntryPoint response.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "contentType")]
         public string ContentType;
 
         /// <summary>
         /// The supported encoding type(s) for an EntryPoint request.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "encodingType")]
         public string EncodingType;
 
         // Backing variable for HttpMethod.
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "httpMethod")]
         private string httpMethod;
 
         /// <summary>
         /// An url template (RFC6570) that will be used to construct the target of the execution of the action.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "urlTemplate")]
         public string UrlTemplate;
 
         // ----- PROPERTIES -----
@@ -53,7 +53,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// An HTTP method that specifies the appropriate HTTP method for a request to
         /// an HTTP EntryPoint. Values are capitalized strings as used in HTTP.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "httpMethod")]
         public string HttpMethod
         {
             get
@@ -85,19 +85,16 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public override string ItemType { get { return "EntryPoint"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public override string ItemTypeDescription { get { return "An entry point, within some Web-based protocol."; } }
 
         /// <summary>
         /// The URL of the type definition on Schema.org.
         /// </summary>
-        [DataMember]
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/EntryPoint"); } }
 
         // ----- CONSTRUCTORS -----

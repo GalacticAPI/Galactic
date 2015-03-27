@@ -23,7 +23,6 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// An in-progress action (e.g, while watching the movie, or driving to a location).
         /// </summary>
-        [DataMember]
         static public ActionStatusType ActiveActionStatus
         {
             get
@@ -41,7 +40,6 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// An action that has already taken place.
         /// </summary>
-        [DataMember]
         static public ActionStatusType CompletedActionStatus
         {
             get
@@ -59,7 +57,6 @@ namespace Galactic.Microdata.SchemaOrg
         /// An action that failed to complete. The action's error property and the HTTP
         /// return code contain more information about the failure.
         /// </summary>
-        [DataMember]
         static public ActionStatusType FailedActionStatus
         {
             get
@@ -76,25 +73,21 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public override string ItemType { get { return "ActionStatusType"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public override string ItemTypeDescription { get { return "The status of an Action."; } }
 
         /// <summary>
         /// The URL of the type definition on Schema.org.
         /// </summary>
-        [DataMember]
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/ActionStatusType"); } }
 
         /// <summary>
         /// A description of an action that is supported.
         /// </summary>
-        [DataMember]
         static public ActionStatusType PotentialActionStatus
         {
             get

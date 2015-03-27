@@ -28,45 +28,45 @@ namespace Galactic.Microdata.SchemaOrg
         /// types. Schema.org tools may have only weaker understanding of extra types,
         /// in particular those defined externally
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "additionalType")]
         public Uri AdditionalType;
 
         /// <summary>
         /// An alias for the item.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "alternateName")]
         public string AlternateName;
 
         /// <summary>
         /// A short description of the item.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "description")]
         public string Description;
 
         /// <summary>
         /// The name of the item.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name= "name")]
         public string Name;
 
         /// <summary>
         /// Indicates a potential Action, which describes an idealized action in which
         /// this thing would play an 'object' role.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "potentialAction")]
         public Action PotentialAction;
 
         /// <summary>
         /// URL of a reference Web page that unambiguously indicates the item's identity.
         /// E.g. the URL of the item's Wikipedia page, Freebase page, or official website.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "sameAs")]
         public Uri SameAs;
 
         /// <summary>
         /// URL of the item.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "url")]
         public Uri Url;
 
         // ----- PROPERTIES -----
@@ -75,7 +75,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// An image of the item.
         /// Expected Types: URI or ImageObject.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "image")]
         public dynamic Image
         {
             get; 
@@ -85,19 +85,16 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public virtual string ItemType { get { return "Thing"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public virtual string ItemTypeDescription { get { return "The most generic type of item."; } }
 
         /// <summary>
         /// The URL of the type definition on Schema.org.
         /// </summary>
-        [DataMember]
         public virtual Uri ItemTypeUrl { get { return new Uri("http://schema.org/Thing"); } }
 
         // ----- CONSTRUCTORS -----

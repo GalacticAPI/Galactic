@@ -29,7 +29,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The caption for this object.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "caption")]
         public string Caption;
 
         /*
@@ -43,25 +43,25 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// Thumbnail image for an image or video.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "thumbnail")]
         public ImageObject Thumbnail;
 
         /// <summary>
         /// If this MediaObject is an AudioObject or VideoObject, the transcript of that object.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "transcript")]
         public string Transcript;
 
         /// <summary>
         /// The frame size of the video.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "videoFrameSize")]
         public string VideoFrameSize;
 
         /// <summary>
         /// The quality of the video.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "videoQuality")]
         public string VideoQuality;
 
         // ----- PROPERTIES -----
@@ -69,26 +69,23 @@ namespace Galactic.Microdata.SchemaOrg
         /// <summary>
         /// The Schema.org type of the item.
         /// </summary>
-        [DataMember]
         public override string ItemType { get { return "VideoObject"; } }
 
         /// <summary>
         /// A short description of the Schema.org type associated with this item.
         /// </summary>
-        [DataMember]
         public override string ItemTypeDescription { get { return "A video file."; } }
 
         /// <summary>
         /// The URL of the type definition on Schema.org.
         /// </summary>
-        [DataMember]
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/VideoObject"); } }
 
         /// <summary>
         /// The composer of the soundtrack.
         /// Expected Types: MusicGroup or Person.
         /// </summary>
-        [DataMember]
+        [DataMember (EmitDefaultValue = false, Name = "musicBy")]
         public dynamic MusicBy
         {
             get;
