@@ -48,6 +48,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Versioning", "Versioning\Ve
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.NoSql.MongoDB", "Galactic.NoSql.MongoDB\Galactic.NoSql.MongoDB.csproj", "{1FE6D209-7D4B-4DD2-9556-A2E51FD34FF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Microdata.SchemaOrg", "Galactic.Microdata.SchemaOrg\Galactic.Microdata.SchemaOrg.csproj", "{575B4A18-653F-45BD-B047-B6AD2E5E1CF7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -130,6 +132,10 @@ Global
 		{1FE6D209-7D4B-4DD2-9556-A2E51FD34FF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FE6D209-7D4B-4DD2-9556-A2E51FD34FF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FE6D209-7D4B-4DD2-9556-A2E51FD34FF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{575B4A18-653F-45BD-B047-B6AD2E5E1CF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{575B4A18-653F-45BD-B047-B6AD2E5E1CF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{575B4A18-653F-45BD-B047-B6AD2E5E1CF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{575B4A18-653F-45BD-B047-B6AD2E5E1CF7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
