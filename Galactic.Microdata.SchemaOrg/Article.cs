@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -86,6 +87,22 @@ namespace Galactic.Microdata.SchemaOrg
         }
 
         // ----- CONSTRUCTORS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public Article()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct an Article from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the Article.</param>
+        public Article (ExpandoObject expando) : base(expando)
+        {
+        }
 
         // ----- METHODS -----
     }

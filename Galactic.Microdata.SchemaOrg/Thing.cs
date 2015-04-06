@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
+using System.Reflection;
 using System.Runtime.Serialization;
 
 
@@ -99,6 +101,104 @@ namespace Galactic.Microdata.SchemaOrg
 
         // ----- CONSTRUCTORS -----
 
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public Thing()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a Thing from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the Thing.</param>
+        public Thing (ExpandoObject expando)
+        {
+            if (expando != null)
+            {
+                foreach (string propertyName in ((IDictionary<string, object>)expando).Keys)
+                {
+                    // Check whether the propertyName is a field or property of the associated
+                    // object and set the value of it.
+                    FieldInfo fieldInfo = this.GetType().GetField(propertyName);
+                    PropertyInfo propertyInfo = this.GetType().GetProperty(propertyName);
+                    if (fieldInfo != null)
+                    {
+                        // Check that this field can be set.
+                        try
+                        {
+                            fieldInfo.SetValue(this, ((IDictionary<string, object>)expando)[propertyName]);
+                        }
+                        catch
+                        {
+                            // There was an error setting the field's value, or it does not support setting.
+                            // Skip this field.
+                            continue;
+                        }
+                    }
+                    else if (propertyInfo != null)
+                    {
+                        // Check that this property can be set.
+                        try
+                        {
+                            propertyInfo.SetValue(this, ((IDictionary<string, object>)expando)[propertyName]);
+                        }
+                        catch
+                        {
+                            // There was an error setting the property's value, or it does not support setting.
+                            // Skip this property.
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        // The propertyName does not correlate to a field or property on the object.
+                        // Skip this propertyName.
+                        continue;
+                    }
+
+                    // Set the field or property on the object.
+                    //this.GetType().InvokeMember(propertyName, bindingFlags, null, this, new [] { ((IDictionary<string, object>)expando)[propertyName] });
+                }
+            }
+        }
+
         // ----- METHODS -----
+
+        /// <summary>
+        /// Returns the item as an ExpandoObject.
+        /// </summary>
+        /// <returns>An ExpandoObject, or null if the item could not be converted.</returns>
+        public ExpandoObject ToExpandoObject()
+        {
+            ExpandoObject expando = new ExpandoObject();
+
+            // Iterate over all the properties and fields of the item using reflection and
+            // adds them to the ExpandoObject.
+            try
+            {
+                PropertyInfo[] properties = this.GetType().GetProperties();
+                foreach (PropertyInfo property in properties)
+                {
+                    ((IDictionary<string, Object>)expando).Add(property.Name, property.GetValue(this));
+                }
+                FieldInfo[] fields = this.GetType().GetFields();
+                foreach (FieldInfo field in fields)
+                {
+                    ((IDictionary<string, Object>)expando).Add(field.Name, field.GetValue(this));
+                }
+
+                // Remove ItemTypeDescription before returning.
+                ((IDictionary<string, Object>)expando).Remove("ItemTypeDescription");
+
+                return expando;
+            }
+            catch
+            {
+                // There was a problem adding the properties and fields.
+                return null;
+            }
+        }
     }
 }

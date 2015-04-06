@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Policy;
@@ -520,6 +521,22 @@ namespace Galactic.Microdata.SchemaOrg
         }
 
         // ----- CONSTRUCTORS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public CreativeWork()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a CreativeWork from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the CreativeWork.</param>
+        public CreativeWork (ExpandoObject expando) : base(expando)
+        {
+        }
 
         // ----- METHODS -----
     }

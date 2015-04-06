@@ -229,7 +229,7 @@ namespace Galactic.NoSql.MongoDB
                     ExpandoObject returnObject = new ExpandoObject();
                     foreach (string key in document.ToDictionary().Keys)
                     {
-                        ((IDictionary<string, object>) returnObject)[key] = document[key];
+                        ((IDictionary<string, object>) returnObject)[key] = BsonTypeMapper.MapToDotNetValue(document[key]);
                     }
 
                     // Return the object.
