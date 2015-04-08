@@ -1,5 +1,6 @@
 ﻿using Galactic.EventLog;
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 
 namespace Galactic.NoSql
@@ -40,6 +41,13 @@ namespace Galactic.NoSql
         /// <param name="id">The id of the document to retrieve.</param>
         /// <returns>The document with the specified id, or null if there was an error, or the id does not exist.</returns>
         public abstract dynamic Get(string id);
+
+        /// <summary>
+        /// Gets documents from the database that correspond to the supplied query.
+        /// </summary>
+        /// <param name="query">The query to use when finding documents.</param>
+        /// <returns>A list of documents that correspond to the query supplied, or an empty list if there was an error, or the query did not produce any results.</returns>
+        public abstract List<dynamic> GetByQuery(object query);
 
         /// <summary>
         /// Logs an exception to the event log.

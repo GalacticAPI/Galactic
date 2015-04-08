@@ -2,6 +2,7 @@
 using Galactic.EventLog;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Builders;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -113,11 +114,19 @@ namespace Galactic.NoSql.MongoDB
                     // Create a BsonDocument to save from the ExpandoObject.
                     BsonDocument bsonDocument = document.ToBsonDocument();
 
-                    // Check that the supplied document contains a SAVE_ID_MEMBER_NAME property.
+                    // Check that the supplied document contains a ID_FIELD_NAME property.
                     if (!bsonDocument.Names.Contains(ID_FIELD_NAME))
                     {
-                        // Add a SAVE_ID_MEMBER_NAME property to the document.
-                        bsonDocument.Add(ID_FIELD_NAME, ObjectId.GenerateNewId());
+                        if (string.IsNullOrEmpty(id))
+                        {
+                            // Add an ID_FIELD_NAME property to the document with a newly generated Id.
+                            bsonDocument.Add(ID_FIELD_NAME, ObjectId.GenerateNewId());
+                        }
+                        else
+                        {
+                            // Add an ID_FIELD_NAME property to the document with the supplied id.
+                            bsonDocument.Add(ID_FIELD_NAME, new ObjectId(id));
+                        }
                     }
 
                     // Add or replace the document.
@@ -209,7 +218,7 @@ namespace Galactic.NoSql.MongoDB
         }
 
         /// <summary>
-        /// Gets a document from the database with the specified id within the default collection.
+        /// Gets a document from the database with the specified id within the specified collection.
         /// </summary>
         /// <param name="id">The id of the document to retrieve.</param>
         /// <param name="collection">The name of the collection to get the document from.</param>
@@ -245,6 +254,61 @@ namespace Galactic.NoSql.MongoDB
             {
                 // A null or empty id or collection was supplied or the collection name was invalid.
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets documents from the database that correspond to the supplied query.
+        /// </summary>
+        /// <param name="query">The query to use when finding documents.</param>
+        /// <returns>A list of documents that correspond to the query supplied, or an empty list if there was an error, or the query did not produce any results.</returns>
+        public override List<dynamic> GetByQuery(object query)
+        {
+            return GetByQuery(query, DEFAULT_COLLECTION);
+        }
+
+        /// <summary>
+        /// Gets documents from the database that correspond to the supplied query.
+        /// </summary>
+        /// <param name="query">The query to use when finding documents. (This implementation expects IMongoQuery objects.)</param>
+        /// <param name="collection">The name of the collection to get the document from.</param>
+        /// <returns>A list of documents that correspond to the query supplied, or an empty list if there was an error, or the query did not produce any results.</returns>
+        public List<dynamic> GetByQuery(object query, string collection)
+        {
+            if (query != null && query is IMongoQuery && !string.IsNullOrWhiteSpace(collection) && isCollectionNameValid(collection))
+            {
+                try
+                {
+                    MongoCollection mongoCollection = database.GetCollection<BsonDocument>(collection);
+
+                    // Get the documents associated with the query in the collection.
+                    MongoCursor<BsonDocument> documents = mongoCollection.FindAs<BsonDocument>((IMongoQuery)query);
+
+                    // Convert each document found into an ExpandoObject with like properties to return.
+                    List<dynamic> list = new List<dynamic>();
+                    foreach (BsonDocument document in documents)
+                    {
+                        ExpandoObject expando = new ExpandoObject();
+                        foreach (string key in document.ToDictionary().Keys)
+                        {
+                            ((IDictionary<string, object>)expando)[key] = BsonTypeMapper.MapToDotNetValue(document[key]);
+                        }
+                        list.Add(expando);
+                    }
+
+                    // Return the list.
+                    return list;
+                }
+                catch (Exception)
+                {
+                    // There was an error geting the document.
+                    return new List<dynamic>();
+                }
+            }
+            else
+            {
+                // A null or invalid query or collection was supplied.
+                return new List<dynamic>();
             }
         }
 

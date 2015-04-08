@@ -167,6 +167,73 @@ namespace Galactic.Microdata.SchemaOrg
         // ----- METHODS -----
 
         /// <summary>
+        /// Converts a list of string to a single string of the same items separated by the
+        /// supplied separator character.
+        /// </summary>
+        /// <param name="list">The list to convert to a string.</param>
+        /// <param name="separator">The separator character to use when creating the string.</param>
+        /// <returns>A string containing the items of the list separated by the separator character, or an empty string if there was an error processing the list.</returns>
+        public static string ListToString(List<string> list, char separator)
+        {
+            if (list != null)
+            {
+                try
+                {
+                    // Build a string from the list.
+                    StringBuilder builder = new StringBuilder();
+                    for (int i = 0; i < list.Count; i++ )
+                    {
+                        builder.Append(list[i]);
+                        if (i != list.Count - 1)
+                        {
+                            // Only append a separator if this is not the last item in the list.
+                            builder.Append(separator);
+                        }
+                    }
+                    return builder.ToString();
+                }
+                catch
+                {
+                    // There was an error building the string.
+                    return "";
+                }
+            }
+            else
+            {
+                // A list or separator was not supplied.
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// Converts a list of strings stored in a comma (or other character) separated string
+        /// into a list of strings.
+        /// </summary>
+        /// <param name="listString">The string representation of the list.</param>
+        /// <param name="separators">An array of characters used to separate the strings in the list.</param>
+        /// <returns>A List with each item from the listString as a member of the list, or an empty List if there was an error processing the listString.</returns>
+        public static List<string> StringToList(string listString, char[] separators)
+        {
+            if (!string.IsNullOrWhiteSpace(listString) && separators.Length > 0)
+            {
+                List<string> list = new List<string>(listString.Split(separators));
+
+                // Remove any leading or trailing space from each item in the list.
+                for (int i = 0; i < list.Count; i++)
+                {
+                    list[i] = list[i].Trim();
+                }
+
+                return list;
+            }
+            else
+            {
+                // A listString or array of separators was not supplied.
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
         /// Returns the item as an ExpandoObject.
         /// </summary>
         /// <returns>An ExpandoObject, or null if the item could not be converted.</returns>

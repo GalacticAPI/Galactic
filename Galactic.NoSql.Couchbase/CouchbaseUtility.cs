@@ -4,6 +4,7 @@ using Couchbase;
 using Couchbase.Configuration;
 using Enyim.Caching.Memcached;
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 
@@ -175,6 +176,16 @@ namespace Galactic.NoSql.Couchbase
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Gets documents from the database that correspond to the supplied query.
+        /// </summary>
+        /// <param name="query">The query to use when finding documents.</param>
+        /// <returns>A list of documents that correspond to the query supplied, or an empty list if there was an error, or the query did not produce any results.</returns>
+        public override List<dynamic> GetByQuery(object query)
+        {
+            return new List<dynamic>();
         }
 
         /// <summary>
