@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -70,6 +71,22 @@ namespace Galactic.Microdata.SchemaOrg
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/NewsArticle"); } }
 
         // ----- CONSTRUCTORS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public NewsArticle()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a NewsArticle from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the NewsArticle.</param>
+        public NewsArticle (ExpandoObject expando) : base(expando)
+        {
+        }
 
         // ----- METHODS -----
     }

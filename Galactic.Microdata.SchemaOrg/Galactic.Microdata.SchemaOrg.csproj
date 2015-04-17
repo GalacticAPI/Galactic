@@ -56,6 +56,8 @@
     <Compile Include="Intangible.cs" />
     <Compile Include="MediaObject.cs" />
     <Compile Include="NewsArticle.cs" />
+    <Compile Include="Person.cs" />
+    <Compile Include="Place.cs" />
     <Compile Include="Thing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VideoObject.cs" />

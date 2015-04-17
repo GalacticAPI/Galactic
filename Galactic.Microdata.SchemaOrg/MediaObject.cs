@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -99,13 +100,11 @@ namespace Galactic.Microdata.SchemaOrg
         public PublicationEvent Publication;
         */
 
-        /*
         /// <summary>
         /// The regions where the media is allowed. If not specified, then it's assumed to be
         /// allowed everywhere. Specify the countries in ISO 3166 format.
         /// </summary>
         public Place RegionsAllowed;
-        */
 
         /// <summary>
         /// Indicates if use of the media require a subscription (either paid or free). Allowed
@@ -160,6 +159,22 @@ namespace Galactic.Microdata.SchemaOrg
         }
 
         // ----- CONSTRUCTORS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public MediaObject()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a MediaObject from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the MediaObject.</param>
+        public MediaObject (ExpandoObject expando) : base(expando)
+        {
+        }
 
         // ----- METHODS -----
     }

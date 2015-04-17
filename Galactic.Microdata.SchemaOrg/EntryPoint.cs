@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -100,5 +101,21 @@ namespace Galactic.Microdata.SchemaOrg
         // ----- CONSTRUCTORS -----
 
         // ----- METHODS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public EntryPoint()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a EntryPoint from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the EntryPoint.</param>
+        public EntryPoint (ExpandoObject expando) : base(expando)
+        {
+        }
     }
 }

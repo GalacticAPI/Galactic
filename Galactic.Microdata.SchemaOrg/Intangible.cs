@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -39,5 +40,21 @@ namespace Galactic.Microdata.SchemaOrg
         // ----- CONSTRUCTORS -----
 
         // ----- METHODS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public Intangible()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a Intangible from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the Intangible.</param>
+        public Intangible (ExpandoObject expando) : base(expando)
+        {
+        }
     }
 }

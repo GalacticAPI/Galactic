@@ -58,12 +58,10 @@ namespace Galactic.Microdata.SchemaOrg
         [DataMember(EmitDefaultValue = false, Name = "accessibilityHazard")]
         public string AccessibilityHazard;
 
-        /*
         /// <summary>
         /// Specifies the Person that is legally accountable for the CreativeWork.
         /// </summary>
         public Person AccountablePerson;
-        */
 
         /*
         /// <summary>
@@ -106,12 +104,10 @@ namespace Galactic.Microdata.SchemaOrg
         [DataMember(EmitDefaultValue = false, Name = "award")]
         public string Award;
 
-        /*
         /// <summary>
         /// Fictional person connected with a creative work.
         /// </summary>
         public Person Character;
-        */
 
         /// <summary>
         /// The number of comments this CreativeWork (e.g. Article, Question or Answer) has
@@ -121,12 +117,10 @@ namespace Galactic.Microdata.SchemaOrg
         [DataMember(EmitDefaultValue = false, Name = "commentCount")]
         public int CommentCount = 0;
 
-        /*
         /// <summary>
         /// The location of the content.
         /// </summary>
         public Place ContentLocation;
-        */
 
         /// <summary>
         /// Official rating of a piece of content—for example,'MPAA PG-13'.
@@ -164,12 +158,10 @@ namespace Galactic.Microdata.SchemaOrg
         [DataMember(EmitDefaultValue = false, Name = "discussionUrl")]
         public Uri DiscussionUrl;
 
-        /*
         /// <summary>
         /// Specifies the Person who edited the CreativeWork.
         /// </summary>
         public Person Editor;
-        */
 
         /*
         /// <summary>

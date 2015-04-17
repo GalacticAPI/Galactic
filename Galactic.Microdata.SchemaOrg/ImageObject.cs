@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -60,6 +61,22 @@ namespace Galactic.Microdata.SchemaOrg
         public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/ImageObject"); } }
 
         // ----- CONSTRUCTORS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ImageObject()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct an ImageObject from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the ImageObject.</param>
+        public ImageObject (ExpandoObject expando) : base(expando)
+        {
+        }
 
         // ----- METHODS -----
     }

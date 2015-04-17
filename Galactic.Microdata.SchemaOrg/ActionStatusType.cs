@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -104,5 +105,21 @@ namespace Galactic.Microdata.SchemaOrg
         // ----- CONSTRUCTORS -----
 
         // ----- METHODS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ActionStatusType()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a ActionStatusType from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the ActionStatusType.</param>
+        public ActionStatusType (ExpandoObject expando) : base(expando)
+        {
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
@@ -161,6 +162,22 @@ namespace Galactic.Microdata.SchemaOrg
         }
 
         // ----- CONSTRUCTORS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public Event()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a Event from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the Event.</param>
+        public Event (ExpandoObject expando) : base(expando)
+        {
+        }
 
         // ----- METHODS -----
     }

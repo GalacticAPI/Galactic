@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -76,12 +77,10 @@ namespace Galactic.Microdata.SchemaOrg
         [DataMember(EmitDefaultValue = false, Name = "startTime")]
         public DateTime StartTime;
         
-        /*
         /// <summary>
         /// Indicates a target EntryPoint for an Action.
         /// </summary>
         public EntryPoint Target;
-        */
         
         // ----- PROPERTIES -----
 
@@ -138,5 +137,21 @@ namespace Galactic.Microdata.SchemaOrg
         // ----- CONSTRUCTORS -----
 
         // ----- METHODS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public Action()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a Action from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the Action.</param>
+        public Action (ExpandoObject expando) : base(expando)
+        {
+        }
     }
 }

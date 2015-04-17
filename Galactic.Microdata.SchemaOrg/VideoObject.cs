@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -18,13 +19,11 @@ namespace Galactic.Microdata.SchemaOrg
 
         // ----- VARIABLES -----
 
-        /*
         /// <summary>
         /// An actor, e.g. in tv, radio, movie, video games etc. Actors can be associated
         /// with individual items or with a series, episode, clip. Supersedes actors.
         /// </summary>
         public Person Actor;
-        */
 
         /// <summary>
         /// The caption for this object.
@@ -32,13 +31,11 @@ namespace Galactic.Microdata.SchemaOrg
         [DataMember (EmitDefaultValue = false, Name = "caption")]
         public string Caption;
 
-        /*
         /// <summary>
         /// A director of e.g. tv, radio, movie, video games etc. content. Directors can be
         /// associated with individual items or with a series, episode, clip. Supersedes directors.
         /// </summary>
         public Person Director;
-        */
 
         /// <summary>
         /// Thumbnail image for an image or video.
@@ -93,6 +90,22 @@ namespace Galactic.Microdata.SchemaOrg
         }
 
         // ----- CONSTRUCTORS -----
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public VideoObject()
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a VideoObject from an ExpandoObject with like properties and values.
+        /// </summary>
+        /// <param name="expando">The ExpandoObject to use when populating the VideoObject.</param>
+        public VideoObject (ExpandoObject expando) : base(expando)
+        {
+        }
 
         // ----- METHODS -----
     }
