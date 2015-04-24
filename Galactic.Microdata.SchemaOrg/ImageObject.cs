@@ -79,5 +79,64 @@ namespace Galactic.Microdata.SchemaOrg
         }
 
         // ----- METHODS -----
+
+        /// <summary>
+        /// Returns the item as microdata annotated HTML.
+        /// </summary>
+        /// <param name="itemprop">The name of the property that this item is the value of in another item. May be null if this item
+        /// is not a property of another.</param>
+        /// <returns>Returns a string of microdata annotated HTML, or an empty string if the item could not be converted.</returns>
+        public override string ToMicrodata(string itemprop = null)
+        {
+            Dictionary<string, object> microdata = GetMicrodata();
+
+            StringBuilder html = new StringBuilder();
+
+            // Write the containing div.
+            html.Append("<div itemscope ");
+            if (!string.IsNullOrWhiteSpace(itemprop))
+            {
+                html.Append("itemprop=\"" + itemprop + "\" ");
+            }
+            html.Append("itemtype=\"" + microdata["ItemTypeUrl"] + "\">\n");
+
+            // Write the image's name.
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                html.Append("<h2 itemprop=\"name\">" + Name + "</h2>\n");
+            }
+            
+            // Write the an image tag for the image.
+            if (ContentUrl != null)
+            {
+                html.Append("<img itemprop=\"contentUrl\" src=\"" + ContentUrl.ToString() + "\" ");
+                if (!string.IsNullOrWhiteSpace(Caption))
+                {
+                    html.Append("alt=\"" + Caption + "\" ");
+                }
+
+                if (Width != null)
+                {
+                    html.Append("width=\"" + Width.ToString() + "\" ");
+                }
+                if (Height != null)
+                {
+                    html.Append("height=\"" + Height.ToString() + "\" ");
+                }
+                html.Append(">\n");
+            }
+            
+            // Write a description of the image.
+            if (!string.IsNullOrWhiteSpace(Description))
+            {
+                html.Append("Description: <span itemprop=\"description\">" + Description + "</span>\n");
+            }
+
+            // Close out the containing div.
+            html.Append("</div>\n");
+
+            // Return the HTML generated.
+            return html.ToString();
+        }
     }
 }

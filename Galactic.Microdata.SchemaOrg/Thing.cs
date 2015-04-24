@@ -206,6 +206,61 @@ namespace Galactic.Microdata.SchemaOrg
         }
 
         /// <summary>
+        /// Returns a dictionary containing microdata about the item.
+        /// NOTE:
+        /// Each dictionary item has a key that is the name of a field or property, and its associated value.
+        /// </summary>
+        /// <returns>A dictionary containing microdata about the item.</returns>
+        protected Dictionary<string, object> GetMicrodata()
+        {
+            Dictionary<string, object> microdata = new Dictionary<string,object>();
+
+            // Iterate over all the properties and fields of the item using reflection and
+            // add their HTML microdata representation to the StringBuilder.
+            try
+            {
+                PropertyInfo[] properties = this.GetType().GetProperties();
+                foreach (PropertyInfo property in properties)
+                {
+                    // Check the property's attributes to see if there is a name to use during serialization.
+                    string propertyName = property.Name;
+                    DataMemberAttribute dataMemberAttribute = property.GetCustomAttribute<DataMemberAttribute>(true);
+                    if (dataMemberAttribute != null)
+                    {
+                        propertyName = dataMemberAttribute.Name;
+                    }
+                    
+                    // Add the property information.
+                    microdata.Add(propertyName, property.GetValue(this));
+                }
+                FieldInfo[] fields = this.GetType().GetFields();
+                foreach (FieldInfo field in fields)
+                {
+                    // Check the field's attributes to see if there is a name to use during serialization.
+                    string fieldName = field.Name;
+                    DataMemberAttribute dataMemberAttribute = field.GetCustomAttribute<DataMemberAttribute>(true);
+                    if (dataMemberAttribute != null)
+                    {
+                        fieldName = dataMemberAttribute.Name;
+                    }
+
+                    // Add the field information.
+                    microdata.Add(fieldName, field.GetValue(this));
+                }
+
+                // Remove ItemTypeDescription before returning.
+                microdata.Remove("ItemTypeDescription");
+
+                return microdata;
+            }
+            catch
+            {
+                // There was a problem adding the properties and fields.
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Converts a list of strings stored in a comma (or other character) separated string
         /// into a list of strings.
         /// </summary>
@@ -266,6 +321,58 @@ namespace Galactic.Microdata.SchemaOrg
                 // There was a problem adding the properties and fields.
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Returns the item as microdata annotated HTML.
+        /// </summary>
+        /// <param name="itemprop">The name of the property that this item is the value of in another item. May be null if this item
+        /// is not a property of another.</param>
+        /// <returns>Returns a string of microdata annotated HTML, or an empty string if the item could not be converted.</returns>
+        public virtual string ToMicrodata(string itemprop = null)
+        {
+            Dictionary<string, object> microdata = GetMicrodata();
+
+            StringBuilder html = new StringBuilder();
+
+            // Write the containing div.
+            html.Append("<div itemscope ");
+            if (!string.IsNullOrWhiteSpace(itemprop))
+            {
+                html.Append("itemprop=\"" + itemprop + "\" ");
+            }
+            html.Append("itemtype=\"" + microdata["ItemTypeUrl"] + "\">\n");
+
+            // Write the item's name.
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                html.Append("<h1 itemprop=\"name\">" + Name + "</h1>\n");
+            }
+
+            // Write an img tag for the item's associated image.
+            if (Image != null)
+            {
+                if (Image is ImageObject)
+                {
+                    html.Append((Image as ImageObject).ToMicrodata("image"));
+                }
+                else
+                {
+                    html.Append("<img itemprop=\"image\" src=\"" + (Image as Uri).ToString() + "\" >\n");
+                }
+            }
+
+            // Write a description of the item.
+            if (!string.IsNullOrWhiteSpace(Description))
+            {
+                html.Append("Description: <span itemprop=\"description\">" + Description + "</span>\n");
+            }
+
+            // Close out the containing div.
+            html.Append("</div>\n");
+
+            // Return the HTML generated.
+            return html.ToString();
         }
     }
 }

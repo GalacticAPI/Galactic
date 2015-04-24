@@ -57,6 +57,7 @@
     <Compile Include="MediaObject.cs" />
     <Compile Include="NewsArticle.cs" />
     <Compile Include="Person.cs" />
+    <Compile Include="Photograph.cs" />
     <Compile Include="Place.cs" />
     <Compile Include="Thing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

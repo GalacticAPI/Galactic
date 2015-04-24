@@ -16,7 +16,7 @@ namespace Galactic.Microdata.SchemaOrg
     /// Repeated events may be structured as separate Event objects.
     /// </summary>
     [DataContract(Name = "Event", Namespace = "http://schema.org/Event")]
-    class Event : Thing
+    public class Event : Thing
     {
         // ----- CONSTANTS -----
 

@@ -169,6 +169,13 @@ namespace Galactic.Microdata.SchemaOrg
         /// An honorific prefix preceding a Person's name such as
         /// Dr/Mrs/Mr.
         /// </summary>
+        [DataMember(EmitDefaultValue = false, Name = "honorificPrefix")]
+        public string HonorificPrefix;
+
+        /// <summary>
+        /// An honorific suffix preceding a Person's name such as
+        /// M.D./PhD/MSCSW.
+        /// </summary>
         [DataMember(EmitDefaultValue = false, Name = "honorificSuffix")]
         public string HonorificSuffix;
 
@@ -386,6 +393,132 @@ namespace Galactic.Microdata.SchemaOrg
         /// <param name="expando">The ExpandoObject to use when populating the Person.</param>
         public Person (ExpandoObject expando) : base(expando)
         {
+        }
+
+        /// <summary>
+        /// Returns the item as microdata annotated HTML.
+        /// </summary>
+        /// <param name="itemprop">The name of the property that this item is the value of in another item. May be null if this item
+        /// is not a property of another.</param>
+        /// <returns>Returns a string of microdata annotated HTML, or an empty string if the item could not be converted.</returns>
+        public virtual string ToMicrodata(string itemprop = null)
+        {
+            Dictionary<string, object> microdata = GetMicrodata();
+
+            StringBuilder html = new StringBuilder();
+
+            // Write the containing div.
+            html.Append("<div itemscope ");
+            if (!string.IsNullOrWhiteSpace(itemprop))
+            {
+                html.Append("itemprop=\"" + itemprop + "\" ");
+            }
+            html.Append("itemtype=\"" + microdata["ItemTypeUrl"] + "\">\n");
+
+            // Write the person's name.
+            if (!string.IsNullOrWhiteSpace(GivenName) || !string.IsNullOrWhiteSpace(FamilyName))
+            {
+                html.Append("<h1>");
+                if (!string.IsNullOrWhiteSpace(HonorificPrefix))
+                {
+                    html.Append("<span itemprop=\"honorificPrefix\"" + HonorificPrefix + "</span> ");
+                }
+                html.Append("<span itemprop=\"givenName\">" + GivenName + "</span><span itemprop=\"familyName\">" + FamilyName + "</span>");
+                if (!string.IsNullOrWhiteSpace(HonorificSuffix))
+                {
+                    html.Append(" <span itemprop=\"honorificSuffix\"" + HonorificSuffix + "</span>");
+                }
+                html.Append("</h1>\n");
+            }
+            else if (!string.IsNullOrWhiteSpace(Name))
+            {
+                html.Append("<h1 itemprop=\"name\">" + Name + "</h1>\n");
+            }
+
+            // Write the person's additional name.
+            if (!string.IsNullOrWhiteSpace(AdditionalName))
+            {
+                html.Append("aka <h2 itemprop=\"additionalName\">" + AdditionalName + "</h2>\n");
+            }
+
+            // Write the person's job title.
+            if (!string.IsNullOrWhiteSpace(JobTitle))
+            {
+                html.Append("<h2 itemprop=\"jobTitle\">" + JobTitle + "</h2>\n");
+            }
+
+            // Write an img tag for the item's associated image.
+            if (Image != null)
+            {
+                if (Image is ImageObject)
+                {
+                    html.Append((Image as ImageObject).ToMicrodata());
+                }
+                else
+                {
+                    html.Append("<img itemprop=\"image\" src=\"" + (Image as Uri).ToString() + "\" >\n");
+                }
+            }
+
+            // Write a description of the item.
+            if (!string.IsNullOrWhiteSpace(Description))
+            {
+                html.Append("Description: <span itemprop=\"description\">" + Description + "</span>\n");
+            }
+
+            // Write the date the person was born.
+            if (BirthDate.Ticks > 0)
+            {
+                html.Append("Born: <meta itemprop=\"birthDate\" content=\"" + BirthDate.ToString("yyyy-mm-dd") + "\">" + BirthDate.ToString("MMMM d, yyyy") + "\n");
+            }
+
+            // Write the person's birth place.
+            if (BirthPlace != null)
+            {
+                html.Append(BirthPlace.ToMicrodata("birthPlace"));
+            }
+
+            // Write the date the person died.
+            if (DeathDate.Ticks > 0)
+            {
+                html.Append("Died: <meta itemprop=\"deathDate\" content=\"" + DeathDate.ToString("yyyy-mm-dd") + "\">" + DeathDate.ToString("MMMM d, yyyy") + "\n");
+            }
+
+            // Write the person's death place.
+            if (DeathPlace != null)
+            {
+                html.Append(DeathPlace.ToMicrodata("deathPlace"));
+            }
+
+            // Write the person's e-mail address.
+            if (!string.IsNullOrWhiteSpace(Email))
+            {
+                html.Append("E-mail Address: <span itemprop=\"email\">" + Email + "</span>\n");
+            }
+
+            // Write the person's telephone number.
+            if (!string.IsNullOrWhiteSpace(Telephone))
+            {
+                html.Append("Telephone Number: <span itemprop=\"telephone\">" + Telephone + "</span>\n");
+            }
+
+            // Write the person's FAX number.
+            if (!string.IsNullOrWhiteSpace(FaxNumber))
+            {
+                html.Append("FAX Number: <span itemprop=\"faxNumber\">" + FaxNumber + "</span>\n");
+            }
+
+            // Write the person's awards.
+            if (!string.IsNullOrWhiteSpace(Award))
+            {
+                html.Append("Awards: <span itemprop=\"award\">" + Award + "</span>\n");
+            }
+
+            // Close out the containing div.
+            html.Append("</div>\n");
+
+            // Return the HTML generated.
+            return html.ToString();
         }
     }
 }

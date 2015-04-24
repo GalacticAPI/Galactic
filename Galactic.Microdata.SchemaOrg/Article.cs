@@ -105,5 +105,157 @@ namespace Galactic.Microdata.SchemaOrg
         }
 
         // ----- METHODS -----
+
+        /// <summary>
+        /// Returns the item as microdata annotated HTML.
+        /// </summary>
+        /// <param name="itemprop">The name of the property that this item is the value of in another item. May be null if this item
+        /// is not a property of another.</param>
+        /// <returns>Returns a string of microdata annotated HTML, or an empty string if the item could not be converted.</returns>
+        public override string ToMicrodata(string itemprop = null)
+        {
+            Dictionary<string, object> microdata = GetMicrodata();
+
+            StringBuilder html = new StringBuilder();
+
+            // Write the containing div.
+            html.Append("<div itemscope ");
+            if (!string.IsNullOrWhiteSpace(itemprop))
+            {
+                html.Append("itemprop=\"" + itemprop + "\" ");
+            }
+            html.Append("itemtype=\"" + microdata["ItemTypeUrl"] + "\">\n");
+
+            // Write the article's headline.
+            if (!string.IsNullOrWhiteSpace(Headline))
+            {
+                html.Append("<h1 itemprop=\"headline\">" + Headline + "</h1>\n");
+            }
+
+            // Write an img tag for the article's associated image.
+            if (Image != null)
+            {
+                if (Image is ImageObject)
+                {
+                    html.Append((Image as ImageObject).ToMicrodata("image"));
+                }
+                else
+                {
+                    html.Append("<img itemprop=\"image\" src=\"" + (Image as Uri).ToString() + "\" >\n");
+                }
+            }
+
+            // Write a description of the article.
+            if (!string.IsNullOrWhiteSpace(Description))
+            {
+                html.Append("Description: <span itemprop=\"description\">" + Description + "</span>\n");
+            }
+
+            // Write the author of the work.
+            if (Author != null)
+            {
+                html.Append("Authored by: ");
+                html.Append(Author.ToMicrodata("author"));
+            }
+
+            // Write the creator of the work.
+            if (Creator != null)
+            {
+                html.Append("Created by: ");
+                html.Append(Creator.ToMicrodata("creator"));
+            }
+
+            // Write the editor of the work.
+            if (Editor != null)
+            {
+                html.Append("Edited by: ");
+                html.Append(Editor.ToMicrodata("editor"));
+            }
+
+            // Write the producer of the work.
+            if (Producer != null)
+            {
+                html.Append("Produced by: ");
+                html.Append(Producer.ToMicrodata("producer"));
+            }
+
+            // Write the provider of the work.
+            if (Provider != null)
+            {
+                html.Append("Provided by: ");
+                html.Append(Provider.ToMicrodata("provider"));
+            }
+
+            // Write the translator of the work.
+            if (Translator != null)
+            {
+                html.Append("Translated by: ");
+                html.Append(Translator.ToMicrodata("translator"));
+            }
+
+            // Write the date the work was created.
+            if (DateCreated.Ticks > 0)
+            {
+                html.Append("Created on: <meta itemprop=\"dateCreated\" content=\"" + DateCreated.ToString("yyyy-mm-dd") + "\">" + DateCreated.ToString("MMMM d, yyyy") + "\n");
+            }
+
+            // Write the date the work was last modified.
+            if (DateModified.Ticks > 0)
+            {
+                html.Append("Modified on: <meta itemprop=\"dateModified\" content=\"" + DateModified.ToString("yyyy-mm-dd") + "\">" + DateModified.ToString("MMMM d, yyyy") + "\n");
+            }
+
+            // Write the date the work was published.
+            if (DatePublished.Ticks > 0)
+            {
+                html.Append("Published on: <meta itemprop=\"datePublished\" content=\"" + DatePublished.ToString("yyyy-mm-dd") + "\">" + DatePublished.ToString("MMMM d, yyyy") + "\n");
+            }
+
+            // Write the section the article is associated with.
+            if (!string.IsNullOrWhiteSpace(ArticleSection))
+            {
+                html.Append("<meta itemprop=\"section\" content=\"" + ArticleSection + "\" >\n");
+            }
+
+            // Write the word count of the article.
+            if (WordCount > 0)
+            {
+                html.Append("<meta itemprop=\"wordCount\" content=\"" + WordCount + "\" >\n");
+            }
+
+            // Write the article's body text.
+            if (!string.IsNullOrWhiteSpace(ArticleBody))
+            {
+                html.Append("<div itemprop=\"articleBody\">" + ArticleBody + "</div>\n");
+            }
+
+            // Write a copyright notice for the work.
+            if (CopyrightYear > 0)
+            {
+                html.Append("Copyright &copy <span itemprop=\"copyrightYear\">" + CopyrightYear + "</span>");
+                if (CopyrightHolder != null)
+                {
+                    if (CopyrightHolder is Person)
+                    {
+                        if (!string.IsNullOrWhiteSpace((CopyrightHolder as Person).GivenName) &&
+                            !string.IsNullOrWhiteSpace((CopyrightHolder as Person).FamilyName))
+                        {
+                            html.Append(" <span itemprop=\"copyrightHolder\">" + (CopyrightHolder as Person).GivenName + " "
+                                + (CopyrightHolder as Person).FamilyName + "</span>\n");
+                        }
+                    }
+                    else
+                    {
+                        html.Append(" <span itemprop=\"copyrightHolder\">" + (CopyrightHolder as Thing).Name + "</span>\n");
+                    }
+                }
+            }
+
+            // Close out the containing div.
+            html.Append("</div>\n");
+
+            // Return the HTML generated.
+            return html.ToString();
+        }
     }
 }
