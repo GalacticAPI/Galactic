@@ -199,7 +199,7 @@ namespace Galactic.Microdata.SchemaOrg
                 }
                 else
                 {
-                    html.Append("<img itemprop=\"image\" src=\"" + (Image as Uri).ToString() + "\" >\n");
+                    html.Append("<img itemprop=\"image\" src=\"" + Image.ToString() + "\" >\n");
                 }
             }
 
@@ -218,7 +218,7 @@ namespace Galactic.Microdata.SchemaOrg
                 }
                 else
                 {
-                    html.Append("<img itemprop=\"logo\" src=\"" + (Logo as Uri).ToString() + "\" >\n");
+                    html.Append("<img itemprop=\"logo\" src=\"" + Logo.ToString() + "\" >\n");
                 }
             }
 

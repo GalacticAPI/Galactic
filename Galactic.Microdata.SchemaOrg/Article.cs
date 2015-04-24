@@ -141,7 +141,7 @@ namespace Galactic.Microdata.SchemaOrg
                 }
                 else
                 {
-                    html.Append("<img itemprop=\"image\" src=\"" + (Image as Uri).ToString() + "\" >\n");
+                    html.Append("<img itemprop=\"image\" src=\"" + Image.ToString() + "\" >\n");
                 }
             }
 

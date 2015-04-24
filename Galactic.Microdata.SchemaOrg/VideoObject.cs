@@ -157,7 +157,7 @@ namespace Galactic.Microdata.SchemaOrg
                     }
                     else
                     {
-                        html.Append("poster=\"" + (Image as Uri).ToString() + "\" ");
+                        html.Append("poster=\"" + Image.ToString() + "\" ");
                     }
                 }
                 if (Width != null)
