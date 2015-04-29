@@ -123,12 +123,20 @@ namespace Galactic.Microdata.SchemaOrg
                     // object and set the value of it.
                     FieldInfo fieldInfo = this.GetType().GetField(propertyName);
                     PropertyInfo propertyInfo = this.GetType().GetProperty(propertyName);
+                    object value = ((IDictionary<string, object>)expando)[propertyName];
                     if (fieldInfo != null)
                     {
                         // Check that this field can be set.
                         try
                         {
-                            fieldInfo.SetValue(this, ((IDictionary<string, object>)expando)[propertyName]);
+                            if (fieldInfo.FieldType.Name == "Uri" && value is string)
+                            {
+                                fieldInfo.SetValue(this, new Uri((string)value));
+                            }
+                            else
+                            {
+                                fieldInfo.SetValue(this, value);
+                            }
                         }
                         catch
                         {
@@ -142,7 +150,14 @@ namespace Galactic.Microdata.SchemaOrg
                         // Check that this property can be set.
                         try
                         {
-                            propertyInfo.SetValue(this, ((IDictionary<string, object>)expando)[propertyName]);
+                            if (propertyInfo.PropertyType.Name == "Uri" && value is string)
+                            {
+                                propertyInfo.SetValue(this, new Uri((string)value));
+                            }
+                            else
+                            {
+                                propertyInfo.SetValue(this, value);
+                            }
                         }
                         catch
                         {

@@ -306,6 +306,21 @@ namespace Galactic.Microdata.SchemaOrg
         // ----- PROPERTIES -----
 
         /// <summary>
+        /// The Schema.org type of the item.
+        /// </summary>
+        public override string ItemType { get { return "Person"; } }
+
+        /// <summary>
+        /// A short description of the Schema.org type associated with this item.
+        /// </summary>
+        public override string ItemTypeDescription { get { return " A person (alive, dead, undead, or fictional)."; } }
+
+        /// <summary>
+        /// The URL of the type definition on Schema.org.
+        /// </summary>
+        public override Uri ItemTypeUrl { get { return new Uri("http://schema.org/Person"); } }
+
+        /// <summary>
         /// The brand(s) associated with a product or service, or the 
         /// brand(s) maintained by an organization or business person.
         /// Expected Types: Organization or Brand.
@@ -401,7 +416,7 @@ namespace Galactic.Microdata.SchemaOrg
         /// <param name="itemprop">The name of the property that this item is the value of in another item. May be null if this item
         /// is not a property of another.</param>
         /// <returns>Returns a string of microdata annotated HTML, or an empty string if the item could not be converted.</returns>
-        public virtual string ToMicrodata(string itemprop = null)
+        public override string ToMicrodata(string itemprop = null)
         {
             Dictionary<string, object> microdata = GetMicrodata();
 
@@ -423,10 +438,17 @@ namespace Galactic.Microdata.SchemaOrg
                 {
                     html.Append("<span itemprop=\"honorificPrefix\"" + HonorificPrefix + "</span> ");
                 }
-                html.Append("<span itemprop=\"givenName\">" + GivenName + "</span><span itemprop=\"familyName\">" + FamilyName + "</span>");
+                if (!string.IsNullOrWhiteSpace(GivenName))
+                {
+                    html.Append("<span itemprop=\"givenName\">" + GivenName + "</span> ");
+                }
+                if (!string.IsNullOrWhiteSpace(FamilyName))
+                {
+                    html.Append("<span itemprop=\"familyName\">" + FamilyName + "</span> ");
+                }
                 if (!string.IsNullOrWhiteSpace(HonorificSuffix))
                 {
-                    html.Append(" <span itemprop=\"honorificSuffix\"" + HonorificSuffix + "</span>");
+                    html.Append("<span itemprop=\"honorificSuffix\"" + HonorificSuffix + "</span>");
                 }
                 html.Append("</h1>\n");
             }
