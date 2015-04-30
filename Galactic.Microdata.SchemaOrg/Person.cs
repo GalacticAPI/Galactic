@@ -491,7 +491,7 @@ namespace Galactic.Microdata.SchemaOrg
             // Write the date the person was born.
             if (BirthDate.Ticks > 0)
             {
-                html.Append("Born: <meta itemprop=\"birthDate\" content=\"" + BirthDate.ToString("yyyy-mm-dd") + "\">" + BirthDate.ToString("MMMM d, yyyy") + "\n");
+                html.Append("Born: <meta itemprop=\"birthDate\" content=\"" + BirthDate.ToString("yyyy-MM-dd") + "\">" + BirthDate.ToString("MMMM d, yyyy") + "\n");
             }
 
             // Write the person's birth place.
@@ -503,7 +503,7 @@ namespace Galactic.Microdata.SchemaOrg
             // Write the date the person died.
             if (DeathDate.Ticks > 0)
             {
-                html.Append("Died: <meta itemprop=\"deathDate\" content=\"" + DeathDate.ToString("yyyy-mm-dd") + "\">" + DeathDate.ToString("MMMM d, yyyy") + "\n");
+                html.Append("Died: <meta itemprop=\"deathDate\" content=\"" + DeathDate.ToString("yyyy-MM-dd") + "\">" + DeathDate.ToString("MMMM d, yyyy") + "\n");
             }
 
             // Write the person's death place.

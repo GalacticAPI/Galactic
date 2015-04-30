@@ -628,19 +628,19 @@ namespace Galactic.Microdata.SchemaOrg
             // Write the date the work was created.
             if (DateCreated.Ticks > 0)
             {
-                html.Append("Created on: <meta itemprop=\"dateCreated\" content=\"" + DateCreated.ToString("yyyy-mm-dd") + "\">" + DateCreated.ToString("MMMM d, yyyy") + "\n");
+                html.Append("Created on: <meta itemprop=\"dateCreated\" content=\"" + DateCreated.ToString("yyyy-MM-dd") + "\">" + DateCreated.ToString("MMMM d, yyyy") + "\n");
             }
 
             // Write the date the work was last modified.
             if (DateModified.Ticks > 0)
             {
-                html.Append("Modified on: <meta itemprop=\"dateModified\" content=\"" + DateModified.ToString("yyyy-mm-dd") + "\">" + DateModified.ToString("MMMM d, yyyy") + "\n");
+                html.Append("Modified on: <meta itemprop=\"dateModified\" content=\"" + DateModified.ToString("yyyy-MM-dd") + "\">" + DateModified.ToString("MMMM d, yyyy") + "\n");
             }
 
             // Write the date the work was published.
             if (DatePublished.Ticks > 0)
             {
-                html.Append("Published on: <meta itemprop=\"datePublished\" content=\"" + DatePublished.ToString("yyyy-mm-dd") + "\">" + DatePublished.ToString("MMMM d, yyyy") + "\n");
+                html.Append("Published on: <meta itemprop=\"datePublished\" content=\"" + DatePublished.ToString("yyyy-MM-dd") + "\">" + DatePublished.ToString("MMMM d, yyyy") + "\n");
             }
 
             // Write the text of the work.
