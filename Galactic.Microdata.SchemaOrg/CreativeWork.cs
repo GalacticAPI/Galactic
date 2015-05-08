@@ -351,12 +351,11 @@ namespace Galactic.Microdata.SchemaOrg
         [DataMember(EmitDefaultValue = false, Name = "version")]
         public double Version;
 
-        /*
         /// <summary>
         /// An embedded video object.
         /// </summary>
+        [DataMember(EmitDefaultValue = false, Name = "video")]
         public VideoObject Video;
-        */
 
         /// <summary>
         /// Example/instance/realization/derivation of the concept of this creative work. eg. The paperback edition, first edition, or eBook.
