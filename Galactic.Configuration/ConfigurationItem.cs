@@ -1,7 +1,9 @@
 ﻿using Galactic.Cryptography;
 using Galactic.EventLog;
-using Galactic.FileSystem;
 using System;
+using System.IO;
+using Directory = Galactic.FileSystem.Directory;
+using File = Galactic.FileSystem.File;
 
 namespace Galactic.Configuration
 {
@@ -109,7 +111,7 @@ namespace Galactic.Configuration
         {
             get
             {
-                // Reads the value from it's configuration file.
+                // Reads the value from its configuration file.
                 // Check whether the value to retrieve is encrypted.
                 if (Encrypted)
                 {
@@ -213,7 +215,7 @@ namespace Galactic.Configuration
                 if (file.Exists())
                 {
                     // Return the value of the item from the file.
-                    return file.ReadLine();
+                    return file.ReadAllAsText();
                 }
                 else
                 {
@@ -300,7 +302,10 @@ namespace Galactic.Configuration
         {
             // Get the encrypted connection string containing the key, initialization vector, value, and key and
             // initialization vector lengths from the file.
-            string encryptedValue = Get(log);
+            // Read only the first line of the file, as this is all that is necessary for the encrypted
+            // format.
+            StringReader reader = new StringReader(Get(log));
+            string encryptedValue = reader.ReadLine();
 
             // Check that an encrypted value was retrieved.
             if (!string.IsNullOrWhiteSpace(encryptedValue))
