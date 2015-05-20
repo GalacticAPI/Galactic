@@ -22,6 +22,11 @@ namespace Galactic.ActiveDirectory
         // ----- CONSTANTS -----
 
         /// <summary>
+        /// The default first site name in Active Directory.
+        /// </summary>
+        public const string DEFAULT_FIRST_SITE_NAME = "Default-First-Site-Name";
+
+        /// <summary>
         /// The maximum number of characters supported for a group's name in Active Directory.
         /// </summary>
         public const int GROUP_NAME_MAX_CHARS = 63;
@@ -380,7 +385,7 @@ namespace Galactic.ActiveDirectory
                     domainAndSiteLineSections = domainAndSiteLine.Split(':');
                 }
                 string domainName = domainAndSiteLineSections[0];
-                string siteName = null;
+                string siteName = DEFAULT_FIRST_SITE_NAME;
                 if (domainAndSiteLineSections.Length > 1)
                 {
                     siteName = domainAndSiteLineSections[1];
@@ -461,8 +466,8 @@ namespace Galactic.ActiveDirectory
         /// <param name="domainName">The DNS style domain name of the Active Directory to connect to.</param>
         /// <param name="userName">The username of the account in AD to use when making the connection.</param>
         /// <param name="password">The password of the account.</param>
-        /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from.</param>
-        public ActiveDirectory(string domainName, string userName, SecureString password, string siteName = null)
+        /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
+        public ActiveDirectory(string domainName, string userName, SecureString password, string siteName = DEFAULT_FIRST_SITE_NAME)
         {
             if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(userName) && password != null)
             {
@@ -518,8 +523,8 @@ namespace Galactic.ActiveDirectory
         /// <param name="ouDn">The distinguished name of the OU to use as a base for operations.</param>
         /// <param name="userName">The username of the account in AD to use when making the connection.</param>
         /// <param name="password">The password of the account.</param>
-        /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from.</param>
-        public ActiveDirectory(string domainName, string ouDn, string userName, SecureString password, string siteName = null)
+        /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
+        public ActiveDirectory(string domainName, string ouDn, string userName, SecureString password, string siteName = DEFAULT_FIRST_SITE_NAME)
         {
             if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(ouDn) && !string.IsNullOrWhiteSpace(userName) && password != null)
             {
@@ -765,11 +770,11 @@ namespace Galactic.ActiveDirectory
                 {
                     DnsQueryRequest request = new DnsQueryRequest();
                     DnsQueryResponse response = request.Resolve("_ldap._tcp." + siteName + "._sites.dc._msdcs." + domainName, NsType.SRV, NsClass.INET, System.Net.Sockets.ProtocolType.Tcp);
-                    SrvRecord[] srvRecords = (SrvRecord[])response.Answers;
+                    IDnsRecord[] records = response.Answers;
                     List<string> domainControllers = new List<string>();
-                    foreach (SrvRecord record in srvRecords)
+                    foreach (IDnsRecord record in records)
                     {
-                        domainControllers.Add(record.HostName);
+                        domainControllers.Add((record as SrvRecord).HostName);
                     }
                     return domainControllers;
                 }
