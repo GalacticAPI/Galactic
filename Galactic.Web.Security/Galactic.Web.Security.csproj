@@ -43,6 +43,7 @@
     <Compile Include="..\Versioning\AutoAssemblyVersion.cs">
       <Link>AutoAssemblyVersion.cs</Link>
     </Compile>
+    <Compile Include="SimpleMappingRoleProvider.cs" />
     <Compile Include="ActiveDirectoryRoleProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
