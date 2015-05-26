@@ -35,8 +35,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Sql.MSSql", "Galac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Sql.Oracle", "Galactic.Sql.Oracle\Galactic.Sql.Oracle.csproj", "{F50559C2-B3EB-45FE-A5E9-8D1F636A115E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Web.Security", "Galactic.Web.Security\Galactic.Web.Security.csproj", "{05E8F87B-1C98-4857-AB91-0E31F892A042}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{07475970-751A-4A8D-AE1B-227C6E9410BE}"
 	ProjectSection(SolutionItems) = preProject
 		LICENSE = LICENSE
@@ -47,6 +45,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Versioning", "Versioning\Versioning.csproj", "{3888C314-10D1-44FA-B3CC-3E27DF532DBE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.NoSql.MongoDB", "Galactic.NoSql.MongoDB\Galactic.NoSql.MongoDB.csproj", "{1FE6D209-7D4B-4DD2-9556-A2E51FD34FF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Web.Security.SimpleMapping", "Galactic.Web.Security.SimpleMapping\Galactic.Web.Security.SimpleMapping.csproj", "{0C6C7304-03BC-48EA-9A0B-ECFA7C584004}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Web.Security.ActiveDirectory", "Galactic.Web.Security.ActiveDirectory\Galactic.Web.Security.ActiveDirectory.csproj", "{0AB44761-30E7-4260-87AF-57969A606A05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -118,10 +120,6 @@ Global
 		{F50559C2-B3EB-45FE-A5E9-8D1F636A115E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F50559C2-B3EB-45FE-A5E9-8D1F636A115E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F50559C2-B3EB-45FE-A5E9-8D1F636A115E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{05E8F87B-1C98-4857-AB91-0E31F892A042}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05E8F87B-1C98-4857-AB91-0E31F892A042}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05E8F87B-1C98-4857-AB91-0E31F892A042}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05E8F87B-1C98-4857-AB91-0E31F892A042}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3888C314-10D1-44FA-B3CC-3E27DF532DBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3888C314-10D1-44FA-B3CC-3E27DF532DBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3888C314-10D1-44FA-B3CC-3E27DF532DBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -130,6 +128,14 @@ Global
 		{1FE6D209-7D4B-4DD2-9556-A2E51FD34FF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FE6D209-7D4B-4DD2-9556-A2E51FD34FF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FE6D209-7D4B-4DD2-9556-A2E51FD34FF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C6C7304-03BC-48EA-9A0B-ECFA7C584004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C6C7304-03BC-48EA-9A0B-ECFA7C584004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C6C7304-03BC-48EA-9A0B-ECFA7C584004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C6C7304-03BC-48EA-9A0B-ECFA7C584004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AB44761-30E7-4260-87AF-57969A606A05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AB44761-30E7-4260-87AF-57969A606A05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AB44761-30E7-4260-87AF-57969A606A05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AB44761-30E7-4260-87AF-57969A606A05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,5 +1,4 @@
-﻿using Galactic.ActiveDirectory;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration.Provider;
@@ -8,15 +7,14 @@ using System.IO;
 using System.Text;
 using System.Web.Hosting;
 using System.Web.Security;
-using AD = Galactic.ActiveDirectory.ActiveDirectory;
 using Galactic.Configuration;
 
-namespace Galactic.Web.Security
+namespace Galactic.Web.Security.SimpleMapping
 {
     /// <summary>
-    /// A role provider for ASP.NET applications that utilizes Active Directory groups for role storage.
+    /// A role provider for ASP.NET applications that maps users to roles in a configuration item file.
     /// </summary>
-    public class ActiveDirectoryRoleProvider : RoleProvider
+    public class SimpleMappingRoleProvider : RoleProvider
     {
         // ----- CONSTANTS -----
 
@@ -24,7 +22,7 @@ namespace Galactic.Web.Security
         private const string CONFIG_ITEM_DIRECTORY_NAME = "applicationConfigurationItemDirectory";
 
         // The name of the configuration item that contains the information required to initialize the role provider.
-        private const string AD_ROLE_PROVIDER_CONFIGURATION_ITEM_NAME = "ActiveDirectoryRoleProvider";
+        private const string SIMPLE_MAPPING_ROLE_PROVIDER_CONFIGURATION_ITEM_NAME = "SimpleMappingRoleProvider";
         
         // ----- VARIABLES -----
 
@@ -34,23 +32,17 @@ namespace Galactic.Web.Security
         // The absolute path to the directory contaning configuration items used by the application.
         private string configurationItemDirectoryPath = "";
 
-        // A prefix to apply to all group names created by the role provider.
-        private string groupPrefix = "";
-
-        // A suffix to apply to all group names created by the role provider.
-        private string groupSuffix = "";
-
         // The maximum length that a role name may be.
-        private int maxRoleNameLength = 0;
+        private const int maxRoleNameLength = 60;
 
         // The name of the role provider, along with its default value.
-        private string providerName = "ActiveDirectoryRoleProvider";
+        private string providerName = "SimpleMappingRoleProvider";
 
-        // The distinguished name of the OU in Active Directory that is set aside for use by the role provider.
-        private string providerOUDn = "";
+        // The configuration item used by this role provider.
+        private static ConfigurationItem configItem = null;
 
-        // A connection to active directory that can be used by the role provider.
-        private static AD ad;
+        // A dictionary keyed on role name, containing a list of the users in each role.
+        private static Dictionary<string, List<string>> roles = new Dictionary<string, List<string>>();
 
         // ----- PROPERTIES -----
 
@@ -92,7 +84,7 @@ namespace Galactic.Web.Security
 
         // ----- CONSTRUCTORS -----
 
-        public ActiveDirectoryRoleProvider()
+        public SimpleMappingRoleProvider()
         {
         }
 
@@ -117,49 +109,15 @@ namespace Galactic.Web.Security
                     configurationItemDirectoryPath = config[CONFIG_ITEM_DIRECTORY_NAME];
 
                     // Get the configuration item with the setup information from a file.
-                    ConfigurationItem configItem = new ConfigurationItem(HostingEnvironment.MapPath(configurationItemDirectoryPath), AD_ROLE_PROVIDER_CONFIGURATION_ITEM_NAME, true);
+                    configItem = new ConfigurationItem(HostingEnvironment.MapPath(configurationItemDirectoryPath), SIMPLE_MAPPING_ROLE_PROVIDER_CONFIGURATION_ITEM_NAME, true);
 
-                    StringReader reader = new StringReader(configItem.Value);
-
-                    // Get the name of the application using this role provider.
-                    applicationName = reader.ReadLine();
-                    if (string.IsNullOrWhiteSpace(applicationName))
+                    // Read the roles from the configuration item.
+                    roles = ReadRoles(new StringReader(configItem.Value));
+                    
+                    if (roles == null)
                     {
-                        throw new ProviderException("The application name was not supplied in the configuration file.");
+                        throw new ProviderException("Couldn't read roles from configuration item.");
                     }
-
-                    // Get the OU that is set aside for use by the role provider.
-                    providerOUDn = reader.ReadLine();
-                    if (string.IsNullOrWhiteSpace(applicationName))
-                    {
-                        throw new ProviderException("The OU was not supplied in the configuration file.");
-                    }
-
-                    // (Optional) Get the prefix to use when naming groups. - NOTE: Leave a blank line the in configuration file if not used.
-                    groupPrefix = reader.ReadLine();
-
-                    // (Optional) Get the suffix to use when naming groups. - NOTE: Leave a blank line the in configuration file if not used.
-                    groupSuffix = reader.ReadLine();
-
-                    // Get the name of the configuration item containing connection information for Active Directory.
-                    string activeDirectoryConfigurationItemName = reader.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(activeDirectoryConfigurationItemName))
-                    {
-                        // Setup a connection to active directory for the role provider.
-                        ad = new AD(HostingEnvironment.MapPath(configurationItemDirectoryPath), activeDirectoryConfigurationItemName);
-                        if (ad == null)
-                        {
-                            throw new ProviderException("Couldn't connect to Active Directory with configuration provided.");
-                        }
-                            
-                    }
-                    else
-                    {
-                        throw new ProviderException("The Active Directory configuration item name was not supplied in the configuration file.");
-                    }
-
-                    // Calculate and set the maximum length of role names for this provider.
-                    maxRoleNameLength = CalculateMaxRoleNameLength();
                 }
                 else
                 {
@@ -220,34 +178,27 @@ namespace Galactic.Web.Security
                 // Add the usernames to the specified roles.
                 foreach (string roleName in roleNames)
                 {
-                    // Check whether the roleName exists as the SAMAccountName of a group in Active Directory.
-                    Group roleGroup = null;
-                    try
+                    // Check whether the roleName exists.
+                    if (!roles.ContainsKey(roleName))
                     {
-                        roleGroup = new Group(ad, ad.GetGUIDBySAMAccountName(GetGroupName(roleName)));
-                    }
-                    catch (ArgumentException)
-                    {
-                        throw new ArgumentException("The " + roleName + " role does not exist in Active Directory.");
+                        throw new ArgumentException("The " + roleName + " role does not exist.");
                     }
 
-                    // There is a group corresponding with the roleName provided.
+                    // There is a role corresponding with the roleName provided.
                     foreach (string username in usernames)
                     {
-                        // Check that the username is attached to an object in Active Directory.
-                        User user = null;
-                        try
+                        // Add the user to the role.
+                        if (!roles[roleName].Contains(username))
                         {
-                            user = new User(ad, ad.GetGUIDBySAMAccountName(username));
-                        }
-                        catch (ArgumentException)
-                        {
-                            throw new ArgumentException("The user named " + username + " does not exist in Active Directory.");
+                            roles[roleName].Add(username);
                         }
 
-                        // The account name is attached to an object in Active Directory.
-                        if (!user.AddToGroup(roleGroup.GUID))
+                        // Save the updated role to the configuration item.
+                        if (!SaveRoles())
                         {
+                            // Remove the user added to the dictionary.
+                            roles[roleName].Remove(username);
+
                             // The user was not added to the group.
                             throw new ProviderException("Unable to add " + username + " to " + roleName + " group in Active Directory.");
                         }
@@ -268,33 +219,6 @@ namespace Galactic.Web.Security
         }
 
         /// <summary>
-        /// Calculates the maximum length that a role name may be.
-        /// </summary>
-        /// <returns>The maximum length in characters that a role name may be.</returns>
-        private int CalculateMaxRoleNameLength()
-        {
-            // Set the maximum role name length to the maximum length of group names in Active Directory.
-            int maxLength = AD.GROUP_NAME_MAX_CHARS;
-
-            // Subtract the length of the prefix for the group (if present).
-            if (!String.IsNullOrWhiteSpace(groupPrefix))
-            {
-                maxLength -= groupPrefix.Length + 1;
-            }
-
-            // Subtract the length of the application name from the group's name.
-            maxLength -= applicationName.Length + 1;
-
-            // Subtract the length of the suffix for the group (if present).
-            if (!String.IsNullOrWhiteSpace(groupSuffix))
-            {
-                maxLength -= groupSuffix.Length + 1;
-            }
-
-            return maxLength;
-        }
-
-        /// <summary>
         /// Adds a new role to the data source for the configured applicationName.
         /// </summary>
         /// <param name="roleName">The name of the role to create.</param>
@@ -305,18 +229,20 @@ namespace Galactic.Web.Security
             // You should throw an ArgumentException if the specified role name is an empty string, contains a comma, or exceeds the
             // maximum length allowed by the data source, and an ArgumentNullException if the specified role name is null (Nothing in Visual Basic).
 
-            if (!String.IsNullOrWhiteSpace(roleName))
-            {
-                string groupName = GetGroupName(roleName);
-                if (String.IsNullOrWhiteSpace(groupName))
+            if (!String.IsNullOrWhiteSpace(roleName) && !roleName.Contains(',') && roleName.Length <= MaxRoleNameLength)
+            {   
+                // Check whether the role already exists.
+                if (roles.ContainsKey(roleName))
                 {
-                    throw new ProviderException("Unable to create a group name for the new role in Active Directory.");
+                    throw new ProviderException("Role already exists.");
                 }
-                
-                // Create a new security group for storing role membership.
-                if (Group.Create(ad, groupName, providerOUDn, (uint)(AD.GroupType.Security | AD.GroupType.Global)) == null)
+
+                // Create a new role.
+                roles.Add(roleName, new List<string>());
+                if (!SaveRoles())
                 {
-                    throw new ProviderException("Unable to create new role in Active Directory.");
+                    roles.Remove(roleName);
+                    throw new ProviderException("Unable to create new role.");
                 }
 
             }
@@ -342,37 +268,40 @@ namespace Galactic.Web.Security
             // You should throw an ArgumentException if the specified role name does not exist, or is an empty string. You should throw an ArgumentNullException
             // if the specified role name is null (Nothing in Visual Basic).
 
-            if (!String.IsNullOrWhiteSpace(roleName))
+            if (roleName != null)
             {
-                string groupName = GetGroupName(roleName);
-                if (String.IsNullOrWhiteSpace(groupName))
+                if (!string.IsNullOrWhiteSpace(roleName) && roles.ContainsKey(roleName))
                 {
-                    throw new ProviderException("Unable to get the name of the group mapped to the role in Active Directory.");
-                }
-
-                // Get the group from Active Directory.
-                Group group;
-                try
-                {
-                    group = new Group(ad, ad.GetGUIDBySAMAccountName(groupName));
-                }
-                catch (ArgumentException)
-                {
-                    throw new ProviderException("Unable to locate " + groupName + " group in Active Directory.");
-                }
-
-                if (throwOnPopulatedRole)
-                {
-                    // Check whether the group is empty.
-                    if (group.Members.Count > 0)
+                    if (throwOnPopulatedRole)
                     {
-                        // The group isn't empty. Throw an exception.
-                        throw new ProviderException("Role not empty.");
+                        // Check whether the group is empty.
+                        if (roles[roleName].Count > 0)
+                        {
+                            // The group isn't empty. Throw an exception.
+                            throw new ProviderException("Role not empty.");
+                        }
+                    }
+
+                    // Save the list of members in case the role does not delete correctly.
+                    List<string> members = roles[roleName];
+
+                    // Delete the role.
+                    roles.Remove(roleName);
+                    if (SaveRoles())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Restore the role that didn't delete correctly.
+                        roles.Add(roleName, members);
+                        return false;
                     }
                 }
-
-                // Delete the group in Active Directory.
-                return Group.Delete(ad, ad.GetGUIDBySAMAccountName(groupName));
+                else
+                {
+                    throw new ArgumentException("roleName");
+                }
             }
             else
             {
@@ -395,36 +324,35 @@ namespace Galactic.Web.Security
             {
                 if (!String.IsNullOrWhiteSpace(roleName))
                 {
-                    string groupName = GetGroupName(roleName);
-                    if (String.IsNullOrWhiteSpace(groupName))
+                    if (roles.ContainsKey(roleName))
                     {
-                        throw new ProviderException("Unable to get the name of the group mapped to the role in Active Directory.");
-                    }
-
-                    // Get the group from Active Directory.
-                    Group group;
-                    try
-                    {
-                        group = new Group(ad, ad.GetGUIDBySAMAccountName(groupName));
-                    }
-                    catch (ArgumentException)
-                    {
-                        throw new ProviderException("Unable to locate " + groupName + " group in Active Directory.");
-                    }
-
-                    // Create a list of the SAM Account Names of the users in the group.
-                    List<String> userNames = new List<String>();
-                    foreach (User user in group.UserMembers)
-                    {
-                        // Check that the user's name contains the usernameToMatch.
-                        if (user.SAMAccountName.Contains(usernameToMatch))
+                        if (usernameToMatch.EndsWith("*"))
                         {
-                            // The user name matches, add them to the list.
-                            userNames.Add(user.SAMAccountName);
+                            // Find all users that start with characters up to the wildcard.
+                            List<string> usernames = (List<string>)roles[roleName].Where(userNameToMatch => usernameToMatch.StartsWith(usernameToMatch.Substring(0, usernameToMatch.Length - 1)));
+                            
+                            // Sort the usernames.
+                            usernames.Sort(StringComparer.OrdinalIgnoreCase);
+
+                            return usernames.ToArray();
+                        }
+                        else
+                        {
+                            // Find a single user.
+                            if (roles[roleName].Contains(usernameToMatch))
+                            {
+                                return new string[] { usernameToMatch };
+                            }
+                            else
+                            {
+                                return new string[] { };
+                            }
                         }
                     }
-
-                    return userNames.ToArray();
+                    else
+                    {
+                        throw new ProviderException("Role does not exist.");
+                    }
                 }
                 else
                 {
@@ -443,105 +371,7 @@ namespace Galactic.Web.Security
         /// <returns>A string array containing the names of all the roles stored in the data source for the configured applicationName.</returns>
         public override string[] GetAllRoles()
         {
-            // Create a wildcard group name that corresponds to groups maintained by this application.
-            string wildcardGroupName = GetGroupName("*");
-
-            // Search Active Directory for groups corresponding to roles managed by this application.
-            List<System.DirectoryServices.Protocols.SearchResultEntry> entries = ad.GetEntriesBySAMAccountName(wildcardGroupName);
-
-            // Check that entries were returned.
-            if (entries != null)
-            {
-                // There are entries in the list.
-
-                // Create a list to hold the names of the roles found.
-                List<String> roleNames = new List<String>();
-
-                // Create groups from the entries.
-                foreach (System.DirectoryServices.Protocols.SearchResultEntry entry in entries)
-                {
-                    SecurityPrincipal securityPrincipal = new SecurityPrincipal(ad, entry);
-                    if (securityPrincipal.IsGroup)
-                    {
-                        // Get the name of the role from the group name.
-                        roleNames.Add(GetRoleName(securityPrincipal.SAMAccountName));
-                    }
-                }
-
-                return roleNames.ToArray();
-            }
-            else
-            {
-                // No entries were returned.
-                return new string[] { };
-            }
-        }
-
-        /// <summary>
-        /// Gets the distinguished name of the group that is mapped to the application's role in Active Directory.
-        /// Groups are named using the following format: [{groupPrefix}-]{applicationName}-{roleName}[-{groupSuffix}]
-        /// (groupPrefix and groupSuffix are optional)
-        /// </summary>
-        /// <param name="roleName">The name of the role.</param>
-        /// <returns></returns>
-        private string GetGroupDN(string roleName)
-        {
-            if (!String.IsNullOrWhiteSpace(roleName))
-            {
-                if (!String.IsNullOrWhiteSpace(providerOUDn))
-                {
-                    string groupName = GetGroupName(roleName);
-                    if (String.IsNullOrWhiteSpace(roleName))
-                    {
-                        throw new ProviderException("Unable to retrieve the distinguished name for the group. A suitable name could not be generated.");
-                    }
-
-                    // Return the distinguished name that is built.
-                    return "CN=" + groupName + "," + providerOUDn;
-                }
-                else
-                {
-                    throw new ProviderException("Unable to retrieve the distinguished name for the group. The OU for use by the provider was not found.");
-                }
-            }
-            else
-            {
-                throw new ArgumentNullException("roleName", "Unable to retrieve the distinguished name for the group. The roleName provided was null or empty.");
-            }
-        }
-
-        /// <summary>
-        /// Returns the correct mapped name for a role's group in Active Directory.
-        /// </summary>
-        /// <param name="roleName">The name of the role.</param>
-        /// <returns>The name the group should have in Active Directory, or null if the name could not be generated.</returns>
-        private String GetGroupName(string roleName)
-        {
-            if (!String.IsNullOrWhiteSpace(roleName))
-            {
-                if (!String.IsNullOrWhiteSpace(applicationName))
-                {
-                    StringBuilder groupNameBuilder = new StringBuilder();
-
-                    // Append the prefix for the group (if present).
-                    if (!String.IsNullOrWhiteSpace(groupPrefix))
-                    {
-                        groupNameBuilder.Append(groupPrefix + "-");
-                    }
-
-                    // Append the main group name.
-                    groupNameBuilder.Append(applicationName + "-" + roleName);
-
-                    // Append the suffix for the group (if present).
-                    if (!String.IsNullOrWhiteSpace(groupSuffix))
-                    {
-                        groupNameBuilder.Append("-" + groupSuffix);
-                    }
-
-                    return groupNameBuilder.ToString();
-                }
-            }
-            return null;
+            return roles.Keys.ToArray();
         }
 
         /// <summary>
@@ -588,81 +418,6 @@ namespace Galactic.Web.Security
         }
 
         /// <summary>
-        /// Returns the name of a role given its group's name in Active Directory.
-        /// </summary>
-        /// <param name="groupName">The name of the group.</param>
-        /// <returns>The name the role, or null if the name could not be generated.</returns>
-        private String GetRoleName(string groupName)
-        {
-            if (!String.IsNullOrWhiteSpace(groupName))
-            {
-                if (!String.IsNullOrWhiteSpace(applicationName))
-                {
-                    StringBuilder roleNameBuilder = new StringBuilder(groupName);
-
-                    // Remove the prefix for the group (if present).
-                    if (!String.IsNullOrWhiteSpace(groupPrefix))
-                    {
-                        roleNameBuilder.Remove(0, groupPrefix.Length + 1);
-                    }
-
-                    // Remove the application name from the group's name.
-                    roleNameBuilder.Remove(0, applicationName.Length + 1);
-
-                    // Remove the suffix for the group (if present).
-                    if (!String.IsNullOrWhiteSpace(groupSuffix))
-                    {
-                        roleNameBuilder.Remove(roleNameBuilder.Length - groupSuffix.Length - 1, groupSuffix.Length + 1);
-                    }
-
-                    return roleNameBuilder.ToString();
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Gets a list of SAM Account Names for the security principals that belong to the role.
-        /// </summary>
-        /// <param name="roleName">The name of the role to find the membership for.</param>
-        /// <returns>A list of SAM Account Names for the security principals in the role.</returns>
-        public List<string> GetMembers(string roleName)
-        {
-            if (!String.IsNullOrWhiteSpace(roleName))
-            {
-                // The roleName is formatted correctly.
-                if (!RoleExists(roleName))
-                {
-                    throw new ProviderException("A role named " + roleName + " does not exist.");
-                }
-
-                // Get the members of the role's corresponding group.
-                Group roleGroup = new Group(ad, ad.GetGUIDBySAMAccountName(GetGroupName(roleName)));
-                List<string> sAMAccountNames = new List<string>();
-                List<SecurityPrincipal> members = roleGroup.Members;
-                if (members != null)
-                {
-                    foreach (SecurityPrincipal member in members)
-                    {
-                        sAMAccountNames.Add(member.SAMAccountName);
-                    }
-                }
-                return sAMAccountNames;
-            }
-            else
-            {
-                if (roleName != null)
-                {
-                    throw new ArgumentException("roleName can not be empty, contain a comma, or be longer than " + MaxRoleNameLength + " characters.");
-                }
-                else
-                {
-                    throw new ArgumentNullException("roleName");
-                }
-            }
-        }
-
-        /// <summary>
         /// Gets a list of users in the specified role for the configured applicationName.
         /// </summary>
         /// <param name="roleName">The name of the role to get the list of users for.</param>
@@ -683,13 +438,7 @@ namespace Galactic.Web.Security
                 }
 
                 // Get the list of user names that are members of the role.
-                Group group = new Group(ad, ad.GetGUIDBySAMAccountName(GetGroupName(roleName)));
-                List<String> userNames = new List<String>();
-                foreach (User user in group.AllUserMembers)
-                {
-                    userNames.Add(user.SAMAccountName);
-                }
-                return userNames.ToArray();
+                return roles[roleName].ToArray();
             }
             else
             {
@@ -725,20 +474,14 @@ namespace Galactic.Web.Security
                     throw new ProviderException("The roleName supplied does not exist.");
                 }
 
-                User user;
-
-                // Check if the username supplied exists.
-                try
-                {
-                    user = new User(ad, ad.GetGUIDBySAMAccountName(username));
-                }
-                catch (ArgumentException)
+                // Check if the supplied username exists.
+                if (!UserExists(username))
                 {
                     throw new ProviderException("The username supplied does not exist.");
                 }
 
-                // Return whether the user is a member of the group corresponding with the roleName supplied.
-                return user.MemberOfGroup(ad.GetGUIDBySAMAccountName(GetGroupName(roleName)), true);
+                // Return whether the user is a member of the role.
+                return roles[roleName].Contains(username);
             }
             else
             {
@@ -767,15 +510,71 @@ namespace Galactic.Web.Security
             }
         }
 
-        /// <summary>
-        /// Removes a members (group or user) from a role.
-        /// </summary>
-        /// <param name="memberName">The name of the user or group to remove from the role.</param>
-        /// <param name="roleName">The name of the role to remove the user or group from.</param>
-        /// <returns>True if the member was removed. False, otherwise.</returns>
-        public bool RemoveMember(string memberName, string roleName)
+        // Parses roles from the provided string reader.
+        // Returns a dictionary keyed on the role name containing a list of users in each role, or null if there was an error reading the string.
+        private static Dictionary<string, List<string>> ReadRoles(StringReader reader)
         {
-            if (!String.IsNullOrWhiteSpace(memberName) && !String.IsNullOrWhiteSpace(roleName))
+            if (reader != null)
+            {
+                try
+                {
+                    // A dictionary keyed on role name that will contain a list of users in each role.
+                    Dictionary<string, List<string>> roles = new Dictionary<string, List<string>>();
+
+                    // Parse each line of the string.
+                    string line = reader.ReadLine();
+                    string roleName = "";
+                    while (!string.IsNullOrEmpty(line))
+                    {
+                        line = line.Trim();
+                        if (line.EndsWith("["))
+                        {
+                            // This is a role definition.
+                            roleName = line.Split('=')[0].Trim();
+
+                            // Create a new entry with the role's name in the dictionary.
+                            roles.Add(roleName, new List<string>());
+                        }
+                        if (line.EndsWith("]"))
+                        {
+                            // This is the end of a role definition.
+                            roleName = "";
+                        }
+                        // Check that a role has been defined on a previous line.
+                        if (!string.IsNullOrWhiteSpace(roleName))
+                        {
+                            // A role has been defined.
+                            // Add the username on this line to the currently defined role.
+                            roles[roleName].Add(line);
+                        }
+                        line = reader.ReadLine();
+                    }
+
+                    // Return the roles found.
+                    return roles;
+                }
+                catch
+                {
+                    // There was an error reading the string.
+                    return null;
+                }
+            }
+            else
+            {
+                // No reader was provided.
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Removes a user from a role.
+        /// </summary>
+        /// <param name="username">The name of the user to remove from the role.</param>
+        /// <param name="roleName">The name of the role to remove the user from.</param>
+        /// <returns>True if the user was removed. False, otherwise.</returns>
+        public bool RemoveUser(string username, string roleName)
+        {
+            if (!String.IsNullOrWhiteSpace(username) && !String.IsNullOrWhiteSpace(roleName))
             {
                 // Check if the supplied role exists.
                 if (!RoleExists(roleName))
@@ -783,32 +582,27 @@ namespace Galactic.Web.Security
                     throw new ProviderException("The roleName supplied does not exist.");
                 }
 
-                try
+                // Remove the user from the role.
+                roles[roleName].Remove(username);
+                if (SaveRoles())
                 {
-                    Group roleGroup = new Group(ad, ad.GetGUIDBySAMAccountName(GetGroupName(roleName)));
-                    try
-                    {
-                        return roleGroup.RemoveMember(new SecurityPrincipal(ad, ad.GetGUIDBySAMAccountName(memberName)));
-                    }
-                    catch
-                    {
-                        // There was an error removing the member from the group.
-                        return false;
-                    }
+                    return true;
                 }
-                catch
+                else
                 {
-                    // There was an error retrieving the role's group from Active Directory.
+                    // The roles couldn't be saved.
+                    // Restore the user to the role and return false.
+                    roles[roleName].Add(username);
                     return false;
                 }
             }
             else
             {
-                if (memberName != null || roleName != null)
+                if (username != null || roleName != null)
                 {
-                    if (memberName != null)
+                    if (username != null)
                     {
-                        throw new ArgumentException("memberName can not be empty.", "memberName");
+                        throw new ArgumentException("username can not be empty.", "username");
                     }
                     else
                     {
@@ -817,9 +611,9 @@ namespace Galactic.Web.Security
                 }
                 else
                 {
-                    if (memberName == null)
+                    if (username == null)
                     {
-                        throw new ArgumentNullException("memberName");
+                        throw new ArgumentNullException("username");
                     }
                     else
                     {
@@ -875,20 +669,13 @@ namespace Galactic.Web.Security
                     }
                 }
 
-                List<SecurityPrincipal> securityPrincipals = new List<SecurityPrincipal>();
-
-                // Check whether all the usernames exist as users in Active Directory.
+                // Check wheterh all usernames exist in the application.
                 foreach (string username in usernames)
                 {
-                    try
+                    if (!UserExists(username))
                     {
-                        User user = new User(ad, ad.GetGUIDBySAMAccountName(username));
-                        securityPrincipals.Add(user);
-                    }
-                    catch (ArgumentException)
-                    {
-                        // The user doesn't exist in Active Directory.
-                        throw new ProviderException(username + " is not a user in Active Directory.");
+                        // The user doesn't exist.
+                        throw new ProviderException(username + " doesn't exist.");
                     }
                 }
 
@@ -905,18 +692,12 @@ namespace Galactic.Web.Security
                 // Remove all users from the specified roles.
                 foreach (string roleName in roleNames)
                 {
-                    try
+                    foreach (string username in usernames)
                     {
-                        Group roleGroup = new Group(ad, ad.GetGUIDBySAMAccountName(GetGroupName(roleName)));
-                        if (!roleGroup.RemoveMembers(securityPrincipals))
+                        if (!RemoveUser(username, roleName))
                         {
                             throw new ProviderException("Can't remove users from " + roleName + ".");
                         }
-                    }
-                    catch (ArgumentNullException)
-                    {
-                        // Active Directory could not be reached.
-                        throw new ProviderException("Can't remove users from " + roleName + ".");
                     }
                 }
             }
@@ -946,19 +727,7 @@ namespace Galactic.Web.Security
 
             if (!String.IsNullOrWhiteSpace(roleName))
             {
-                // Check if a group representing the role, exists in Active Directory.
-                try
-                {
-                    Group group = new Group(ad, ad.GetGUIDBySAMAccountName(GetGroupName(roleName)));
-                    
-                    // The group exists.
-                    return true;
-                }
-                catch
-                {
-                    // The group does not exist.
-                    return false;
-                }
+                return roles.ContainsKey(roleName);
             }
             else
             {
@@ -970,6 +739,66 @@ namespace Galactic.Web.Security
                 {
                     throw new ArgumentNullException("roleName");
                 }
+            }
+        }
+
+        // Saves the currently defined roles and membership to the supplied configuration item.
+        private static bool SaveRoles()
+        {
+            if (configItem != null)
+            {
+                if (roles != null)
+                {
+                    try
+                    {
+                        // Build a string from the role data in the application.
+                        StringBuilder builder = new StringBuilder();
+                        foreach (string roleName in roles.Keys)
+                        {
+                            builder.Append(roleName + "=[\n");
+                            foreach (string memberName in roles[roleName])
+                            {
+                                builder.Append(memberName + "\n");
+                            }
+                            builder.Append("]\n");
+                        }
+                        // Save the role data to the configuration item.
+                        configItem.Value = builder.ToString();
+
+                        // The role data was successfully saved.
+                        return true;
+                    }
+                    catch
+                    {
+                        // There was an error saving the role data to the configuration item.
+                        return false;
+                    }
+                }
+            }
+            // The configuration item or roles dictionary for this provider is not defined.
+            return false;
+        }
+
+        // Determines whether the user exists within the application (is assigned to any role).
+        private bool UserExists(string username)
+        {
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                bool exists = false;
+                foreach (string role in GetAllRoles())
+                {
+                    if (roles[role].Contains(username))
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+                return exists;
+            }
+            else
+            {
+                // A username was not supplied.
+                return false;
             }
         }
     }

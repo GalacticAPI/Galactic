@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Galactic.Web.Security")]
+[assembly: AssemblyTitle("Galactic.Web.Security.ActiveDirectory")]
 [assembly: AssemblyDescription("A .NET application role provider that uses Microsoft Active Directory groups as the backend for roles.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Galactic API Team")]
-[assembly: AssemblyProduct("Galactic.Web.Security")]
+[assembly: AssemblyProduct("Galactic.Web.Security.ActiveDirectory")]
 [assembly: AssemblyCopyright("Copyright © 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("8168ed5e-408e-440e-a237-410b5595a610")]
+[assembly: Guid("476bdc9d-3617-487a-8c0b-98aadca7ae5d")]
 
 // Version information for an assembly consists of the following four values:
 //

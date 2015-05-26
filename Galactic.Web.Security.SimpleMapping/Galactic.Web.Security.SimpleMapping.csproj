@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{05E8F87B-1C98-4857-AB91-0E31F892A042}</ProjectGuid>
+    <ProjectGuid>{0C6C7304-03BC-48EA-9A0B-ECFA7C584004}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Galactic.Web.Security</RootNamespace>
-    <AssemblyName>Galactic.Web.Security</AssemblyName>
+    <RootNamespace>Galactic.Web.Security.SimpleMapping</RootNamespace>
+    <AssemblyName>Galactic.Web.Security.SimpleMapping</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,7 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Galactic.Web.Security.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Galactic.Web.Security.SimpleMapping.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,29 +30,28 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Galactic.Web.Security.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Galactic.Web.Security.SimpleMapping.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.DirectoryServices.Protocols" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Versioning\AutoAssemblyVersion.cs">
       <Link>AutoAssemblyVersion.cs</Link>
     </Compile>
-    <Compile Include="SimpleMappingRoleProvider.cs" />
-    <Compile Include="ActiveDirectoryRoleProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleMappingRoleProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Galactic.ActiveDirectory\Galactic.ActiveDirectory.csproj">
-      <Project>{be9d78c1-4339-40ed-b969-7a6c8efda816}</Project>
-      <Name>Galactic.ActiveDirectory</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Galactic.Configuration\Galactic.Configuration.csproj">
       <Project>{544a08d2-50dc-43cf-847e-f922261477b4}</Project>
       <Name>Galactic.Configuration</Name>
