@@ -1385,6 +1385,17 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Sets the object that is the base for all searches within Active Directory.
+        /// This only needs to be set if you need to search somewhere other than the base of the directory.
+        /// </summary>
+        /// <param name="distinguishedName">The distinguished name of the object where searches will begin. (Typically an OU or the base DN of the directory.)</param>
+        /// <returns>True if the search base was set, false otherwise.</returns>
+        public bool SetSearchBase(string distinguishedName)
+        {
+            return ldap.SetSearchBaseAndScope(distinguishedName);
+        }
+
+        /// <summary>
         /// Tests whether an integer contains a UserAccountControl flag.
         /// </summary>
         /// <param name="accountControlValue">The integer to test.</param>
