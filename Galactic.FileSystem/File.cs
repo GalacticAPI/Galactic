@@ -123,6 +123,79 @@ namespace Galactic.FileSystem
         }
 
         /// <summary>
+        /// Copies a file to a new location.
+        /// </summary>
+        /// <param name="path">The path of the file to move.</param>
+        /// <param name="newPath">The destination path to copy the file to.</param>
+        /// <param name="overwrite">Whether to overwrite the contents of a file if it already exists.</param>
+        /// <returns>True if the file was copied. False otherwise.</returns>
+        static public bool Copy(string path, string newPath, bool overwrite = false)
+        {
+            if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(newPath))
+            {
+                // Determine if the path is a file.
+                if (SystemFile.Exists(path))
+                {
+                    // It is a file.
+                    try
+                    {
+                        FileInfo info = new FileInfo(path);
+                        try
+                        {
+                            try
+                            {
+                                info.CopyTo(newPath + @"\" + info.Name, overwrite);
+                                return true;
+                            }
+                            catch (DirectoryNotFoundException)
+                            {
+                                // The directory specified in the newPath does not exist.
+                                return false;
+                            }
+                            catch (IOException)
+                            {
+                                // An I/O error occurs, such as the destination file already exists or the destination device is not ready.
+                                return false;
+                            }
+                            catch (NotSupportedException)
+                            {
+                                // The newPath contains a colon (:) within the string but does not specify the volume. 
+                                return false;
+                            }
+                            catch (SecurityException)
+                            {
+                                // We don't have the permissions required to copy the file.
+                                return false;
+                            }
+                            catch (UnauthorizedAccessException)
+                            {
+                                // The destination file name is a directory or is on another drive.
+                                return false;
+                            }
+                        }
+                        catch (SecurityException)
+                        {
+                            // We don't have permissions to get information about the file's parent directory.
+                            return false;
+                        }
+                    }
+                    catch (SecurityException)
+                    {
+                        // We don't have the permissions required to get information about the file.
+                        return false;
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Access to the file was denied.
+                        return false;
+                    }
+                }
+            }
+            // Null or empty paths were supplied or the file to move does not exist.
+            return false;
+        }
+
+        /// <summary>
         /// Creates or overwrites a file at the supplied path location.
         /// </summary>
         /// <param name="path">The path to the location to create the file at.</param>
@@ -394,6 +467,47 @@ namespace Galactic.FileSystem
             {
                 // A path was not supplied.
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the size of a file in bytes.
+        /// </summary>
+        /// <param name="path">The path to the file.</param>
+        /// <returns>The size of the file in bytes, or a negative file size if there was error retrieving this information.</returns>
+        static public long GetSizeInBytes(string path)
+        {
+            // Check that a path is supplied.
+            if (!string.IsNullOrEmpty(path))
+            {
+                // A path is supplied.
+
+                // Check whether the file exits.
+                if (SystemFile.Exists(path))
+                {
+                    // The file exists.
+                    try
+                    {
+                        // Get the size of the file in bytes.
+                        FileInfo fileInfo = new FileInfo(path);
+                        return fileInfo.Length;
+                    }
+                    catch
+                    {
+                        // There was an error getting the size information from the file.
+                        return -1;
+                    }
+                }
+                else
+                {
+                    // The file does not exist.
+                    return -1;
+                }
+            }
+            else
+            {
+                // A path was not supplied.
+                return -1;
             }
         }
 
