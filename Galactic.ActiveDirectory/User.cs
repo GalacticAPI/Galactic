@@ -359,6 +359,17 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// The user's security identifier (SID).
+        /// </summary>
+        public byte[] SecurityIdentifier
+        {
+            get
+            {
+                return GetByteAttributeValue("objectSid");
+            }
+        }
+
+        /// <summary>
         /// The user's street address.
         /// </summary>
         public string StreetAddress
