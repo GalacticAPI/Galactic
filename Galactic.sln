@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.ActiveDirectory", "Galactic.ActiveDirectory\Galactic.ActiveDirectory.csproj", "{BE9D78C1-4339-40ED-B969-7A6C8EFDA816}"
 EndProject
@@ -49,6 +49,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Web.Security.SimpleMapping", "Galactic.Web.Security.SimpleMapping\Galactic.Web.Security.SimpleMapping.csproj", "{0C6C7304-03BC-48EA-9A0B-ECFA7C584004}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Web.Security.ActiveDirectory", "Galactic.Web.Security.ActiveDirectory\Galactic.Web.Security.ActiveDirectory.csproj", "{0AB44761-30E7-4260-87AF-57969A606A05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Web.Security.SimpleActiveDirectory", "Galactic.Web.Security.SimpleActiveDirectory\Galactic.Web.Security.SimpleActiveDirectory.csproj", "{00CA1D12-480D-44E7-9FA9-8D6BF07FE307}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -136,6 +138,10 @@ Global
 		{0AB44761-30E7-4260-87AF-57969A606A05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AB44761-30E7-4260-87AF-57969A606A05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AB44761-30E7-4260-87AF-57969A606A05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00CA1D12-480D-44E7-9FA9-8D6BF07FE307}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00CA1D12-480D-44E7-9FA9-8D6BF07FE307}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00CA1D12-480D-44E7-9FA9-8D6BF07FE307}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00CA1D12-480D-44E7-9FA9-8D6BF07FE307}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
