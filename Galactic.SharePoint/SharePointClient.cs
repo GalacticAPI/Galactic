@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using Microsoft.SharePoint.Client;
 using Galactic.Configuration;
+using GalFile = Galactic.FileSystem.File;
 
 namespace Galactic.SharePoint
 {
@@ -12,6 +13,9 @@ namespace Galactic.SharePoint
 
         // A CAML query that will retrieve all items from a list.
         private const string CAML_GET_ALL_ITEMS = "<View><Query><OrderBy><FieldRef Name='ID' /></OrderBy></Query></View>";
+
+        // The default size of NTFS file clusters in bytes.
+        private const int NTFS_FILE_CLUSTER_SIZE_IN_BYTES = 16384;
 
         // ---------- VARIABLES ----------
 
@@ -74,6 +78,64 @@ namespace Galactic.SharePoint
         public void Dispose()
         {
             clientContext.Dispose();
+        }
+
+        /// <summary>
+        /// Downloads a file from the SharePoint server with the specified relative URL.
+        /// </summary>
+        /// <param name="relativeUrl">The relative URL of the file to retrieve from the base of the web application containing it.</param>
+        /// <param name="downloadPath">The path to the directory that the file should be downloaded to.</param>
+        /// <returns>True if the file was downloaded, false otherwise.</returns>
+        public bool DownloadFileByUrl(string relativeUrl, string downloadPath)
+        {
+            if (!string.IsNullOrWhiteSpace(relativeUrl) && Directory.Exists(downloadPath))
+            {
+                try
+                {
+                    // Get information about the file from SharePoint.
+                    FileInformation fileInfo = Microsoft.SharePoint.Client.File.OpenBinaryDirect(clientContext, relativeUrl);
+
+                    // Get a reader for the file's contents.
+                    BinaryReader reader = new BinaryReader(fileInfo.Stream);
+
+                    // Get the segments of the relative path supplied.
+                    string[] pathParts = relativeUrl.Split('/');
+
+                    // Create a new file and get a stream of it for writing.
+                    FileStream fileStream = GalFile.Create(downloadPath + pathParts[pathParts.Length - 1]);
+
+                    // Get a writer from the file stream created above.
+                    BinaryWriter writer = new BinaryWriter(fileStream);
+
+                    // Create a buffer for reading / writing data that is the default size of NTFS file clusters.
+                    byte[] buffer = new byte[NTFS_FILE_CLUSTER_SIZE_IN_BYTES];
+
+                    // Tracks the number of bytes read from the current read.
+                    int numBytesRead = reader.Read(buffer, 0, buffer.Length);
+
+                    // Keep reading while there are bytes left in the file to read.
+                    while (numBytesRead > 0)
+                    {
+                        // Write to the new file.
+                        writer.Write(buffer, 0, numBytesRead);
+
+                        // Read more bytes.
+                        numBytesRead = reader.Read(buffer, 0, buffer.Length);
+                    }
+
+                    // The file was successfully downloaded.
+                    return true;
+                }
+                catch
+                {
+                    // There was an error downloading the file.
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>

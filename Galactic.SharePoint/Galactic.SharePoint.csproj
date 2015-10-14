@@ -65,6 +65,10 @@
       <Project>{f4453732-46d4-4e66-aa0a-31743139704c}</Project>
       <Name>Galactic.EventLog</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Galactic.FileSystem\Galactic.FileSystem.csproj">
+      <Project>{7fd65b20-0363-433b-b026-edce5e4ec35d}</Project>
+      <Name>Galactic.FileSystem</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
