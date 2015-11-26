@@ -118,22 +118,52 @@ namespace Galactic.SharePoint
         {
             if (item != null)
             {
-                ListItemCreationInformation creationInfo = new ListItemCreationInformation
-                {
-                    LeafName = item.DisplayName
-                };
-                ListItem listItem = List.AddItem(creationInfo);
-                List.Update();
+                Add(item.DisplayName, item.Fields);
+            }
+        }
 
-                // Add field values.
-                foreach (KeyValuePair<string, object> field in item.Fields)
+        /// <summary>
+        /// Adds a list item to the list.
+        /// </summary>
+        /// <param name="name">The name of the item to add.</param>
+        /// <param name="fields">A dictionary of names and values of the fields of the list item.</param>
+        /// <returns>The SharePointList item that was added to the list, or null if there was an error adding it.</returns>
+        public SharePointListItem Add(string name, Dictionary<string, object> fields)
+        {
+            if (!string.IsNullOrWhiteSpace(name) && fields != null)
+            {
+                try
                 {
-                    listItem[field.Key] = field.Value;
+                    ListItemCreationInformation creationInfo = new ListItemCreationInformation
+                    {
+                        LeafName = name
+                    };
+                    ListItem listItem = List.AddItem(creationInfo);
+                    List.Update();
+                    
+                    // Add field values.
+                    foreach (KeyValuePair<string, object> field in fields)
+                    {
+                        listItem[field.Key] = field.Value;
+                    }
+                    listItem.Update();
+
+                    // Update the server with the changes.
+                    List.Context.ExecuteQuery();
+
+                    // Return the newly created list item.
+                    return new SharePointListItem(listItem);
                 }
-                listItem.Update();
-
-                // Update the server with the changes.
-                List.Context.ExecuteQuery();
+                catch
+                {
+                    // There was an error adding the list item.
+                    return null;
+                }
+            }
+            else
+            {
+                // Not enough information was provided to create the list item.
+                return null;
             }
         }
 

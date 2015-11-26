@@ -130,5 +130,32 @@ namespace Galactic.SharePoint
         {
             return new SharePointDocument(listItem);
         }
+
+        /// <summary>
+        /// Updates the a field within a SharePointListItem with the specified value.
+        /// </summary>
+        /// <param name="fieldName">The name of the field to update.</param>
+        /// <param name="fieldValue">The value to assign to the field.</param>
+        /// <returns>True if the item was updated, false otherwise.</returns>
+        public bool UpdateField(string fieldName, object fieldValue)
+        {
+            if (!string.IsNullOrWhiteSpace(fieldName) || fieldValue != null)
+            {
+                try
+                {
+                    // Update the field's value on the server.
+                    listItem[fieldName] = fieldValue;
+                    listItem.Update();
+                    listItem.Context.ExecuteQuery();
+                }
+                catch
+                {
+                    // There was an error updating the field values.
+                    return false;
+                }
+            }
+            // The values were changed, or no updates were necessary.
+            return true;
+        }
     }
 }
