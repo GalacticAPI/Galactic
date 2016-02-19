@@ -10,6 +10,7 @@ using System.IO;
 using System.Security;
 using System.Security.Principal;
 using System.Text;
+using DSAD = System.DirectoryServices.ActiveDirectory;
 
 namespace Galactic.ActiveDirectory
 {
@@ -579,46 +580,49 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Binds to Active Directory. Uses the current session credentials to authenticate.
         /// </summary>
-        /// <param name="domainName">The DNS style domain name of the Active Directory to connect to.</param>
-        public ActiveDirectory(string domainName)
+        /// <param name="domainName">(Optional) The DNS style domain name of the Active Directory to connect to. If left unspecified, the domain that the computer is currently connected to will be used.</param>
+        public ActiveDirectory(string domainName = null)
         {
             string siteName = DEFAULT_FIRST_SITE_NAME;
-            if (!string.IsNullOrWhiteSpace(domainName))
-            {
-                try
-                {
-                    // Get a list of domain controllers from a specific site, if one was supplied.
-                    List<string> domainControllers = new List<string>();
-                    if (!string.IsNullOrWhiteSpace(siteName))
-                    {
-                        domainControllers = GetSiteDomainControllers(domainName, siteName);
-                    }
 
-                    if (domainControllers.Count == 0)
-                    {
-                        // Create the connection to the domain controller serving the current computer.
-                        ldap = new Galactic_LDAP(new List<string> { domainName }, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, null, null, domainName, true);
-                    }
-                    else
-                    {
-                        // Create the connection to the domain controllers serving the specified site.
-                        ldap = new Galactic_LDAP(domainControllers, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, null, null, domainName, true);
-                    }
-
-                    // Set the default search base and scope.
-                    ldap.SetSearchBaseAndScope(DistinguishedName);
-                }
-                catch
-                {
-                    throw new ArgumentException("Unable to establish connection to Active Directory.");
-                }
-            }
-            else
+            if (string.IsNullOrWhiteSpace(domainName))
             {
+                using (DSAD.Domain domain = DSAD.Domain.GetComputerDomain())
+                {
+                    domainName = domain.Name;
+                }
                 if (string.IsNullOrWhiteSpace(domainName))
                 {
-                    throw new ArgumentNullException("domainName");
+                    throw new ArgumentNullException("domainName", "Specified domain name is invalid. Unable to autodetect Active Directory domain.");
                 }
+            }
+
+            try
+            {
+                // Get a list of domain controllers from a specific site, if one was supplied.
+                List<string> domainControllers = new List<string>();
+                if (!string.IsNullOrWhiteSpace(siteName))
+                {
+                    domainControllers = GetSiteDomainControllers(domainName, siteName);
+                }
+
+                if (domainControllers.Count == 0)
+                {
+                    // Create the connection to the domain controller serving the current computer.
+                    ldap = new Galactic_LDAP(new List<string> { domainName }, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, null, null, domainName, true);
+                }
+                else
+                {
+                    // Create the connection to the domain controllers serving the specified site.
+                    ldap = new Galactic_LDAP(domainControllers, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, null, null, domainName, true);
+                }
+
+                // Set the default search base and scope.
+                ldap.SetSearchBaseAndScope(DistinguishedName);
+            }
+            catch
+            {
+                throw new ArgumentException("Unable to establish connection to Active Directory.");
             }
         }
 
