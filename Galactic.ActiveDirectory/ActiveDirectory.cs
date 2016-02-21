@@ -577,14 +577,15 @@ namespace Galactic.ActiveDirectory
                 }
             }
         }
+
         /// <summary>
         /// Binds to Active Directory. Uses the current session credentials to authenticate.
         /// </summary>
         /// <param name="domainName">(Optional) The DNS style domain name of the Active Directory to connect to. If left unspecified, the domain that the computer is currently connected to will be used.</param>
-        public ActiveDirectory(string domainName = null)
+        /// <param name="ouDn">(Optional) The distinguished name of the OU to use as a base for operations. If left unspecified, the root of the domain will be used.</param>
+        /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
+        public ActiveDirectory(string domainName = null, string ouDn = null, string siteName = DEFAULT_FIRST_SITE_NAME)
         {
-            string siteName = DEFAULT_FIRST_SITE_NAME;
-
             if (string.IsNullOrWhiteSpace(domainName))
             {
                 using (DSAD.Domain domain = DSAD.Domain.GetComputerDomain())
@@ -618,7 +619,14 @@ namespace Galactic.ActiveDirectory
                 }
 
                 // Set the default search base and scope.
-                ldap.SetSearchBaseAndScope(DistinguishedName);
+                if (!string.IsNullOrWhiteSpace(ouDn))
+                {
+                    ldap.SetSearchBaseAndScope(ouDn);
+                }
+                else
+                {
+                    ldap.SetSearchBaseAndScope(DistinguishedName);
+                }
             }
             catch
             {

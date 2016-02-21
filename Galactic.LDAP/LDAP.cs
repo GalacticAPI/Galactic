@@ -93,7 +93,7 @@ namespace Galactic.LDAP
         /// <param name="userName">(Optional) The user name to use when connecting to the LDAP server.</param>
         /// <param name="password">(Optional) The password to use with the user name provided to connect to the LDAP server.</param>
         /// <param name="domainName">(Optional) The domain or computer name associated with the user credentials provided.</param>
-        /// <param name="useLogonCredentials">(Optional) If enabled, the LDAP connection will use the legon credentials from the current session. Disabled by default.</param>
+        /// <param name="useLogonCredentials">(Optional) If enabled, the LDAP connection will use the logon credentials from the current session. Disabled by default.</param>
         /// </summary>
         public LDAP(List<string> servers, int portNumber, AuthType authType = AuthType.Anonymous, string userName = null, SecureString password = null, string domainName = null, bool useLogonCredentials = false)
         {
