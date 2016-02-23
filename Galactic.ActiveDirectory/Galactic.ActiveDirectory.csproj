@@ -33,10 +33,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DnDns">
-      <HintPath>..\..\SharedLibraries\Release\DnDNS\DnDns.dll</HintPath>
+      <HintPath>..\packages\DnDns.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.Protocols" />
   </ItemGroup>
   <ItemGroup>

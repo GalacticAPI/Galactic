@@ -93,10 +93,11 @@ namespace Galactic.LDAP
         /// <param name="userName">(Optional) The user name to use when connecting to the LDAP server.</param>
         /// <param name="password">(Optional) The password to use with the user name provided to connect to the LDAP server.</param>
         /// <param name="domainName">(Optional) The domain or computer name associated with the user credentials provided.</param>
+        /// <param name="useLogonCredentials">(Optional) If enabled, the LDAP connection will use the logon credentials from the current session. Disabled by default.</param>
         /// </summary>
-        public LDAP(List<string> servers, int portNumber, AuthType authType = AuthType.Anonymous, string userName = null, SecureString password = null, string domainName = null)
+        public LDAP(List<string> servers, int portNumber, AuthType authType = AuthType.Anonymous, string userName = null, SecureString password = null, string domainName = null, bool useLogonCredentials = false)
         {
-            if (servers != null && servers.Count > 0 && portNumber > 0 && !string.IsNullOrWhiteSpace(userName) && password != null)
+            if ((servers != null && servers.Count > 0 && portNumber > 0 && !string.IsNullOrWhiteSpace(userName) && password != null) || (servers != null && servers.Count > 0 && portNumber > 0 && useLogonCredentials))
             {
                 try
                 {
@@ -118,7 +119,15 @@ namespace Galactic.LDAP
                     // Create the connection to the server(s).
                     try
                     {
-                        connection = new LdapConnection(directoryIdentifier, credential, authType);
+                        if(useLogonCredentials)
+                        {
+                            connection = new LdapConnection(directoryIdentifier);
+                        }
+                        else
+                        {
+                            connection = new LdapConnection(directoryIdentifier, credential, authType);
+                        }
+                        
 
                         // Gather information about the LDAP server(s) from the RootDSE entry.
                         SearchResponse rootDSESearchResponse = (SearchResponse)connection.SendRequest(new SearchRequest(null, "(objectClass=*)", SearchScope.Base));
