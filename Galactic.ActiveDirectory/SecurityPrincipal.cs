@@ -353,7 +353,7 @@ namespace Galactic.ActiveDirectory
                             proxyAddresses.Add(proxyAddressToAdd);
 
                             // Set the modifications to the proxyAddress field in the account's AD object.
-                            return SetAttribute("proxyAddresses", new object[] { proxyAddresses.ToArray() });
+                            return SetAttribute("proxyAddresses", proxyAddresses.ToArray());
                         }
                         else
                         {
@@ -367,7 +367,7 @@ namespace Galactic.ActiveDirectory
                 proxyAddresses = new List<string> { proxyAddressToAdd };
 
                 // Set the modifications to the proxyAddress field in the account's AD object.
-                return SetAttribute("proxyAddresses", new object[] { proxyAddresses.ToArray() });
+                return SetAttribute("proxyAddresses", proxyAddresses.ToArray());
             }
             else
             {
@@ -492,7 +492,7 @@ namespace Galactic.ActiveDirectory
                         {
                             // Remove the existing entry.
                             proxyAddresses.Remove(proxyAddressToRemove);
-                            return SetAttribute("proxyAddresses", new object[] { proxyAddresses.ToArray() });
+                            return SetAttribute("proxyAddresses", proxyAddresses.ToArray());
                         }
                         else
                         {
@@ -501,7 +501,7 @@ namespace Galactic.ActiveDirectory
                             {
                                 // Remove the existing entry.
                                 proxyAddresses.Remove(primaryProxyAddressToRemove);
-                                return SetAttribute("proxyAddresses", new object[] { proxyAddresses.ToArray() });
+                                return SetAttribute("proxyAddresses", proxyAddresses.ToArray());
                             }
 
                             // This account did not have an e-mail address matching the one desired.
