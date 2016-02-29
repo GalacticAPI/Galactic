@@ -12,5 +12,5 @@ using System.Reflection;
 [assembly: AssemblyFileVersion("1.3.0.<#= this.RevisionNumber #>")]
 <#+
 	// Set the default date to the date of the last minor version.
-    int RevisionNumber = (int)(DateTime.UtcNow - new DateTime(2015,8,2)).TotalDays;
+    int RevisionNumber = (int)(DateTime.UtcNow - new DateTime(2016,2,29)).TotalDays;
 #>
