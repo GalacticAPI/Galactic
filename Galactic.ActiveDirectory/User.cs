@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Text;
 
 namespace Galactic.ActiveDirectory
 {
@@ -612,7 +613,9 @@ namespace Galactic.ActiveDirectory
         /// <returns>True if the password was set, false otherwise.</returns>
         public bool SetPassword(string password)
         {
-            return SetStringAttribute("unicodePwd", password);
+            // Create a UTF16 array of bytes from the supplied password.
+            byte[] bytes = Encoding.Unicode.GetBytes("\"" + password + "\"");
+            return SetAttribute("unicodePwd", new object[] { bytes });
         }
 
         /// <summary>
