@@ -12,7 +12,7 @@ Build Requirements:
 
 To accomodate automatic assembly versioning, this solution requires that the following be installed:
 
-Microsoft Visual Studio 2015 SDK - http://www.microsoft.com/en-us/download/details.aspx?id=46850
+Microsoft Visual Studio Extensibility Tools (formerly the Visual Studio SDK in releases prior to 2015)
 
 Modeling SDK for Visual Studio 2015 - http://www.microsoft.com/en-us/download/details.aspx?id=48148
 
