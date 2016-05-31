@@ -513,15 +513,18 @@ namespace Galactic.ActiveDirectory
                 List<DirectoryAttribute> attributes = new List<DirectoryAttribute>
                 {
                     new DirectoryAttribute("sAMAccountName", sAMAccountName),
-                    new DirectoryAttribute("objectClass", "user"),
-                    new DirectoryAttribute("userPrincipalName", sAMAccountName + "@" + ad.Name)
+                    new DirectoryAttribute("objectClass", "user")
                 };
                 if (additionalAttributes != null)
                 {
                     // Only add non conflicting attributes.
+                    if(!additionalAttributes.Exists(x => String.Equals(x.Name, "userPrincipalName", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        attributes.Add(new DirectoryAttribute("userPrincipalName", sAMAccountName + "@" + ad.Name));
+                    }
                     foreach (DirectoryAttribute attribute in additionalAttributes)
                     {
-                        if (attribute.Name != "sAMAccountName" && attribute.Name != "objectClass" && attribute.Name != "userPrincipalName")
+                        if (attribute.Name != "sAMAccountName" && attribute.Name != "objectClass")
                         {
                             attributes.Add(attribute);
                         }
