@@ -1453,6 +1453,42 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Gets a Interval value of the supplied DateTime.
+        /// Interval attributes are stored as Windows File Time strings with the number of 100-nanosecond intervals that have elapsed since 12:00 midnight, January 1, 1601 AD, UTC.
+        /// </summary>
+        /// <param name="date">The DateTime object to convert into an Interval value.</param>
+        /// <returns>The Interval (string) value of the supplied DateTime, or null if it could not be converted.</returns>
+        static public string ToInterval(DateTime date)
+        {
+            try
+            {
+                return date.ToFileTimeUtc().ToString();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets a Interval value of the supplied UInt64.
+        /// Interval attributes are stored as Windows File Time strings with the number of 100-nanosecond intervals that have elapsed since 12:00 midnight, January 1, 1601 AD, UTC.
+        /// </summary>
+        /// <param name="unsigned">The UInt64 to convert into an Interval value.</param>
+        /// <returns>The Interval (string) value of the supplied Uint64, or null if it could not be converted.</returns>
+        static public string ToInterval(UInt64 unsigned)
+        {
+            try
+            {
+                return unsigned.ToString();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Tests whether an integer contains a UserAccountControl flag.
         /// </summary>
         /// <param name="accountControlValue">The integer to test.</param>

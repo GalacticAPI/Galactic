@@ -305,11 +305,11 @@ namespace Galactic.ActiveDirectory
             {
                 if (value)
                 {
-                    SetAttribute("pwdLastSet", new object[] { BitConverter.GetBytes(0) });
+                    SetAttribute("pwdLastSet", new object[] { ActiveDirectory.ToInterval(0) });
                 }
                 else
                 {
-                    SetAttribute("pwdLastSet", new object[] { BitConverter.GetBytes(-1) });
+                    SetAttribute("pwdLastSet", new object[] { "-1" });
                 }
             }
         }
