@@ -513,14 +513,16 @@ namespace Galactic.ActiveDirectory
                 List<DirectoryAttribute> attributes = new List<DirectoryAttribute>
                 {
                     new DirectoryAttribute("sAMAccountName", sAMAccountName),
-                    new DirectoryAttribute("objectClass", "user")
+                    new DirectoryAttribute("objectClass", "user"),
+                    new DirectoryAttribute("userPrincipalName", sAMAccountName + "@" + ad.Name)
                 };
                 if (additionalAttributes != null)
                 {
                     // Only add non conflicting attributes.
-                    if(!additionalAttributes.Exists(x => String.Equals(x.Name, "userPrincipalName", StringComparison.OrdinalIgnoreCase)))
+                    if (additionalAttributes.Exists(x => String.Equals(x.Name, "userPrincipalName", StringComparison.OrdinalIgnoreCase)))
                     {
-                        attributes.Add(new DirectoryAttribute("userPrincipalName", sAMAccountName + "@" + ad.Name));
+                        //Removes default UPN from attribute list.
+                        attributes.RemoveAll(x => String.Equals(x.Name, "userPrincipalName", StringComparison.OrdinalIgnoreCase));
                     }
                     foreach (DirectoryAttribute attribute in additionalAttributes)
                     {
