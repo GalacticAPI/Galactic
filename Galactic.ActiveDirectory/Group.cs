@@ -336,7 +336,7 @@ namespace Galactic.ActiveDirectory
                 {
                     dns.Add(principal.DistinguishedName);
                 }
-                return DeleteAttribute("member", new object[] { dns.ToArray() });
+                return DeleteAttribute("member", dns.ToArray());
             }
             return false;
         }

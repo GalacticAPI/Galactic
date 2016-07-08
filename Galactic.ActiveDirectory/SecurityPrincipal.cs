@@ -392,6 +392,21 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Removes this principal from the supplied group.
+        /// </summary>
+        /// <param name="guid">The GUID of the group to add the principal to.</param>
+        /// <returns>True if the principal was added, false otherwise.</returns>
+        public bool RemoveFromGroup(Guid guid)
+        {
+            if (guid != Guid.Empty)
+            {
+                Group group = new Group(AD, guid);
+                return group.RemoveMembers(new List<SecurityPrincipal>() { this });
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Checks if this principal is a member of the supplied group.
         /// </summary>
         /// <param name="guid">The GUID of the group to check.</param>
