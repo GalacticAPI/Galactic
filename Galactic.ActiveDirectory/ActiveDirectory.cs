@@ -146,8 +146,8 @@ namespace Galactic.ActiveDirectory
 
             /// <summary>
             /// This is a computer account for a computer that is running Microsoft Windows NT 4.0
-            /// Workstation, Microsoft Windows NT 4.0 Server, Microsoft Windowser 2000 Professional,
-            /// or Widnows 2000 Server and is a member of this domain.
+            /// Workstation, Microsoft Windows NT 4.0 Server, Microsoft Windows 2000 Professional,
+            /// or Windows 2000 Server and is a member of this domain.
             /// </summary>
             WorkstationTrustAccount = 0x1000,
 
@@ -205,7 +205,7 @@ namespace Galactic.ActiveDirectory
 
             /// <summary>
             /// (Windows 2000/Windows Server 2003) The account is enabled for delegation. This is a security-sensitive
-            /// setting. Accounts that have this option enabled should be tightly controlled. Thsi setting lets a service
+            /// setting. Accounts that have this option enabled should be tightly controlled. This setting lets a service
             /// that runs under the account assume a client's identity and authenticate as that user to other remote servers
             /// on the network.
             /// </summary>
@@ -731,7 +731,7 @@ namespace Galactic.ActiveDirectory
         /// <param name="name">The name of the attribute that should have its value deleted.</param>
         /// <param name="entry">The SearchResultEntry containing the attribute to delete.</param>
         /// <param name="values">Optional: The specific values to delete. If null, all values will be deleted. Defaults to null.</param>
-        /// <returns>True if the attribute's valuea are deleted, false otherwise.</returns>
+        /// <returns>True if the attribute's values are deleted, false otherwise.</returns>
         public bool DeleteAttribute(string name, SearchResultEntry entry, object[] values = null)
         {
             try
@@ -818,7 +818,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         /// <param name="domainName">The DNS domain name of the Active Directory to retrieve the domain controllers for.</param>
         /// <param name="siteName">The name of the site to retrieve the domain controllers for.</param>
-        /// <returns>A list containg the FQDNs of the domain controllers in the specified site, or an empty list if they could not be retrieved.</returns>
+        /// <returns>A list containing the FQDNs of the domain controllers in the specified site, or an empty list if they could not be retrieved.</returns>
         static public List<String> GetSiteDomainControllers(string domainName, string siteName)
         {
             if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(siteName))

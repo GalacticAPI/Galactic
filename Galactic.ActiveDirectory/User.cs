@@ -614,6 +614,47 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Gets of all user accounts that were modified within the specified time frame.
+        /// </summary>
+        /// <param name="ad">The Active Directory to retrieve users from.</param>
+        /// <param name="startDate">The lower boundary of the time frame.</param>
+        /// <param name="endDate">The upper boundary of the time frame.</param>
+        /// <returns>Returns a list of all users that were during the specified period of time.</returns>
+        static public List<User> GetModifiedUsers(ActiveDirectory ad, DateTime startDate, DateTime endDate)
+        {
+            // The LDAP search filter to use to find all the users.
+            string FILTER = String.Format("(&(objectCategory=person)(objectClass=user)(whenChanged>={0})(whenChanged<={1}))", startDate.ToUniversalTime().ToString("yyyyMMddHHmmss.s") + "Z", endDate.ToUniversalTime().ToString("yyyyMMddHHmmss.s") + "Z");
+
+            if (ad != null)
+            {
+                // Get the GUIDs of all the users in AD.
+
+                // Create a list of attributes that should be retrieved with the query.
+                List<string> attributes = new List<string>();
+                attributes.AddRange(ActiveDirectoryObject.AttributeNames);
+                attributes.AddRange(SecurityPrincipal.AttributeNames);
+                attributes.AddRange(AttributeNames);
+
+                // Search for the users in AD.
+                List<SearchResultEntry> entries = ad.GetEntries(FILTER, attributes);
+
+                // Check whether the search returned results.
+                if (entries != null)
+                {
+                    // The search returned results.
+                    // Get user objects from the entries retrieved.
+                    List<User> users = new List<User>();
+                    foreach (SearchResultEntry entry in entries)
+                    {
+                        users.Add(new User(ad, entry));
+                    }
+                    return users;
+                }
+            }
+            return new List<User>();
+        }
+
+        /// <summary>
         /// Sets the password of the user.
         /// </summary>
         /// <param name="password">The new password to use for the user.</param>
