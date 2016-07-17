@@ -179,6 +179,39 @@ namespace Galactic.Configuration
         // ----- METHODS -----
 
         /// <summary>
+        /// Creates a new configuration file that can then be loaded normally.
+        /// Note: This will NOT overwrite an existing file.
+        /// </summary>
+        /// <param name="folderPath">The path of the folder to create the configuration item.</param>
+        /// <param name="name">The name of the configuration item to create.</param>
+        /// <returns>True if the file was created or already exists, false if an error prevented it from being created.</returns>
+        public static bool Create(string folderPath, string name)
+        {
+            string fullPath = folderPath + name + FILE_EXTENSION;
+            if (!File.Exists(fullPath))
+            {
+                // Create the file.
+                try
+                {
+                    // Create and close the file.
+                    File file = new File(fullPath, false);
+                    file.Close();
+                    return true;
+                }
+                catch
+                {
+                    // There was an error creating the file.
+                    return false;
+                }
+            }
+            else
+            {
+                // The file already exists.
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Deletes the configuration item.
         /// </summary>
         /// <returns>True if the item was deleted, false otherwise.</returns>
@@ -300,26 +333,30 @@ namespace Galactic.Configuration
         /// <returns>The value or null if not found or it could not be decrypted.</returns>
         protected string SecureGet(EventLog.EventLog log)
         {
-            // Get the encrypted connection string containing the key, initialization vector, value, and key and
-            // initialization vector lengths from the file.
-            // Read only the first line of the file, as this is all that is necessary for the encrypted
-            // format.
-            StringReader reader = new StringReader(Get(log));
-            string encryptedValue = reader.ReadLine();
+            // Get the raw value of the encrypted string.
+            string value = Get(log);
 
-            // Check that an encrypted value was retrieved.
-            if (!string.IsNullOrWhiteSpace(encryptedValue))
+            // Decrypt the string if the raw value contains one.
+            if (!string.IsNullOrWhiteSpace(value))
             {
-                // The encrypted value was retrieved.
+                // Get the encrypted string containing the key, initialization vector, value, and key and
+                // initialization vector lengths from the file.
+                // Read only the first line of the file, as this is all that is necessary for the encrypted
+                // format.
+                StringReader reader = new StringReader(Get(log));
+                string encryptedValue = reader.ReadLine();
 
-                // Decrypt the encrypted value.
-                return AES256.DecryptConsolidatedString(encryptedValue);
+                // Check that an encrypted value was retrieved.
+                if (!string.IsNullOrWhiteSpace(encryptedValue))
+                {
+                    // The encrypted value was retrieved.
+
+                    // Decrypt the encrypted value.
+                    return AES256.DecryptConsolidatedString(encryptedValue);
+                }
             }
-            else
-            {
-                // Could not retrieve the encrypted value.
-                return null;
-            }
+            // Could not retrieve the encrypted value.
+            return null;
         }
 
         /// <summary>
