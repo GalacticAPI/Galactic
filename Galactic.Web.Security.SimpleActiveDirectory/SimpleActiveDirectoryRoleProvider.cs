@@ -377,17 +377,29 @@ namespace Galactic.Web.Security.SimpleActiveDirectory
 
             if (!string.IsNullOrWhiteSpace(username))
             {
-                User user = new User(ad, ad.GetGUIDBySAMAccountName(username));
-                List<string> groupDns = user.Groups;
-
                 // The list of roles that the user belongs to.
                 List<string> roles = new List<string>();
 
-                // Get the SAMAccountName of each group the user is a member of and add it as a role.
-                foreach (string groupDn in groupDns)
+                // Check whether the user's GUID is found.
+                // If there is an error accessing the user's information all role processing will be skipped.
+                Guid userGuid = ad.GetGUIDBySAMAccountName(username);
+                if (userGuid != Guid.Empty)
                 {
-                    Group group = new Group(ad, ad.GetEntryByDistinguishedName(groupDn));
-                    roles.Add(group.SAMAccountName);
+                    User user = new User(ad, userGuid);
+                    List<string> groupDns = user.Groups;
+
+                    // Get the SAMAccountName of each group the user is a member of and add it as a role.
+                    foreach (string groupDn in groupDns)
+                    {
+                        // Check that the group's entry was found by its distinguished name.
+                        // If there is an error accessing the group's information, the group will not be added to the list of roles.
+                        System.DirectoryServices.Protocols.SearchResultEntry groupEntry = ad.GetEntryByDistinguishedName(groupDn);
+                        if (groupEntry != null)
+                        {
+                            Group group = new Group(ad, groupEntry);
+                            roles.Add(group.SAMAccountName);
+                        }
+                    }
                 }
 
                 // Return the list of roles to which the user belongs.

@@ -1204,7 +1204,7 @@ namespace Galactic.ActiveDirectory
         {
             if (!string.IsNullOrEmpty(filter))
             {
-                // Search the directory for an entry with the specified SAM account name.
+                // Search the directory for entries that match the filter.
                 List<SearchResultEntry> entries = GetEntries(filter, attributes);
 
                 if (entries != null && entries.Count > 0)
