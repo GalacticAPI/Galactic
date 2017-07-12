@@ -54,6 +54,12 @@
       <Name>Galactic.Sql</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SQLScripts\SqlEventLog-CreateTables.sql" />
+    <None Include="SQLScripts\SqlEventLog-DropTables.sql" />
+    <None Include="SQLScripts\SqlEventLog-InitializeTables.sql" />
+    <None Include="SQLScripts\SqlEventLog-StoredProcedures.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>call "$(SolutionDir)PostBuild.bat" "$(SolutionDir)" $(SolutionName) $(ProjectName) $(ConfigurationName) "$(TargetPath)" $(TargetFileName)</PostBuildEvent>
