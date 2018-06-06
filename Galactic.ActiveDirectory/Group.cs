@@ -117,6 +117,26 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// The number of members in the group. 
+        /// </summary>
+        public int MemberCount
+        {
+            get
+            {
+                List<string> dns = GetStringAttributeValues("member");
+                if (dns != null)
+                {
+                    //Count number of DNs listed.
+                    return dns.Count;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        /// <summary>
         /// Users who are members of the group.
         /// </summary>
         public List<User> UserMembers
