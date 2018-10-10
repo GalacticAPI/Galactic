@@ -57,12 +57,27 @@ namespace Galactic.SharePoint
                     contextUrl = reader.ReadLine();
                 }
 
-                // Initialize the client context.
-                clientContext = new ClientContext(contextUrl)
+                clientContext = new ClientContext(contextUrl);
+                // Initialize the client context for the environment in use
+                /*
+                 * I'm sure there's a better way to detect the SharePoint
+                 * implementation but this should work for now without
+                 * breaking anything.
+                 * */
+                if (contextUrl.Contains(".sharepoint.com"))
                 {
-                    // Add the credentials to the SharePoint context.
-                    Credentials = new NetworkCredential(userName, password, domain)
-                };
+                    //SharePoint Online (cloud)
+                    System.Security.SecureString securePassWord = new System.Security.SecureString();
+
+                    foreach (char c in password.ToCharArray()) securePassWord.AppendChar(c);
+
+                    clientContext.Credentials = new SharePointOnlineCredentials(userName, securePassWord);
+                }
+                else
+                {
+                    //SharePoint (on-prem)
+                    clientContext.Credentials = new NetworkCredential(userName, password, domain);
+                }
             }
             else
             {
