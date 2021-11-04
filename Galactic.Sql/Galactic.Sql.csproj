@@ -1,70 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BAFD7D99-D809-439E-AD60-AA4073533D88}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Galactic.Sql</RootNamespace>
-    <AssemblyName>Galactic.Sql</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net5.0</TargetFramework>
+    <ReleaseVersion>2.0.0.0</ReleaseVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Galactic.Sql.XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Galactic.Sql.XML</DocumentationFile>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
+    <ProjectReference Include="..\Galactic.EventLog\Galactic.EventLog.csproj" />
+    <ProjectReference Include="..\Galactic.FileSystem\Galactic.FileSystem.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\Versioning\AutoAssemblyVersion.cs">
-      <Link>AutoAssemblyVersion.cs</Link>
-    </Compile>
-    <Compile Include="IStoredProcedure.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SqlRow.cs" />
-    <Compile Include="SqlUtility.cs" />
-    <Compile Include="StoredProcedure.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Galactic.EventLog\Galactic.EventLog.csproj">
-      <Project>{f4453732-46d4-4e66-aa0a-31743139704c}</Project>
-      <Name>Galactic.EventLog</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Galactic.FileSystem\Galactic.FileSystem.csproj">
-      <Project>{7fd65b20-0363-433b-b026-edce5e4ec35d}</Project>
-      <Name>Galactic.FileSystem</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>call "$(SolutionDir)PostBuild.bat" "$(SolutionDir)" $(SolutionName) $(ProjectName) $(ConfigurationName) "$(TargetPath)" $(TargetFileName)</PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

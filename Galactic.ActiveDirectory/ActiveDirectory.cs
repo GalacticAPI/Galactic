@@ -1,16 +1,13 @@
 ﻿using Galactic_LDAP = Galactic.LDAP.LDAP;
-using Galactic.Configuration;
-using DnDns.Enums;
-using DnDns.Query;
-using DnDns.Records;
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
-using System.IO;
+using DnsClient;
+using DnsClient.Protocol;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Principal;
 using System.Text;
-using DSAD = System.DirectoryServices.ActiveDirectory;
 
 namespace Galactic.ActiveDirectory
 {
@@ -312,7 +309,14 @@ namespace Galactic.ActiveDirectory
         {
             get
             {
-                return new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    return new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -363,169 +367,14 @@ namespace Galactic.ActiveDirectory
         // ----- CONSTRUCTORS -----
 
         /// <summary>
-        /// Binds to Active Directory using the configuration in the specified configuration item.
-        /// </summary>
-        /// <param name="configurationItemDirectoryPath">The physical path to the directory where configuration item files can be found.</param>
-        /// <param name="configurationItemName">The name of the configuration item containing the Active Directory configuration.</param>
-        public ActiveDirectory(string configurationItemDirectoryPath, string configurationItemName)
-        {
-            if (!string.IsNullOrWhiteSpace(configurationItemDirectoryPath) && !string.IsNullOrWhiteSpace(configurationItemName))
-            {
-                // Get the configuration item with the connection data from a file.
-                ConfigurationItem configItem = new ConfigurationItem(configurationItemDirectoryPath, configurationItemName, true);
-
-                // Get the connection data from the configuration item.
-                StringReader reader = new StringReader(configItem.Value);
-
-                string domainAndSiteLine = reader.ReadLine();
-
-                // Get the domain name and site name (if specified).
-                string[] domainAndSiteLineSections = new string[] {};
-                if (!string.IsNullOrWhiteSpace(domainAndSiteLine))
-                {
-                    domainAndSiteLineSections = domainAndSiteLine.Split(':');
-                }
-                string domainName = domainAndSiteLineSections[0];
-                string siteName = DEFAULT_FIRST_SITE_NAME;
-                if (domainAndSiteLineSections.Length > 1)
-                {
-                    siteName = domainAndSiteLineSections[1];
-                }
-
-                string userName = reader.ReadLine();
-                SecureString password = new SecureString();
-                int intRead = reader.Read();
-                while (intRead >= 0)
-                {
-                    char c = Convert.ToChar(intRead);
-                    if (c != '\n')
-                    {
-                        password.AppendChar(c);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                    intRead = reader.Read();
-                }
-
-                if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(userName) && password.Length > 0)
-                {
-                    try
-                    {
-                        // Get a list of domain controllers from a specific site, if one was supplied.
-                        List<string> domainControllers = new List<string>();
-                        if (!string.IsNullOrWhiteSpace(siteName))
-                        {
-                            domainControllers = GetSiteDomainControllers(domainName, siteName);
-                        }
-
-                        if (domainControllers.Count == 0)
-                        {
-                            // Create the connection to the domain controller serving the current computer.
-                            ldap = new Galactic_LDAP(new List<string> { domainName }, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
-                        }
-                        else
-                        {
-                            // Create the connection to the domain controllers serving the specified site.
-                            ldap = new Galactic_LDAP(domainControllers, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
-                        }
-
-                        // Set the default search base and scope.
-                        ldap.SetSearchBaseAndScope(DistinguishedName);
-                    }
-                    catch
-                    {
-                        throw new ArgumentException("Unable to establish connection to Active Directory.");
-                    }
-                }
-                else
-                {
-                    if (string.IsNullOrWhiteSpace(domainName))
-                    {
-                        throw new ArgumentException("Domain name not provided in configuration item.");
-                    }
-                    else if (string.IsNullOrWhiteSpace(userName))
-                    {
-                        throw new ArgumentException("User name not provided in configuration item.");
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Password not provided in configuration item.");
-                    }
-                }
-            }
-            else
-            {
-                throw new ArgumentException("Unable to establish connection to Active Directory.");
-            }
-        }
-
-        /// <summary>
         /// Binds to Active Directory.
         /// </summary>
         /// <param name="domainName">The DNS style domain name of the Active Directory to connect to.</param>
         /// <param name="userName">The username of the account in AD to use when making the connection.</param>
         /// <param name="password">The password of the account.</param>
-        /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
-        public ActiveDirectory(string domainName, string userName, SecureString password, string siteName = DEFAULT_FIRST_SITE_NAME)
-        {
-            if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(userName) && password != null)
-            {
-                try
-                {
-                    // Get a list of domain controllers from a specific site, if one was supplied.
-                    List<string> domainControllers = new List<string>();
-                    if (!string.IsNullOrWhiteSpace(siteName))
-                    {
-                        domainControllers = GetSiteDomainControllers(domainName, siteName);
-                    }
-
-                    if (domainControllers.Count == 0)
-                    {
-                        // Create the connection to the domain controller serving the current computer.
-                        ldap = new Galactic_LDAP(new List<string> { domainName }, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
-                    }
-                    else
-                    {
-                        // Create the connection to the domain controllers serving the specified site.
-                        ldap = new Galactic_LDAP(domainControllers, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
-                    }
-
-                    // Set the default search base and scope.
-                    ldap.SetSearchBaseAndScope(DistinguishedName);
-                }
-                catch
-                {
-                    throw new ArgumentException("Unable to establish connection to Active Directory.");
-                }
-            }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(domainName))
-                {
-                    throw new ArgumentNullException("domainName");
-                }
-                if (string.IsNullOrWhiteSpace(userName))
-                {
-                    throw new ArgumentNullException("userName");
-                }
-                if (password == null)
-                {
-                    throw new ArgumentNullException("password");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Constructs an Active Directory object with a base of the specified OU. Binds to Active Directory.
-        /// </summary>
-        /// <param name="domainName">The DNS style domain name of the Active Directory to connect to.</param>
-        /// <param name="ouDn">The distinguished name of the OU to use as a base for operations.</param>
-        /// <param name="userName">The username of the account in AD to use when making the connection.</param>
-        /// <param name="password">The password of the account.</param>
-        /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
-        public ActiveDirectory(string domainName, string ouDn, string userName, SecureString password, string siteName = DEFAULT_FIRST_SITE_NAME)
+        /// <param name="ouDn">(Optional) The distinguished name of the OU to use as a base for operations. Defaults to the distinguished name of the domain if not supplied.</param>
+        /// <param name="siteName">(Optional) The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
+        public ActiveDirectory(string domainName, string userName, SecureString password, string ouDn = "", string siteName = DEFAULT_FIRST_SITE_NAME)
         {
             if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(ouDn) && !string.IsNullOrWhiteSpace(userName) && password != null)
             {
@@ -549,8 +398,17 @@ namespace Galactic.ActiveDirectory
                         ldap = new Galactic_LDAP(domainControllers, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
                     }
 
-                    // Set the search base to the specified dn.
-                    ldap.SetSearchBaseAndScope(ouDn);
+                    // Set the search base and scope.
+                    if (!string.IsNullOrWhiteSpace(ouDn))
+                    {
+                        // Set the search base to the specified dn.
+                        ldap.SetSearchBaseAndScope(ouDn);
+                    }
+                    else
+                    {
+                        // Set the default search base and scope.
+                        ldap.SetSearchBaseAndScope(DistinguishedName);
+                    }
                 }
                 catch
                 {
@@ -575,62 +433,6 @@ namespace Galactic.ActiveDirectory
                 {
                     throw new ArgumentNullException("password");
                 }
-            }
-        }
-
-        /// <summary>
-        /// Binds to Active Directory. Uses the current session credentials to authenticate.
-        /// </summary>
-        /// <param name="domainName">(Optional) The DNS style domain name of the Active Directory to connect to. If left unspecified, the domain that the computer is currently connected to will be used.</param>
-        /// <param name="ouDn">(Optional) The distinguished name of the OU to use as a base for operations. If left unspecified, the root of the domain will be used.</param>
-        /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
-        public ActiveDirectory(string domainName = null, string ouDn = null, string siteName = DEFAULT_FIRST_SITE_NAME)
-        {
-            if (string.IsNullOrWhiteSpace(domainName))
-            {
-                using (DSAD.Domain domain = DSAD.Domain.GetComputerDomain())
-                {
-                    domainName = domain.Name;
-                }
-                if (string.IsNullOrWhiteSpace(domainName))
-                {
-                    throw new ArgumentNullException("domainName", "Specified domain name is invalid. Unable to autodetect Active Directory domain.");
-                }
-            }
-
-            try
-            {
-                // Get a list of domain controllers from a specific site, if one was supplied.
-                List<string> domainControllers = new List<string>();
-                if (!string.IsNullOrWhiteSpace(siteName))
-                {
-                    domainControllers = GetSiteDomainControllers(domainName, siteName);
-                }
-
-                if (domainControllers.Count == 0)
-                {
-                    // Create the connection to the domain controller serving the current computer.
-                    ldap = new Galactic_LDAP(new List<string> { domainName }, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, null, null, domainName, true);
-                }
-                else
-                {
-                    // Create the connection to the domain controllers serving the specified site.
-                    ldap = new Galactic_LDAP(domainControllers, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, null, null, domainName, true);
-                }
-
-                // Set the default search base and scope.
-                if (!string.IsNullOrWhiteSpace(ouDn))
-                {
-                    ldap.SetSearchBaseAndScope(ouDn);
-                }
-                else
-                {
-                    ldap.SetSearchBaseAndScope(DistinguishedName);
-                }
-            }
-            catch
-            {
-                throw new ArgumentException("Unable to establish connection to Active Directory.");
             }
         }
 
@@ -825,13 +627,15 @@ namespace Galactic.ActiveDirectory
             {
                 try
                 {
-                    DnsQueryRequest request = new DnsQueryRequest();
-                    DnsQueryResponse response = request.Resolve("_ldap._tcp." + siteName + "._sites.dc._msdcs." + domainName, NsType.SRV, NsClass.INET, System.Net.Sockets.ProtocolType.Tcp);
-                    IDnsRecord[] records = response.Answers;
+                    // Check if the DNS lookup client has already been initialized.
+                    LookupClient lookupClient = new LookupClient();
+                    IDnsQueryResponse response = lookupClient.Query("_ldap._tcp." + siteName + "._sites.dc._msdcs." + domainName, QueryType.SRV);
+                    IReadOnlyList<DnsResourceRecord> records = response.Answers;
+
                     List<string> domainControllers = new List<string>();
-                    foreach (IDnsRecord record in records)
+                    foreach (var record in records)
                     {
-                        domainControllers.Add((record as SrvRecord).HostName);
+                        domainControllers.Add((record as SrvRecord).Target);
                     }
                     return domainControllers;
                 }

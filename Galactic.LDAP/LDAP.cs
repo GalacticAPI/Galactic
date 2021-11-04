@@ -119,7 +119,7 @@ namespace Galactic.LDAP
                     // Create the connection to the server(s).
                     try
                     {
-                        if(useLogonCredentials)
+                        if (useLogonCredentials)
                         {
                             connection = new LdapConnection(directoryIdentifier);
                         }
@@ -127,7 +127,7 @@ namespace Galactic.LDAP
                         {
                             connection = new LdapConnection(directoryIdentifier, credential, authType);
                         }
-                        
+
 
                         // Gather information about the LDAP server(s) from the RootDSE entry.
                         SearchResponse rootDSESearchResponse = (SearchResponse)connection.SendRequest(new SearchRequest(null, "(objectClass=*)", SearchScope.Base));
@@ -136,7 +136,7 @@ namespace Galactic.LDAP
                             // Save the rootDSE for access by API clients.
                             rootDSE = rootDSESearchResponse.Entries[0];
                             SearchResultAttributeCollection attributes = rootDSE.Attributes;
-                            
+
                             // Check that LDAP V3 is supported.
                             if (attributes["supportedLDAPVersion"].GetValues(typeof(string)).Contains("3"))
                             {
@@ -266,7 +266,7 @@ namespace Galactic.LDAP
                             if (control is PageResultResponseControl)
                             {
                                 PageResultResponseControl pageResultResponseControl =
-                                    (PageResultResponseControl) control;
+                                    (PageResultResponseControl)control;
 
                                 // Update the cookie in the request control to gather the next page of the query.
                                 pageResultRequestControl.Cookie = pageResultResponseControl.Cookie;
@@ -347,7 +347,7 @@ namespace Galactic.LDAP
                 try
                 {
                     AddResponse response = (AddResponse)connection.SendRequest(request);
-                    
+
                     // Check that a response was received.
                     if (response != null)
                     {

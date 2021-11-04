@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Security;
-using System.Security.AccessControl;
 using SystemFile = System.IO.File;
 
 namespace Galactic.FileSystem
@@ -24,10 +23,18 @@ namespace Galactic.FileSystem
         // A reader for reading from the file.
         private StreamReader reader = null;
 
-        // The file security object for this file.
-        private FileSecurity security = null;
-
         // ----- PROPERTITES -----
+
+        /// <summary>
+        /// The underlying FileStream object for the file.
+        /// </summary>
+        public FileStream FileStream
+        {
+            get
+            {
+                return fileStream;
+            }
+        }
 
         /// <summary>
         /// The path to the file on the file system.
@@ -44,26 +51,6 @@ namespace Galactic.FileSystem
         /// Whether the file is opened as read-only.
         /// </summary>
         public bool ReadOnly { get; protected set; }
-
-        /// <summary>
-        /// The FileSecurity object for this file.
-        /// </summary>
-        public FileSecurity Security
-        {
-            get
-            {
-                // Updates the security object with the latest information from the file.
-                security = GetSecurityObject(Path);
-                return security;
-            }
-            set
-            {
-                if (value != null)
-                {
-                    security = value;
-                }
-            }
-        }
 
         // ----- CONSTRUCTORS -----
 
@@ -423,54 +410,6 @@ namespace Galactic.FileSystem
         }
 
         /// <summary>
-        /// Gets the FileSecurity object for the file specified by the supplied path.
-        /// </summary>
-        /// <param name="path">The path to the file to retrieve the security object for.</param>
-        /// <returns>The security object for the file specified. Null if the file does not exist,
-        /// an I/O error occurred, or the process does not have the permissions required to
-        /// complete the operation.</returns>
-        static public FileSecurity GetSecurityObject(string path)
-        {
-            // Check that a path is supplied.
-            if (!string.IsNullOrEmpty(path))
-            {
-                // A path is supplied.
-
-                // Check whether the file exits.
-                if (SystemFile.Exists(path))
-                {
-                    // The file exists.
-                    try
-                    {
-                        return SystemFile.GetAccessControl(path);
-                    }
-                    catch (IOException)
-                    {
-                        // An I/O error occurred while opening the file.
-                        return null;
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                        // The path parameter specified a file that is read-only.
-                        // Or this operation is not supported on the current platform.
-                        // Or the caller does not have the required permission.
-                        return null;
-                    }
-                }
-                else
-                {
-                    // The file does not exist.
-                    return null;
-                }
-            }
-            else
-            {
-                // A path was not supplied.
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Gets the size of a file in bytes.
         /// </summary>
         /// <param name="path">The path to the file.</param>
@@ -814,87 +753,6 @@ namespace Galactic.FileSystem
             {
                 // The path was not supplied.
                 return null;
-            }
-        }
-
-        /// <summary>
-        /// Removes all explicit access rules from this file.
-        /// </summary>
-        /// <param name="commitChanges">Indicates whether changes should be commited to this file. Useful when combining multiple commands.</param>
-        /// <returns>True if access was removed. False otherwise.</returns>
-        public bool RemoveAllExplicitAccessRules(bool commitChanges)
-        {
-            return RemoveAllExplicitAccessRules(Path, out security, commitChanges);
-        }
-
-        /// <summary>
-        /// Removes all explicit access rules from the supplied file.
-        /// </summary>
-        /// <param name="path">The path to the file to have access removed on.</param>
-        /// <param name="security">The FileSecurity object of the file once changed.</param>
-        /// <param name="commitChanges">Indicates whether changes should be commited to this file. Useful when combining multiple commands.</param>
-        /// <returns>True if access was removed. False otherwise.</returns>
-        static public bool RemoveAllExplicitAccessRules(string path, out FileSecurity security, bool commitChanges)
-        {
-            // Check that a path was supplied.
-            if (!string.IsNullOrEmpty(path))
-            {
-                // The path was supplied.
-
-                // Check whether the file exists.
-                if (SystemFile.Exists(path))
-                {
-                    // The file exists.
-
-                    // Remove existing explicit permissions.
-                    security = GetSecurityObject(path);
-                    if (security != null)
-                    {
-                        AuthorizationRuleCollection rules = security.GetAccessRules(true, false, typeof(System.Security.Principal.SecurityIdentifier));
-                        foreach (AuthorizationRule rule in rules)
-                        {
-                            security.RemoveAccessRule((FileSystemAccessRule)rule);
-                        }
-                        // Commit the changes if necessary.
-                        if (commitChanges)
-                        {
-                            try
-                            {
-                                SystemFile.SetAccessControl(path, security);
-                            }
-                            catch (IOException)
-                            {
-                                // An I/O error occurred while opening the file.
-                                return false;
-                            }
-                            catch (UnauthorizedAccessException)
-                            {
-                                // The path parameter specified a file that is read-only.
-                                // The operation is not supported on the current platform.
-                                // Or the current process does not have the required permission.
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                    else
-                    {
-                        // Unable to get the file's security object.
-                        return false;
-                    }
-                }
-                else
-                {
-                    // The file does not exist.
-                    security = null;
-                    return false;
-                }
-            }
-            else
-            {
-                // A path was not supplied.
-                security = null;
-                return false;
             }
         }
 

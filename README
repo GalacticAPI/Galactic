@@ -1,20 +1,6 @@
-This is the main project for the Galactic API. It uses the SharedLibraries project as a central place to put built DLLs and access third-party libraries necessary for the project but not availble via NuGet.
-
-This repository should generally be placed at the same level in the directory structure as the SharedLibraries project.
-
-For example:
-
-If you place the SharedLibraries project in: C:\Users\Username\Documents\Visual Studio 2015\Projects\SharedLibraries
-then this project should be placed in: C:\Users\Username\Documents\Visual Studio 2015\Projects\Galactic
+This is the main project for the Galactic API.
 
 -------------------------------------------------------------------------------
 Build Requirements:
 
-To accomodate automatic assembly versioning, this solution requires that the following be installed:
-
-Microsoft Visual Studio Extensibility Tools (formerly the Visual Studio SDK in releases prior to 2015)
-
-Modeling SDK for Visual Studio 2015 - http://www.microsoft.com/en-us/download/details.aspx?id=48148
-
-If they are not installed, automatic assembly versioning will not work, but the solution should otherwise
-build normally.
+This solution targets .NET 5.0.

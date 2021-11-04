@@ -1,9 +1,5 @@
 ﻿using Galactic.EventLog;
-// Oracle Data Provider for .NET
-// DLL usually available in the Oracle client install folder in the
-// .\ODP.NET\bin\x.x folder (where x.x is the version of ODP.NET).
-// OracleDataAccess.dll
-using Oracle.DataAccess.Client;
+using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Data;

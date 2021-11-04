@@ -2,12 +2,7 @@
 using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-
-// Microsoft SQL Server Management Objects (SMO) SDK
-// Microsoft.SqlServer.Smo.dll
-// Microsoft.SqlServer.ConnectionInfo.dll
-// Microsoft.SqlServer.Management.Sdk.Sfc.dll
+using Microsoft.Data.SqlClient;
 
 namespace Galactic.Sql.MSSql
 {
@@ -147,8 +142,8 @@ namespace Galactic.Sql.MSSql
             // Check that the command and connection string are supplied.
             if (!string.IsNullOrWhiteSpace(command) && !string.IsNullOrWhiteSpace(connectionString))
             {
-                SqlConnection connection = new SqlConnection(connectionString);
-                Server server = new Server(new ServerConnection(connection));
+                SqlConnection sqlConnection = new SqlConnection(connectionString);
+                Server server = new Server(new ServerConnection(sqlConnection));
                 try
                 {
                     server.ConnectionContext.ExecuteNonQuery(command);

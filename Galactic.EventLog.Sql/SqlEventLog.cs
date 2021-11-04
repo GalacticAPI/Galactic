@@ -991,8 +991,8 @@ namespace Galactic.EventLog.Sql
                             // Set the the event's SourceId with the value returned.
                             SqlEventLogNamedItem source = new SqlEventLogNamedItem
                             {
-                                Id = (int) rowSourceId,
-                                Name = GetSources((int) rowSourceId, null)[0].Name
+                                Id = (int)rowSourceId,
+                                Name = GetSources((int)rowSourceId, null)[0].Name
                             };
                             logEvent.Source = source;
                         }
@@ -1010,8 +1010,8 @@ namespace Galactic.EventLog.Sql
                             // Set the the event's CategoryId with the value returned. 
                             SqlEventLogNamedItem category = new SqlEventLogNamedItem
                             {
-                                Id = (int) rowCategoryId,
-                                Name = GetCategories((int) rowCategoryId, null)[0].Name
+                                Id = (int)rowCategoryId,
+                                Name = GetCategories((int)rowCategoryId, null)[0].Name
                             };
                             logEvent.Category = category;
                         }
@@ -1029,8 +1029,8 @@ namespace Galactic.EventLog.Sql
                             // Set the the event's SeverityLevelId with the value returned.
                             SqlEventLogNamedItem severityLevel = new SqlEventLogNamedItem
                             {
-                                Id = (int) rowSeverityLevelId,
-                                Name = GetSeverityLevels((int) rowSeverityLevelId, null)[0].Name
+                                Id = (int)rowSeverityLevelId,
+                                Name = GetSeverityLevels((int)rowSeverityLevelId, null)[0].Name
                             };
                             logEvent.SeverityLevel = severityLevel;
                         }
