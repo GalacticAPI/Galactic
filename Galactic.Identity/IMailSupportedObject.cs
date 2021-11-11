@@ -19,12 +19,12 @@ namespace Galactic.Identity
         /// A list of the object's e-mail addresses.
         /// The object's primary e-mail address will always be first in the list.
         /// </summary>
-        abstract public List<string> EmailAddresses { get; set; }
+        public List<string> EmailAddresses { get; set; }
 
         /// <summary>
         /// The object's primary e-mail address.
         /// </summary>
-        abstract public string PrimaryEmailAddress { get; set; }
+        public string PrimaryEmailAddress { get; set; }
 
         // ----- STATIC CONSTRUCTORS -----
 

@@ -17,7 +17,7 @@ namespace Galactic.Identity
         /// <summary>
         /// A description of the object.
         /// </summary>
-        abstract public string Description { get; set; }
+        public string Description { get; set; }
 
         // ----- STATIC CONSTRUCTORS -----
 

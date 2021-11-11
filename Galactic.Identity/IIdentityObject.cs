@@ -19,22 +19,22 @@ namespace Galactic.Identity
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
-        abstract public DateTime? CreationTime { get; set; }
+        public DateTime? CreationTime { get; set; }
 
         /// <summary>
         /// The list of groups this object is a member of.
         /// </summary>
-        abstract public List<IGroup> Groups { get; }
+        public List<IGroup> Groups { get; }
 
         /// <summary>
         /// The object's unique ID in the system.
         /// </summary>
-        abstract public string UniqueId { get; set; }
+        public string UniqueId { get; set; }
 
         /// <summary>
         /// The type or category of the object.
         /// </summary>
-        abstract public string Type { get; set; }
+        public string Type { get; set; }
 
         // ----- STATIC CONSTRUCTORS -----
 
@@ -59,7 +59,7 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="names">The names of the attributes to get the values of.</param>
         /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
-        abstract public List<IdentityAttribute<Object>> GetAttributes(List<string> names);
+        public List<IdentityAttribute<Object>> GetAttributes(List<string> names);
 
         /// <summary>
         /// Removes the identity object from the supplied group.
@@ -81,14 +81,14 @@ namespace Galactic.Identity
         /// <param name="group">The group to check.</param>
         /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
         /// <returns>True if the object is a member, false otherwise.</returns>
-        abstract public bool MemberOfGroup(IGroup group, bool recursive);
+        public bool MemberOfGroup(IGroup group, bool recursive);
 
         /// <summary>
         /// Sets attribute values of an identity object. If null or empty values are supplied the attribute's value will be deleted.
         /// </summary>
         /// <param name="attributes">The attribute to set.</param>
         /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
-        abstract public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes);
+        public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes);
 
         // ----- IEQUALITYCOMPARER METHODS -----
 

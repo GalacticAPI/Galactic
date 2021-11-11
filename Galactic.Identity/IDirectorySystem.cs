@@ -22,11 +22,11 @@ namespace Galactic.Identity
         /// <summary>
         /// Create a new group within the directory system given its proposed name, its type, and other optional attributes.
         /// </summary>
-        /// <param name="name">The proposed name of teh group.</param>
+        /// <param name="name">The proposed name of the group.</param>
         /// <param name="type">The type of group to create.</param>
         /// <param name="additionalAttributes">Optional: Additional attributes to set when creating the group.</param>
         /// <returns>The newly created group object.</returns>
-        abstract public IGroup CreateGroup(string name, string type, List<IdentityAttribute<Object>> additionalAttributes = null);
+        public IGroup CreateGroup(string name, string type, List<IdentityAttribute<Object>> additionalAttributes = null);
 
         /// <summary>
         /// Creates a user within the directory system given it's login, and other options attributes.
@@ -34,26 +34,26 @@ namespace Galactic.Identity
         /// <param name="login">The proposed login name of the user.</param>
         /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user.</param>
         /// <returns>The newly creaTed user object.</returns>
-        abstract public IUser CreateUser(string login, List<IdentityAttribute<Object>> additionalAttributes = null);
+        public IUser CreateUser(string login, List<IdentityAttribute<Object>> additionalAttributes = null);
 
         /// <summary>
         /// Deletes an object with the specified unique id from the directory system.
         /// </summary>
         /// <param name="uniqueId">The unique id of the object to delete.</param>
         /// <returns>True if the object was deleted, false otherwise.</returns>
-        abstract public bool DeleteObject(string uniqueId);
+        public bool DeleteObject(string uniqueId);
 
         /// <summary>
         /// Get's all users in the directory system.
         /// </summary>
         /// <returns>A list of all users in the directory system.</returns>
-        abstract public List<IUser> GetAllUsers();
+        public List<IUser> GetAllUsers();
 
         /// <summary>
         /// Gets a list of the types of groups supported by the directory system.
         /// </summary>
         /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
-        abstract public List<string> GetGroupTypes();
+        public List<string> GetGroupTypes();
 
         /// <summary>
         /// Gets identity objects that match wildcarded (*) attribute value in the supplied attribute.
@@ -61,7 +61,7 @@ namespace Galactic.Identity
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the object found. If not supplied, the default list of attributes is returned.</param>
         /// <returns></returns>
-        abstract public List<IIdentityObject> GetObjectsByAttribute(IdentityAttribute<Object> attribute, List<IdentityAttribute<Object>> returnedAttributes = null);
+        public List<IIdentityObject> GetObjectsByAttribute(IdentityAttribute<Object> attribute, List<IdentityAttribute<Object>> returnedAttributes = null);
 
         /// <summary>
         /// Moves an object in the directory system.
@@ -69,7 +69,7 @@ namespace Galactic.Identity
         /// <param name="uniqueId">The unique id of the object to move.</param>
         /// <param name="parentUniqueId">The unique id of the object that will be the new parent of the object.</param>
         /// <returns>True if the object was moved, false otherwise.</returns>
-        abstract public bool MoveObject(string uniqueId, string parentUniqueId);
+        public bool MoveObject(string uniqueId, string parentUniqueId);
 
         /// <summary>
         /// Renames an object in the directory system.
@@ -77,6 +77,6 @@ namespace Galactic.Identity
         /// <param name="uniqueId">The unique id of the object to rename.</param>
         /// <param name="name"The new name of the object.</param>
         /// <returns>True if the object was renamed, false otherwise.</returns>
-        abstract public bool RenameObject(string uniqueId, string name);
+        public bool RenameObject(string uniqueId, string name);
     }
 }
