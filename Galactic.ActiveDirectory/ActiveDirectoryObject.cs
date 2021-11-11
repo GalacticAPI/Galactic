@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Runtime.Versioning;
 
 namespace Galactic.ActiveDirectory
 {
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("android")]
     public class ActiveDirectoryObject : IComparable<ActiveDirectoryObject>, IEqualityComparer<ActiveDirectoryObject>
     {
         // ----- CONSTANTS -----
@@ -390,7 +393,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         /// <param name="attributeName">The name of the attribute to set.</param>
         /// <param name="value">The string value to set the attribute to.</param>
-        /// <returns>True if the attribuet was set successfully, false otherwise.</returns>
+        /// <returns>True if the attribute was set successfully, false otherwise.</returns>
         public bool SetStringAttribute(string attributeName, string value)
         {
             if (!string.IsNullOrWhiteSpace(attributeName))

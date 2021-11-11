@@ -5,6 +5,7 @@ using System.DirectoryServices.Protocols;
 using DnsClient;
 using DnsClient.Protocol;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security;
 using System.Security.Principal;
 using System.Text;
@@ -15,6 +16,8 @@ namespace Galactic.ActiveDirectory
     /// ActiveDirectory is a class that allows for the query and manipulation
     /// of Active Directory objects.
     /// </summary>
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("android")]
     public class ActiveDirectory : IDisposable
     {
         // ----- CONSTANTS -----
@@ -509,7 +512,7 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Deletes an entry with the specified GUID from Active Directory.
         /// </summary>
-        /// <param name="guid"></param>
+        /// <param name="guid">The GUID of the entry to delete.</param>
         /// <returns>True if the entry was deleted, false otherwise.</returns>
         public bool Delete(Guid guid)
         {

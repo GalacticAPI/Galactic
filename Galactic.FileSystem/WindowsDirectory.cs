@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using SystemDirectory = System.IO.Directory;
@@ -12,6 +12,7 @@ namespace Galactic.FileSystem
     /// <summary>
     /// A Windows-specific utility class for manipulating directories on the file system. 
     /// </summary>
+    [SupportedOSPlatform("windows")]
     public static class WindowsDirectory
     {
         // ----- CONSTANTS -----
@@ -87,8 +88,8 @@ namespace Galactic.FileSystem
         /// 2000 or later.</returns>
         static public bool AddAccessRule(string path, ref DirectorySecurity security, FileSystemAccessRule rule, bool commitChanges)
         {
-            // Check that a path, security object, and rule are supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && security != null && rule != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check that a path, security object, and rule are supplied.
+            if (!string.IsNullOrEmpty(path) && security != null && rule != null)
             {
                 // A path, security object, and rule are supplied.
                 // Check whether the directory exits.
@@ -142,8 +143,8 @@ namespace Galactic.FileSystem
         /// blocked.</returns>
         static public bool BlockInheritance(string path, ref DirectorySecurity security, bool addInheritedPermissions, bool commitChanges)
         {
-            // Check whether a path and security object were supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && security != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check whether a path and security object were supplied.
+            if (!string.IsNullOrEmpty(path) && security != null)
             {
                 // A path and security object were supplied.
                 // Check whether the directory exists.
@@ -205,8 +206,8 @@ namespace Galactic.FileSystem
         /// current operating system in not Windows 2000 or later.</returns>
         static public bool CommitChanges(string path, ref DirectorySecurity security)
         {
-            // Check that a path and security object were supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && security != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check that a path and security object were supplied.
+            if (!string.IsNullOrEmpty(path) && security != null)
             {
                 // Check whether the directory exits.
                 if (SystemDirectory.Exists(path))
@@ -247,8 +248,8 @@ namespace Galactic.FileSystem
         /// the path specified is read-only, or the process does not have permission to complete the operation.</returns>
         static public DirectorySecurity GetSecurityObject(string path)
         {
-            // Check that a path is supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check that a path is supplied.
+            if (!string.IsNullOrEmpty(path))
             {
                 // A path is supplied.
 
@@ -305,8 +306,8 @@ namespace Galactic.FileSystem
         static public bool GiveAccess(byte[] accountSid, string path, ref DirectorySecurity security, FileSystemRights rights,
             bool applyToSubfolders, bool applyToFiles, bool commitChanges)
         {
-            // Check whether the accountSid, path, and security object are supplied and the OS is Windows.
-            if (accountSid != null && !string.IsNullOrEmpty(path) && security != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check whether the accountSid, path, and security object are supplied.
+            if (accountSid != null && !string.IsNullOrEmpty(path) && security != null)
             {
                 // An accountSid, path, and security object are supplied.
 
@@ -369,8 +370,8 @@ namespace Galactic.FileSystem
         /// <returns>True if access was granted. False otherwise.</returns>
         static public bool GiveAccess(DirectoryEntry entry, string path, ref DirectorySecurity security, FileSystemRights rights, bool applyToSubfolders, bool applyToFiles, bool commitChanges)
         {
-            // Check whether the entry was supplied and the OS is Windows.
-            if (entry != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check whether the entry was supplied.
+            if (entry != null)
             {
                 // The entry was supplied.
                 // Get the SID of from the supplied entry.
@@ -400,64 +401,55 @@ namespace Galactic.FileSystem
         {
             // Rights were supplied.
 
-            // Check if the OS is windows.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Get the type(s) of FileSystemRights to apply from the AccessRights supplied.
+            List<FileSystemRights> fileSystemRights = new List<FileSystemRights>();
+            switch (rights)
             {
-                // Get the type(s) of FileSystemRights to apply from the AccessRights supplied.
-                List<FileSystemRights> fileSystemRights = new List<FileSystemRights>();
-                switch (rights)
-                {
-                    case AccessRights.CreateFilesWriteData:
-                        fileSystemRights.Add(FileSystemRights.CreateFiles);
-                        fileSystemRights.Add(FileSystemRights.WriteData);
-                        break;
-                    case AccessRights.FullControl:
-                        fileSystemRights.Add(FileSystemRights.FullControl);
-                        break;
-                    case AccessRights.ListFolderReadData:
-                        fileSystemRights.Add(FileSystemRights.ListDirectory);
-                        fileSystemRights.Add(FileSystemRights.ReadData);
-                        break;
-                    case AccessRights.Modify:
-                        fileSystemRights.Add(FileSystemRights.Modify);
-                        break;
-                    case AccessRights.Read:
-                        fileSystemRights.Add(FileSystemRights.Read);
-                        break;
-                    case AccessRights.ReadAttributes:
-                        fileSystemRights.Add(FileSystemRights.ReadAttributes);
-                        break;
-                    case AccessRights.ReadExtendedAttributes:
-                        fileSystemRights.Add(FileSystemRights.ReadExtendedAttributes);
-                        break;
-                    case AccessRights.ReadPermissions:
-                        fileSystemRights.Add(FileSystemRights.ReadPermissions);
-                        break;
-                    case AccessRights.TraverseFolderExecuteFile:
-                        fileSystemRights.Add(FileSystemRights.Traverse);
-                        break;
-                    default:
-                        // Incorrect access rights specified.
-                        return false;
-                }
+                case AccessRights.CreateFilesWriteData:
+                    fileSystemRights.Add(FileSystemRights.CreateFiles);
+                    fileSystemRights.Add(FileSystemRights.WriteData);
+                    break;
+                case AccessRights.FullControl:
+                    fileSystemRights.Add(FileSystemRights.FullControl);
+                    break;
+                case AccessRights.ListFolderReadData:
+                    fileSystemRights.Add(FileSystemRights.ListDirectory);
+                    fileSystemRights.Add(FileSystemRights.ReadData);
+                    break;
+                case AccessRights.Modify:
+                    fileSystemRights.Add(FileSystemRights.Modify);
+                    break;
+                case AccessRights.Read:
+                    fileSystemRights.Add(FileSystemRights.Read);
+                    break;
+                case AccessRights.ReadAttributes:
+                    fileSystemRights.Add(FileSystemRights.ReadAttributes);
+                    break;
+                case AccessRights.ReadExtendedAttributes:
+                    fileSystemRights.Add(FileSystemRights.ReadExtendedAttributes);
+                    break;
+                case AccessRights.ReadPermissions:
+                    fileSystemRights.Add(FileSystemRights.ReadPermissions);
+                    break;
+                case AccessRights.TraverseFolderExecuteFile:
+                    fileSystemRights.Add(FileSystemRights.Traverse);
+                    break;
+                default:
+                    // Incorrect access rights specified.
+                    return false;
+            }
 
-                // Give the desired access rights to the directory.
-                foreach (FileSystemRights right in fileSystemRights)
-                {
-                    if (!GiveAccess(accountSid, path, ref security, right, applyToSubfolders, applyToFiles, commitChanges))
-                    {
-                        // The access right could not be applied.
-                        return false;
-                    }
-                }
-                // All rights were applied successfully.
-                return true;
-            }
-            else
+            // Give the desired access rights to the directory.
+            foreach (FileSystemRights right in fileSystemRights)
             {
-                // The OS is not Windows.
-                return false;
+                if (!GiveAccess(accountSid, path, ref security, right, applyToSubfolders, applyToFiles, commitChanges))
+                {
+                    // The access right could not be applied.
+                    return false;
+                }
             }
+            // All rights were applied successfully.
+            return true;
         }
 
         /// <summary>
@@ -504,8 +496,8 @@ namespace Galactic.FileSystem
         /// <returns>True if access was granted. False otherwise.</returns>
         public static bool GiveAccess(AccessRights rights, DirectoryEntry entry, string path, ref DirectorySecurity security, bool applyToSubfolders, bool applyToFiles, bool commitChanges)
         {
-            // Check whether the entry was supplied and the OS is Windows.
-            if (entry != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check whether the entry was supplied.
+            if (entry != null)
             {
                 // The entry was supplied.
                 // Get the SID of from the supplied entry.
@@ -529,8 +521,8 @@ namespace Galactic.FileSystem
         /// <returns>True if all rules were removed. False if an error occurred.</returns>
         static public bool RemoveAllAccessRules(string path, ref DirectorySecurity security, bool commitChanges)
         {
-            // Check whether a path and security object were supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && security != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check whether a path and security object were supplied.
+            if (!string.IsNullOrEmpty(path) && security != null)
             {
                 // A path and security object were supplied.
                 // Check whether the path exists.
@@ -597,8 +589,8 @@ namespace Galactic.FileSystem
         /// <returns>True if access was removed. False otherwise.</returns>
         static public bool RemoveAllExplicitAccessRules(string path, ref DirectorySecurity security, bool commitChanges)
         {
-            // Check whether the path and security object are supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && security != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check whether the path and security object are supplied.
+            if (!string.IsNullOrEmpty(path) && security != null)
             {
                 // Check whether the directory exists.
                 if (SystemDirectory.Exists(path))
@@ -655,8 +647,8 @@ namespace Galactic.FileSystem
         /// <returns>True if the ownership could be set. False otherwise.</returns>
         static public bool SetOwner(string path, ref DirectorySecurity security, byte[] ownerSid, bool commitChanges)
         {
-            // Check whether a path, security object, and owner were supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && security != null && ownerSid != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check whether a path, security object, and owner were supplied.
+            if (!string.IsNullOrEmpty(path) && security != null && ownerSid != null)
             {
                 // A path, security object, and owner were supplied.
                 // Check whether the directory exists.
@@ -720,8 +712,8 @@ namespace Galactic.FileSystem
         /// <returns>True if the ownership could be set. False otherwise.</returns>
         static public bool SetOwner(string path, ref DirectorySecurity security, DirectoryEntry owner, bool commitChanges)
         {
-            // Check whether an owner was supplied and the OS is Windows.
-            if (owner != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check whether an owner was supplied.
+            if (owner != null)
             {
                 // An owner was supplied.
 

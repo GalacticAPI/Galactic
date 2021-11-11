@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Runtime.Versioning;
 
 namespace Galactic.ActiveDirectory
 {
@@ -8,6 +9,8 @@ namespace Galactic.ActiveDirectory
     /// Group is a class that allows for the query and manipulation of
     /// Active Directory group objects.
     /// </summary>
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("android")]
     public class Group : SecurityPrincipal, IEnumerable<SecurityPrincipal>
     {
 
@@ -243,7 +246,7 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
-        /// Creates a new group within Active Directory given it's proposed name, the distinguished name of the OU to place it in, and other optional attributes.
+        /// Creates a new group within Active Directory given its proposed name, the distinguished name of the OU to place it in, and other optional attributes.
         /// </summary>
         /// <param name="ad">An Active Directory object used to create the group.</param>
         /// <param name="sAMAccountName">The proposed SAM Account name for the group.</param>

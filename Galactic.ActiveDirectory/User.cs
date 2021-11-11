@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace Galactic.ActiveDirectory
@@ -9,6 +10,8 @@ namespace Galactic.ActiveDirectory
     /// User is a class that allows for the query and manipulation of
     /// Active Directory user objects.
     /// </summary>
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("android")]
     public class User : SecurityPrincipal, IComparable<User>, IEqualityComparer<User>
     {
         // ----- CONSTANTS -----
@@ -326,7 +329,7 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
-        /// The date and time that the user's password was last site.
+        /// The date and time that the user's password was last set.
         /// </summary>
         public DateTime? PasswordLastSet
         {

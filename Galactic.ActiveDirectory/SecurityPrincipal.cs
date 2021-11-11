@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
 namespace Galactic.ActiveDirectory
 {
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("android")]
     public class SecurityPrincipal : ActiveDirectoryObject, IComparable<SecurityPrincipal>, IEqualityComparer<SecurityPrincipal>
     {
         // ----- CONSTANTS -----
@@ -395,7 +398,7 @@ namespace Galactic.ActiveDirectory
         /// Removes this principal from the supplied group.
         /// </summary>
         /// <param name="guid">The GUID of the group to add the principal to.</param>
-        /// <returns>True if the principal was added, false otherwise.</returns>
+        /// <returns>True if the principal was removed, false otherwise.</returns>
         public bool RemoveFromGroup(Guid guid)
         {
             if (guid != Guid.Empty)
@@ -410,7 +413,7 @@ namespace Galactic.ActiveDirectory
         /// Checks if this principal is a member of the supplied group.
         /// </summary>
         /// <param name="guid">The GUID of the group to check.</param>
-        /// <param name="recursive">Whether to do a recursive lookup of all parent groups that this principal might be a member of.</param>
+        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this principal might be a member of.</param>
         /// <returns>True if the principal is a member, false otherwise.</returns>
         public bool MemberOfGroup(Guid guid, bool recursive)
         {

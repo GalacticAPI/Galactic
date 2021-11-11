@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using SystemFile = System.IO.File;
 
@@ -9,6 +9,7 @@ namespace Galactic.FileSystem
     /// <summary>
     /// A utility class for manipulating files on the file system. Adds additional Windows-specific functionality.
     /// </summary>
+    [SupportedOSPlatform("windows")]
     public class WindowsFile : File
     {
         // ----- CONSTANTS -----
@@ -72,8 +73,8 @@ namespace Galactic.FileSystem
         /// complete the operation.</returns>
         static public FileSecurity GetSecurityObject(string path)
         {
-            // Check that a path is supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check that a path is supplied.
+            if (!string.IsNullOrEmpty(path))
             {
                 // A path is supplied.
 
@@ -130,8 +131,8 @@ namespace Galactic.FileSystem
         /// <returns>True if access was removed. False otherwise.</returns>
         static public bool RemoveAllExplicitAccessRules(string path, out FileSecurity security, bool commitChanges)
         {
-            // Check that a path was supplied and the OS is Windows.
-            if (!string.IsNullOrEmpty(path) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Check that a path was supplied.
+            if (!string.IsNullOrEmpty(path))
             {
                 // The path was supplied.
 

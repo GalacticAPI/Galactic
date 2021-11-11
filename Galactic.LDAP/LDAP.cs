@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.Versioning;
 using System.Security;
 using System.DirectoryServices.Protocols;
 
 namespace Galactic.LDAP
 {
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("android")]
     public class LDAP : IDisposable
     {
         // ----- CONSTANTS -----
