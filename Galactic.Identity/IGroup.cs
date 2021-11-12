@@ -58,14 +58,9 @@ namespace Galactic.Identity
         public bool ClearMembership();
 
         /// <summary>
-        /// Removes identity objects from the group.
+        /// Returns an enumerator that iterates through the collection.
         /// </summary>
-        /// <param name="members">The objects to remove.</param>
-        /// <returns>True if the objects were removed, false otherwise.</returns>
-        public bool RemoveMembers(List<IIdentityObject> members);
-
-        // ----- IENUMERABLE METHODS -----
-
+        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
         new public IEnumerator<IIdentityObject> GetEnumerator()
         {
             foreach (IIdentityObject member in Members)
@@ -74,14 +69,11 @@ namespace Galactic.Identity
             }
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            foreach (IIdentityObject member in Members)
-            {
-                yield return member;
-            }
-        }
-
-        // ----- END IENUMERABLE METHODS -----
+        /// <summary>
+        /// Removes identity objects from the group.
+        /// </summary>
+        /// <param name="members">The objects to remove.</param>
+        /// <returns>True if the objects were removed, false otherwise.</returns>
+        public bool RemoveMembers(List<IIdentityObject> members);
     }
 }

@@ -177,6 +177,23 @@ namespace Galactic.ActiveDirectory
         // ----- METHODS -----
 
         /// <summary>
+        /// Compares this ActiveDirectoryObject to another ActiveDirectoryObject.
+        /// </summary>
+        /// <param name="other">The other ActiveDirectoryObject to compare this one to.</param>
+        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
+        public int CompareTo(ActiveDirectoryObject other)
+        {
+            if (other != null)
+            {
+                return string.Compare(GUID.ToString(), other.GUID.ToString(), StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                throw new ArgumentNullException("other");
+            }
+        }
+
+        /// <summary>
         /// Deletes values from an attribute.
         /// </summary>
         /// <param name="attributeName">The name of the attribute with values to delete.</param>
@@ -193,6 +210,31 @@ namespace Galactic.ActiveDirectory
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Checks whether x and y are equal (using GUIDs).
+        /// </summary>
+        /// <param name="x">The first ActiveDirectoryObject to check.</param>
+        /// <param name="y">The second ActiveDirectoryObject to check against.</param>
+        /// <returns>True if the objects are equal, false otherwise.</returns>
+        public bool Equals(ActiveDirectoryObject x, ActiveDirectoryObject y)
+        {
+            if (x != null && y != null)
+            {
+                return x.GUID.Equals(y.GUID);
+            }
+            else
+            {
+                if (x == null)
+                {
+                    throw new ArgumentNullException("x");
+                }
+                else
+                {
+                    throw new ArgumentNullException("y");
+                }
+            }
         }
 
         /// <summary>
@@ -268,6 +310,23 @@ namespace Galactic.ActiveDirectory
 
             // Get the entry from AD.
             return GetEntryFromAD(guid);
+        }
+
+        /// <summary>
+        /// Generates a hash code for the ActiveDirectoryObject supplied.
+        /// </summary>
+        /// <param name="obj">The ActiveDirectoryObject to generate a hash code for.</param>
+        /// <returns>An integer hash code for the object.</returns>
+        public int GetHashCode(ActiveDirectoryObject obj)
+        {
+            if (obj != null)
+            {
+                return obj.GUID.GetHashCode();
+            }
+            else
+            {
+                throw new ArgumentNullException("obj");
+            }
         }
 
         /// <summary>
@@ -411,65 +470,6 @@ namespace Galactic.ActiveDirectory
             {
                 // No attribute name was supplied.
                 return false;
-            }
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (using GUIDs).
-        /// </summary>
-        /// <param name="x">The first ActiveDirectoryObject to check.</param>
-        /// <param name="y">The second ActiveDirectoryObject to check against.</param>
-        /// <returns>True if the objects are equal, false otherwise.</returns>
-        public bool Equals(ActiveDirectoryObject x, ActiveDirectoryObject y)
-        {
-            if (x != null && y != null)
-            {
-                return x.GUID.Equals(y.GUID);
-            }
-            else
-            {
-                if (x == null)
-                {
-                    throw new ArgumentNullException("x");
-                }
-                else
-                {
-                    throw new ArgumentNullException("y");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Generates a hash code for the ActiveDirectoryObject supplied.
-        /// </summary>
-        /// <param name="obj">The ActiveDirectoryObject to generate a hash code for.</param>
-        /// <returns>An integer hash code for the object.</returns>
-        public int GetHashCode(ActiveDirectoryObject obj)
-        {
-            if (obj != null)
-            {
-                return obj.GUID.GetHashCode();
-            }
-            else
-            {
-                throw new ArgumentNullException("obj");
-            }
-        }
-
-        /// <summary>
-        /// Compares this ActiveDirectoryObject to another ActiveDirectoryObject.
-        /// </summary>
-        /// <param name="other">The other ActiveDirectoryObject to compare this one to.</param>
-        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
-        public int CompareTo(ActiveDirectoryObject other)
-        {
-            if (other != null)
-            {
-                return string.Compare(GUID.ToString(), other.GUID.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                throw new ArgumentNullException("other");
             }
         }
     }

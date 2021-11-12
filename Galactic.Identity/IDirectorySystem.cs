@@ -24,17 +24,19 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="name">The proposed name of the group.</param>
         /// <param name="type">The type of group to create.</param>
-        /// <param name="additionalAttributes">Optional: Additional attributes to set when creating the group.</param>
-        /// <returns>The newly created group object.</returns>
-        public IGroup CreateGroup(string name, string type, List<IdentityAttribute<Object>> additionalAttributes = null);
+        /// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the group. Defaults to the standard group create location for the system if not supplied or invalid.</param>
+        /// <param name="additionalAttributes">(Optional) Additional attributes to set when creating the group.</param>
+        /// <returns>The newly created group object, or null if it could not be created.</returns>
+        public IGroup CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null);
 
         /// <summary>
         /// Creates a user within the directory system given it's login, and other options attributes.
         /// </summary>
-        /// <param name="login">The proposed login name of the user.</param>
+        /// <param name="login">The proposed login of the user.</param>
+        /// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
         /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user.</param>
-        /// <returns>The newly creaTed user object.</returns>
-        public IUser CreateUser(string login, List<IdentityAttribute<Object>> additionalAttributes = null);
+        /// <returns>The newly creaTed user object, or null if it could not be created.</returns>
+        public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null);
 
         /// <summary>
         /// Deletes an object with the specified unique id from the directory system.
@@ -60,8 +62,8 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the object found. If not supplied, the default list of attributes is returned.</param>
-        /// <returns></returns>
-        public List<IIdentityObject> GetObjectsByAttribute(IdentityAttribute<Object> attribute, List<IdentityAttribute<Object>> returnedAttributes = null);
+        /// <returns>A list of idenity objects that match the attribute value supplied.</returns>
+        public List<IIdentityObject> GetObjectsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null);
 
         /// <summary>
         /// Moves an object in the directory system.

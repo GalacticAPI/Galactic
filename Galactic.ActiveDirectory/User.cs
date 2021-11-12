@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Galactic.Identity;
+using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
@@ -12,7 +13,7 @@ namespace Galactic.ActiveDirectory
     /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class User : SecurityPrincipal, IComparable<User>, IEqualityComparer<User>
+    public class User : SecurityPrincipal, IComparable<User>, IEqualityComparer<User>, IUser
     {
         // ----- CONSTANTS -----
 
@@ -20,6 +21,11 @@ namespace Galactic.ActiveDirectory
         /// The list of specific attributes that should be retrieved when searching for the entry in AD. The attributes of parent objects should be included as well.
         /// </summary>
         static protected new string[] AttributeNames = { "department" };
+
+        /// <summary>
+        /// The default location for users to be created in Active Directory.
+        /// </summary>
+        public const string DEFAULT_CREATE_PATH = "CN=Users";
 
         // ----- VARIABLES -----
 
@@ -61,6 +67,36 @@ namespace Galactic.ActiveDirectory
                 {
                     return null;
                 }
+            }
+        }
+
+        /// <summary>
+        /// The user's city.
+        /// </summary>
+        public string City
+        {
+            get
+            {
+                return GetStringAttributeValue("l");
+            }
+            set
+            {
+                SetStringAttribute("l", value);
+            }
+        }
+
+        /// <summary>
+        /// The user's country code as defined in ISO 3166-1 alpha-2.
+        /// </summary>
+        public string CountryCode
+        {
+            get
+            {
+                return GetStringAttributeValue("c");
+            }
+            set
+            {
+                SetStringAttribute("c", value);
             }
         }
 
@@ -256,6 +292,21 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// The login name (SAMAccountName) for the user in the system.
+        /// </summary>
+        public string Login
+        {
+            get
+            {
+                return SAMAccountName;
+            }
+            set
+            {
+                SAMAccountName = value;
+            }
+        }
+
+        /// <summary>
         /// The path to the user's logon script.
         /// </summary>
         public string LogonScript
@@ -282,6 +333,78 @@ namespace Galactic.ActiveDirectory
             set
             {
                 SetStringAttribute("manager", value);
+            }
+        }
+
+        /// <summary>
+        /// The unique ID of the user's manager in the system.
+        /// </summary>
+        public string ManagerId
+        {
+            get
+            {
+                return AD.GetGUIDByDistinguishedName(Manager).ToString();
+            }
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    try
+                    {
+                        User manager = new(AD, Guid.Parse(value));
+                        Manager = manager.DistinguishedName;
+                    }
+                    catch(FormatException)
+                    {
+                        throw new FormatException("The unique ID (GUID) supplied was invalid.");
+                    }
+
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(ManagerId));
+                }
+            }
+        }
+
+        /// <summary>
+        /// The full name of the user's manager.
+        /// </summary>
+        public string ManagerName
+        {
+            get
+            {
+                return new User(AD, AD.GetGUIDByDistinguishedName(Manager)).DisplayName;
+            }
+        }
+
+        /// <summary>
+        /// The user's middle name.
+        /// </summary>
+        public string MiddleName
+        {
+            get
+            {
+                return GetStringAttributeValue("middleName");
+            }
+            set
+            {
+                SetStringAttribute("middleName", value);
+            }
+        }
+
+        /// <summary>
+        /// The user's mobile phone number.
+        /// </summary>
+        public string MobilePhone
+        {
+            get
+            {
+                return GetStringAttributeValue("mobile");
+            }
+            set
+            {
+                SetStringAttribute("mobile", value);
             }
         }
 
@@ -316,6 +439,33 @@ namespace Galactic.ActiveDirectory
                 }
             }
         }
+
+        /// <summary>
+        /// The name of the organization the user belong's to.
+        /// </summary>
+        public string Organization
+        {
+            get
+            {
+                return GetStringAttributeValue("company");
+            }
+            set
+            {
+                SetStringAttribute("company", value);
+            }
+        }
+
+        /// <summary>
+        /// Whether the user has to change their password at their next login.
+        /// </summary>
+        public bool PasswordChangeRequiredAtNextLogin
+        {
+            get
+            {
+                return MustChangePasswordAtNextLogon;
+            }
+        }
+        
 
         /// <summary>
         /// Whether the user's password has expired.
@@ -363,6 +513,66 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// The user's physical address.
+        /// </summary>
+        public string PhyscialAddress
+        {
+            get
+            {
+                return StreetAddress;
+            }
+            set
+            {
+                StreetAddress = value;
+            }
+        }
+
+        /// <summary>
+        /// The user's postal (mailing) address.
+        /// </summary>
+        public string PostalAddress
+        {
+            get
+            {
+                return GetStringAttributeValue("postalAddress");
+            }
+            set
+            {
+                SetStringAttribute("postalAddress", value);
+            }
+        }
+
+        /// <summary>
+        /// The postal code of the user. (ZIP code in the US.)
+        /// </summary>
+        public string PostalCode
+        {
+            get
+            {
+                return GetStringAttributeValue("postalCode");
+            }
+            set
+            {
+                SetStringAttribute("postalCode", value);
+            }
+        }
+
+        /// <summary>
+        /// The user's primary phone number.
+        /// </summary>
+        public string PrimaryPhone
+        {
+            get
+            {
+                return PhoneNumber;
+            }
+            set
+            {
+                PhoneNumber = value;
+            }
+        }
+
+        /// <summary>
         /// The user's security identifier (SID).
         /// </summary>
         public byte[] SecurityIdentifier
@@ -370,6 +580,21 @@ namespace Galactic.ActiveDirectory
             get
             {
                 return GetByteAttributeValue("objectSid");
+            }
+        }
+
+        /// <summary>
+        /// The user's state.
+        /// </summary>
+        public string State
+        {
+            get
+            {
+                return GetStringAttributeValue("st");
+            }
+            set
+            {
+                SetStringAttribute("st", value);
             }
         }
 
@@ -400,6 +625,17 @@ namespace Galactic.ActiveDirectory
             set
             {
                 SetStringAttribute("title", value);
+            }
+        }
+
+        /// <summary>
+        /// The type or category of the User. Empty if unknown.
+        /// </summary>
+        public override string Type
+        {
+            get
+            {
+                return GetStringAttributeValue("employeeType");
             }
         }
 
@@ -491,6 +727,16 @@ namespace Galactic.ActiveDirectory
         // ----- METHODS -----
 
         /// <summary>
+        /// Compares this User to another User.
+        /// </summary>
+        /// <param name="other">The other User to compare this one to.</param>
+        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
+        public int CompareTo(User other)
+        {
+            return CompareTo((ActiveDirectoryObject)other);
+        }
+
+        /// <summary>
         /// Creates a new user within Active Directory given it's proposed name, the distinguished name of the OU to place it in, and other optional attributes.
         /// </summary>
         /// <param name="ad">An Active Directory object used to create the user.</param>
@@ -578,6 +824,17 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Checks whether x and y are equal (using GUIDs).
+        /// </summary>
+        /// <param name="x">The first User to check.</param>
+        /// <param name="y">The second User to check against.</param>
+        /// <returns>True if the objects are equal, false otherwise.</returns>
+        public bool Equals(User x, User y)
+        {
+            return base.Equals(x, y);
+        }
+
+        /// <summary>
         /// Gets all users in the Active Directory.
         /// </summary>
         /// <param name="ad">The Active Directory to retrieve users from.</param>
@@ -614,6 +871,16 @@ namespace Galactic.ActiveDirectory
                 }
             }
             return new List<User>();
+        }
+
+        /// <summary>
+        /// Generates a hash code for the User supplied.
+        /// </summary>
+        /// <param name="obj">The User to generate a hash code for.</param>
+        /// <returns>An integer hash code for the object.</returns>
+        public int GetHashCode(User obj)
+        {
+            return GetHashCode((ActiveDirectoryObject)obj);
         }
 
         /// <summary>
@@ -713,37 +980,6 @@ namespace Galactic.ActiveDirectory
                 return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (using GUIDs).
-        /// </summary>
-        /// <param name="x">The first User to check.</param>
-        /// <param name="y">The second User to check against.</param>
-        /// <returns>True if the objects are equal, false otherwise.</returns>
-        public bool Equals(User x, User y)
-        {
-            return base.Equals(x, y);
-        }
-
-        /// <summary>
-        /// Generates a hash code for the User supplied.
-        /// </summary>
-        /// <param name="obj">The User to generate a hash code for.</param>
-        /// <returns>An integer hash code for the object.</returns>
-        public int GetHashCode(User obj)
-        {
-            return GetHashCode((ActiveDirectoryObject)obj);
-        }
-
-        /// <summary>
-        /// Compares this User to another User.
-        /// </summary>
-        /// <param name="other">The other User to compare this one to.</param>
-        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
-        public int CompareTo(User other)
-        {
-            return CompareTo((ActiveDirectoryObject)other);
         }
     }
 }

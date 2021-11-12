@@ -1,9 +1,10 @@
-﻿using Galactic_LDAP = Galactic.LDAP.LDAP;
+﻿using DnsClient;
+using DnsClient.Protocol;
+using Galactic.Identity;
+using Galactic_LDAP = Galactic.LDAP.LDAP;
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
-using DnsClient;
-using DnsClient.Protocol;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security;
@@ -18,7 +19,7 @@ namespace Galactic.ActiveDirectory
     /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class ActiveDirectory : IDisposable
+    public class ActiveDirectory : IDirectorySystem, IDisposable
     {
         // ----- CONSTANTS -----
 
@@ -510,6 +511,150 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Create a new group within the directory system given its proposed name, its type, and other optional attributes.
+        /// </summary>
+        /// <param name="name">The proposed name of the group. (SAMAccountName)</param>
+        /// <param name="type">The type of group to create.</param>
+        /// <param name="parentUniqueId">(Optional) The unique id (GUID) of the object that will be the parent of the group. Defaults to the standard group create location for the system if not supplied or invalid.</param>
+        /// <param name="additionalAttributes">(Optional) Additional attributes to set when creating the group.</param>
+        /// <returns>The newly created group object, or null if it could not be created.</returns>
+        public IGroup CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
+        {
+            if (!String.IsNullOrWhiteSpace(name) && !String.IsNullOrWhiteSpace(type))
+            {
+                // Build the default path to the location where groups should be created.
+                string ouDn = Group.DEFAULT_CREATE_PATH + "," + DistinguishedName;
+
+                // If the GUID of an OU is supplied get its distinguishedName and use it instead.
+                if (!String.IsNullOrWhiteSpace(parentUniqueId))
+                {
+                    try
+                    {
+                        // Get the OU's object.
+                        Guid ouGuid = new(parentUniqueId);
+                        ActiveDirectoryObject ouObj = new(this, ouGuid);
+
+                        // Get the distinguishedName of the OU.
+                        ouDn = ouObj.DistinguishedName;
+                    }
+                    catch
+                    {
+                        // No action necessary. Uses the default.
+                    }
+                }
+
+                // Convert the supplied type into an Active Directory native type.
+                GroupType groupType;
+                if (GetGroupTypes().Contains(type))
+                {
+                    try
+                    {
+                        groupType = Enum.Parse<GroupType>(type);
+                    }
+                    catch
+                    {
+                        throw new ArgumentException("Invalid group type supplied.", nameof(type));
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid group type supplied.", nameof(type));
+                }
+
+                // Convert any additionalAttributes into DirectoryAttribute objects.
+                List<DirectoryAttribute> directoryAttributes = new();
+                if (additionalAttributes != null)
+                {
+                    foreach (IdentityAttribute<Object> attribute in additionalAttributes)
+                    {
+                        directoryAttributes.Add(new(attribute.Name, attribute.Value));
+                    }
+                }
+
+                // Create the group.
+                try
+                {
+                    return Group.Create(this, name, ouDn, (uint)groupType, directoryAttributes);
+                }
+                catch
+                {
+                    // There was an error creating the group.
+                    return null;
+                }
+            }
+            else
+            {
+                if (String.IsNullOrWhiteSpace(name))
+                {
+                    throw new ArgumentNullException(nameof(name));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(type));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a user within the directory system given it's login, and other options attributes.
+        /// </summary>
+        /// <param name="login">The proposed login of the user. (SAMAccountName)</param>
+        /// <param name="parentUniqueId">(Optional) The unique id (GUID) of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
+        /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user.</param>
+        /// <returns>The newly creaTed user object, or null if it could not be created.</returns>
+        public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
+        {
+            if (!String.IsNullOrWhiteSpace(login))
+            {
+                // Build the default path to the location where users should be created.
+                string ouDn = User.DEFAULT_CREATE_PATH + "," + DistinguishedName;
+
+                // If the GUID of an OU is supplied get its distinguishedName and use it instead.
+                if (!String.IsNullOrWhiteSpace(parentUniqueId))
+                {
+                    try
+                    {
+                        // Get the OU's object.
+                        Guid ouGuid = new(parentUniqueId);
+                        ActiveDirectoryObject ouObj = new(this, ouGuid);
+
+                        // Get the distinguishedName of the OU.
+                        ouDn = ouObj.DistinguishedName;
+                    }
+                    catch
+                    {
+                        // No action necessary. Uses the default.
+                    }
+                }
+
+                // Convert any additionalAttributes into DirectoryAttribute objects.
+                List<DirectoryAttribute> directoryAttributes = new();
+                if (additionalAttributes != null)
+                {
+                    foreach (IdentityAttribute<Object> attribute in additionalAttributes)
+                    {
+                        directoryAttributes.Add(new(attribute.Name, attribute.Value));
+                    }
+                }
+
+                // Create the user.
+                try
+                {
+                    return User.Create(this, login, ouDn, directoryAttributes);
+                }
+                catch
+                {
+                    // There was an error creating the user.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(login));
+            }
+        }
+
+        /// <summary>
         /// Deletes an entry with the specified GUID from Active Directory.
         /// </summary>
         /// <param name="guid">The GUID of the entry to delete.</param>
@@ -557,11 +702,37 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Deletes an object with the specified unique id from the directory system.
+        /// </summary>
+        /// <param name="uniqueId">The unique id (GUID) of the object to delete.</param>
+        /// <returns>True if the object was deleted, false otherwise.</returns>
+        public bool DeleteObject(string uniqueId)
+        {
+            try
+            {
+                return Delete(Guid.Parse(uniqueId));
+            }
+            catch
+            {
+                throw new ArgumentException("Invalid GUID supplied.", nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Releases underlying resources associated with the Active Directory connection.
         /// </summary>
         public void Dispose()
         {
             ldap.Dispose();
+        }
+
+        /// <summary>
+        /// Get's all users in the directory system.
+        /// </summary>
+        /// <returns>A list of all users in the directory system.</returns>
+        public List<IUser> GetAllUsers()
+        {
+            return User.GetAllUsers(this).ConvertAll<IUser>(user => user);
         }
 
         /// <summary>
@@ -1047,6 +1218,20 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Gets a list of the types of groups supported by the directory system.
+        /// </summary>
+        /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
+        public List<string> GetGroupTypes()
+        {
+            return new List<string>() {
+                "Universal",
+                "DomainLocal",
+                "Global",
+                "Security"
+            };
+        }
+
+        /// <summary>
         /// Gets the GUID of the supplied entry.
         /// </summary>
         /// <param name="entry">The entry to get the GUID of.</param>
@@ -1138,6 +1323,51 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Gets identity objects that match wildcarded (*) attribute value in the supplied attribute.
+        /// </summary>
+        /// <param name="attribute">The attribute with name and value to search against.</param>
+        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the object found. If not supplied, the default list of attributes is returned.</param>
+        /// <returns>A list of idenity objects that match the attribute value supplied.</returns>
+        public List<IIdentityObject> GetObjectsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
+        {
+            if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
+            {
+                // Get the names of any attributes to return.
+                List<string> attributeNames = new();
+                if (returnedAttributes != null)
+                {
+                    foreach (IdentityAttribute<object> returnedAttribute in returnedAttributes)
+                    {
+                        attributeNames.Add(returnedAttribute.Name);
+                    }
+                }
+
+                // Search for entries that match the wildcarded attribute value supplied.
+                List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value, attributeNames);
+
+                // Filter the list of entries returned so that only Users and Groups are returned.
+                List<IIdentityObject> matchedObjects = new();
+                if (entries != null)
+                {
+                    foreach (SearchResultEntry entry in entries)
+                    {
+                        SecurityPrincipal principal = new(this, entry);
+                        if (principal.IsGroup || principal.IsUser)
+                        {
+                            matchedObjects.Add(principal);
+                        }
+                    }
+                }
+
+                return matchedObjects;
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(attribute));
+            }
+        }
+
+        /// <summary>
         /// Gets a string with the name of a User Account Control flag given its value.
         /// </summary>
         /// <param name="uac">The value of the User Account Control flag.</param>
@@ -1198,6 +1428,41 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Moves an object in the directory system.
+        /// </summary>
+        /// <param name="uniqueId">The unique id (GUID) of the object to move.</param>
+        /// <param name="parentUniqueId">The unique id (GUID) of the object that will be the new parent of the object.</param>
+        /// <returns>True if the object was moved, false otherwise.</returns>
+        public bool MoveObject(string uniqueId, string parentUniqueId)
+        {
+            if (!String.IsNullOrWhiteSpace(uniqueId) && !String.IsNullOrWhiteSpace(parentUniqueId))
+            {
+                try
+                {
+                    Guid guid = Guid.Parse(uniqueId);
+                    Guid parentGuid = Guid.Parse(parentUniqueId);
+                    return MoveRenameObject(guid, parentGuid);
+                }
+                catch
+                {
+                    // There was an error parsing the GUID or moving the object.
+                    return false;
+                }
+            }
+            else
+            {
+                if (String.IsNullOrWhiteSpace(uniqueId))
+                {
+                    throw new ArgumentNullException(nameof(uniqueId));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(parentUniqueId));
+                }
+            }
+        }
+
+        /// <summary>
         /// Moves and / or renames an object in Active Directory.
         /// </summary>
         /// <param name="objectGuid">The GUID of the object to move and / or rename.</param>
@@ -1246,6 +1511,40 @@ namespace Galactic.ActiveDirectory
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Renames an object in the directory system.
+        /// </summary>
+        /// <param name="uniqueId">The unique id (GUID) of the object to rename.</param>
+        /// <param name="name"The new name of the object (Common Name).</param>
+        /// <returns>True if the object was renamed, false otherwise.</returns>
+        public bool RenameObject(string uniqueId, string name)
+        {
+            if (!String.IsNullOrWhiteSpace(uniqueId) && !String.IsNullOrWhiteSpace(name))
+            {
+                try
+                {
+                    Guid guid = Guid.Parse(uniqueId);
+                    return MoveRenameObject(guid, null, name);
+                }
+                catch
+                {
+                    // There was an error parsing the GUID or renaming the object.
+                    return false;
+                }
+            }
+            else
+            {
+                if (String.IsNullOrWhiteSpace(uniqueId))
+                {
+                    throw new ArgumentNullException(nameof(uniqueId));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(name));
+                }
+            }
         }
 
         /// <summary>

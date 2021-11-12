@@ -19,7 +19,7 @@ namespace Galactic.Identity
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
-        public DateTime? CreationTime { get; set; }
+        public DateTime? CreationTime { get; }
 
         /// <summary>
         /// The list of groups this object is a member of.
@@ -29,12 +29,12 @@ namespace Galactic.Identity
         /// <summary>
         /// The object's unique ID in the system.
         /// </summary>
-        public string UniqueId { get; set; }
+        public string UniqueId { get; }
 
         /// <summary>
-        /// The type or category of the object.
+        /// The type or category of the object. Empty if unknown.
         /// </summary>
-        public string Type { get; set; }
+        public string Type { get; }
 
         // ----- STATIC CONSTRUCTORS -----
 
@@ -55,42 +55,21 @@ namespace Galactic.Identity
         }
 
         /// <summary>
-        /// Gets the values of the attributes associated with the supplied names.
+        /// Compares this identity object to another identity object.
         /// </summary>
-        /// <param name="names">The names of the attributes to get the values of.</param>
-        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
-        public List<IdentityAttribute<Object>> GetAttributes(List<string> names);
-
-        /// <summary>
-        /// Removes the identity object from the supplied group.
-        /// </summary>
-        /// <param name="group">The group to remove the object from.</param>
-        /// <returns>True if the object was removed, false otherwise.</returns>
-        public bool RemoveFromGroup(IGroup group)
+        /// <param name="other">The other identity object to compare this one to.</param>
+        /// <returns>1 iif the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
+        public new virtual int CompareTo(IIdentityObject other)
         {
-            if (group != null)
+            if (other != null)
             {
-                return group.RemoveMembers(new() { this });
+                return string.Compare(UniqueId, other.UniqueId, StringComparison.OrdinalIgnoreCase);
             }
-            return false;
+            else
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
         }
-
-        /// <summary>
-        /// Checks if the identity object is a member of the supplied group.
-        /// </summary>
-        /// <param name="group">The group to check.</param>
-        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
-        /// <returns>True if the object is a member, false otherwise.</returns>
-        public bool MemberOfGroup(IGroup group, bool recursive);
-
-        /// <summary>
-        /// Sets attribute values of an identity object. If null or empty values are supplied the attribute's value will be deleted.
-        /// </summary>
-        /// <param name="attributes">The attribute to set.</param>
-        /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
-        public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes);
-
-        // ----- IEQUALITYCOMPARER METHODS -----
 
         /// <summary>
         /// Checks whether x and y are equal (have the same UniqueIds).
@@ -98,7 +77,7 @@ namespace Galactic.Identity
         /// <param name="x">The first identity object to check.</param>
         /// <param name="y">The second identity object to check.</param>
         /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public new bool Equals(IIdentityObject x, IIdentityObject y)
+        public new virtual bool Equals(IIdentityObject x, IIdentityObject y)
         {
             if (x != null && y != null)
             {
@@ -118,6 +97,13 @@ namespace Galactic.Identity
         }
 
         /// <summary>
+        /// Gets the values of the attributes associated with the supplied names.
+        /// </summary>
+        /// <param name="names">The names of the attributes to get the values of.</param>
+        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
+        public List<IdentityAttribute<Object>> GetAttributes(List<string> names);
+
+        /// <summary>
         /// Generates a hash code for the identity object supplied.
         /// </summary>
         /// <param name="obj">The identity object to generate a hash code for.</param>
@@ -134,27 +120,33 @@ namespace Galactic.Identity
             }
         }
 
-        // ----- END IEQUALITYCOMPARER METHODS -----
-
-        // ----- ICOMPARABLE METHODS -----
+        /// <summary>
+        /// Checks if the identity object is a member of the supplied group.
+        /// </summary>
+        /// <param name="group">The group to check.</param>
+        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
+        /// <returns>True if the object is a member, false otherwise.</returns>
+        public bool MemberOfGroup(IGroup group, bool recursive);
 
         /// <summary>
-        /// Compares this identity object to another identity object.
+        /// Removes the identity object from the supplied group.
         /// </summary>
-        /// <param name="other">The other identity object to compare this one to.</param>
-        /// <returns>1 iif the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
-        public new int CompareTo(IIdentityObject other)
+        /// <param name="group">The group to remove the object from.</param>
+        /// <returns>True if the object was removed, false otherwise.</returns>
+        public bool RemoveFromGroup(IGroup group)
         {
-            if (other != null)
+            if (group != null)
             {
-                return string.Compare(UniqueId, other.UniqueId, StringComparison.OrdinalIgnoreCase);
+                return group.RemoveMembers(new() { this });
             }
-            else
-            {
-                throw new ArgumentNullException(nameof(other));
-            }
+            return false;
         }
 
-        // ----- END ICOMPARABLE METHODS -----
+        /// <summary>
+        /// Sets attribute values of an identity object. If null or empty values are supplied the attribute's value will be deleted.
+        /// </summary>
+        /// <param name="attributes">The attribute to set.</param>
+        /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
+        public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes);
     }
 }

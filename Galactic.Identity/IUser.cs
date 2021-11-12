@@ -68,7 +68,7 @@ namespace Galactic.Identity
         /// <summary>
         /// The full name of the user's manager.
         /// </summary>
-        public string ManagerName { get; set; }
+        public string ManagerName { get; }
 
         /// <summary>
         /// The user's middle name.

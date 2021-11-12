@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Galactic.Identity;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Linq;
 using System.Runtime.Versioning;
 
 namespace Galactic.ActiveDirectory
@@ -11,7 +14,7 @@ namespace Galactic.ActiveDirectory
     /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class Group : SecurityPrincipal, IEnumerable<SecurityPrincipal>
+    public class Group : SecurityPrincipal, IEnumerable<SecurityPrincipal>, IGroup
     {
 
         // ----- CONSTANTS -----
@@ -21,9 +24,25 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         static protected new string[] AttributeNames = { "department", "member", "groupType" };
 
+        /// <summary>
+        /// The default location for groups to be created in Active Directory.
+        /// </summary>
+        public const string DEFAULT_CREATE_PATH = "CN=Users";
+
         // ----- VARIABLES -----
 
         // ----- PROPERTIES -----
+
+        /// <summary>
+        /// All users that are a member of this group or a subgroup.
+        /// </summary>
+        List<IUser> IGroup.AllUserMembers
+        {
+            get
+            {
+                return AllUserMembers.ConvertAll<IUser>(user => user);
+            }
+        }
 
         /// <summary>
         /// Does a recursive lookup to find all users that are a member of this
@@ -95,6 +114,28 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Groups that are a member of the group.
+        /// </summary>
+        List<IGroup> IGroup.GroupMembers
+        {
+            get
+            {
+                return GroupMembers.ConvertAll<IGroup>(group => group);
+            }
+        }
+
+        /// <summary>
+        /// The members of the group.
+        /// </summary>
+        List<IIdentityObject> IGroup.Members
+        {
+            get
+            {
+                return Members.ConvertAll<IIdentityObject>(principal => principal);
+            }
+        }
+
+        /// <summary>
         /// The members of the group.
         /// </summary>
         public List<SecurityPrincipal> Members
@@ -140,6 +181,42 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// The type or category of the Group. Empty if unknown.
+        /// </summary>
+        public override string Type
+        {
+            get
+            {
+                // Get the attribute value and convert it to a usable enum.
+                byte[] groupBits = GetByteAttributeValue("groupType");
+                uint groupTypeNum = BitConverter.ToUInt32(groupBits);
+                ActiveDirectory.GroupType groupType = (ActiveDirectory.GroupType)groupTypeNum;
+
+                // Check if the flag is set for various types of groups.
+                if (groupType.HasFlag(ActiveDirectory.GroupType.DomainLocal))
+                {
+                    return "DomainLocal";
+                }
+                else if (groupType.HasFlag(ActiveDirectory.GroupType.Global))
+                {
+                    return "Global";
+                }
+                else if (groupType.HasFlag(ActiveDirectory.GroupType.Security))
+                {
+                    return "Security";
+                }
+                else if (groupType.HasFlag(ActiveDirectory.GroupType.Universal))
+                {
+                    return "Universal";
+                }
+                else
+                {
+                    return "";
+                }
+            }
+        }
+
+        /// <summary>
         /// Users who are members of the group.
         /// </summary>
         public List<User> UserMembers
@@ -164,6 +241,17 @@ namespace Galactic.ActiveDirectory
                     }
                 }
                 return users;
+            }
+        }
+
+        /// <summary>
+        /// Users that are a member of the group. (Not including subgroups.)
+        /// </summary>
+        List<IUser> IGroup.UserMembers
+        {
+            get
+            {
+                return UserMembers.ConvertAll<IUser>(user => user);
             }
         }
 
@@ -215,6 +303,29 @@ namespace Galactic.ActiveDirectory
         // ----- METHODS -----
 
         /// <summary>
+        /// Adds members to the group.
+        /// </summary>
+        /// <param name="members">The members to add.</param>
+        /// <returns>True if the members were added, false otherwise.</returns>
+        public bool AddMembers(List<IIdentityObject> members)
+        {
+            if (members != null)
+            {
+                List<SecurityPrincipal> securityPrincipals = new();
+                foreach (IIdentityObject member in members)
+                {
+                    securityPrincipals.Add(member as SecurityPrincipal);
+                }
+                return AddMembers(securityPrincipals);
+            }
+            else
+            {
+                // No members were supplied.
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Adds security principals to the group.
         /// </summary>
         /// <param name="principals">The principals to add.</param>
@@ -243,6 +354,17 @@ namespace Galactic.ActiveDirectory
         public bool ClearMembership()
         {
             return DeleteAttribute("member");
+        }
+
+
+        /// <summary>
+        /// Compares this Group to another Group.
+        /// </summary>
+        /// <param name="other">The other Group to compare this one to.</param>
+        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
+        public int CompareTo(Group other)
+        {
+            return CompareTo((ActiveDirectoryObject)other);
         }
 
         /// <summary>
@@ -336,6 +458,57 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Checks whether x and y are equal (using GUIDs).
+        /// </summary>
+        /// <param name="x">The first Group to check.</param>
+        /// <param name="y">The second Group to check against.</param>
+        /// <returns>True if the objects are equal, false otherwise.</returns>
+        public bool Equals(Group x, Group y)
+        {
+            return base.Equals(x, y);
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
+        IEnumerator<IIdentityObject> IEnumerable<IIdentityObject>.GetEnumerator()
+        {
+            return ((IGroup)this).GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
+        public IEnumerator<SecurityPrincipal> GetEnumerator()
+        {
+            foreach (SecurityPrincipal member in Members)
+            {
+                yield return member;
+            }
+        }
+
+        /// <summary>
+        /// Generates a hash code for the Group supplied.
+        /// </summary>
+        /// <param name="obj">The Group to generate a hash code for.</param>
+        /// <returns>An integer hash code for the object.</returns>
+        public int GetHashCode(Group obj)
+        {
+            return GetHashCode((ActiveDirectoryObject)obj);
+        }
+
+        /// <summary>
         /// Removes a security principal from the group.
         /// </summary>
         /// <param name="principal">The principal to remove.</param>
@@ -343,6 +516,29 @@ namespace Galactic.ActiveDirectory
         public bool RemoveMember(SecurityPrincipal principal)
         {
             return RemoveMembers(new List<SecurityPrincipal> { principal });
+        }
+
+        /// <summary>
+        /// Removes identity objects from the group.
+        /// </summary>
+        /// <param name="members">The objects to remove.</param>
+        /// <returns>True if the objects were removed, false otherwise.</returns>
+        public bool RemoveMembers(List<IIdentityObject> members)
+        {
+            if (members != null)
+            {
+                List<SecurityPrincipal> securityPrincipals = new();
+                foreach (IIdentityObject member in members)
+                {
+                    securityPrincipals.Add(member as SecurityPrincipal);
+                }
+                return RemoveMembers(securityPrincipals);
+            }
+            else
+            {
+                // No members were supplied.
+                return false;
+            }
         }
 
         /// <summary>
@@ -362,57 +558,6 @@ namespace Galactic.ActiveDirectory
                 return DeleteAttribute("member", dns.ToArray());
             }
             return false;
-        }
-
-        // ----- IENUMERABLE METHODS -----
-
-        public IEnumerator<SecurityPrincipal> GetEnumerator()
-        {
-            foreach (SecurityPrincipal member in Members)
-            {
-                yield return member;
-            }
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            foreach (SecurityPrincipal member in Members)
-            {
-                yield return member;
-            }
-        }
-
-        // ----- END IENUMERABLE METHODS -----
-
-        /// <summary>
-        /// Checks whether x and y are equal (using GUIDs).
-        /// </summary>
-        /// <param name="x">The first Group to check.</param>
-        /// <param name="y">The second Group to check against.</param>
-        /// <returns>True if the objects are equal, false otherwise.</returns>
-        public bool Equals(Group x, Group y)
-        {
-            return base.Equals(x, y);
-        }
-
-        /// <summary>
-        /// Generates a hash code for the Group supplied.
-        /// </summary>
-        /// <param name="obj">The Group to generate a hash code for.</param>
-        /// <returns>An integer hash code for the object.</returns>
-        public int GetHashCode(Group obj)
-        {
-            return GetHashCode((ActiveDirectoryObject)obj);
-        }
-
-        /// <summary>
-        /// Compares this Group to another Group.
-        /// </summary>
-        /// <param name="other">The other Group to compare this one to.</param>
-        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
-        public int CompareTo(Group other)
-        {
-            return CompareTo((ActiveDirectoryObject)other);
         }
     }
 }

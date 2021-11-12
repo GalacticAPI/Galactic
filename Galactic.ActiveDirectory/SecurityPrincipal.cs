@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Galactic.Identity;
+using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
@@ -8,7 +10,7 @@ namespace Galactic.ActiveDirectory
 {
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class SecurityPrincipal : ActiveDirectoryObject, IComparable<SecurityPrincipal>, IEqualityComparer<SecurityPrincipal>
+    public class SecurityPrincipal : ActiveDirectoryObject, IComparable<SecurityPrincipal>, IDescriptionSupportedObject, IEqualityComparer<SecurityPrincipal>, IIdentityObject, IMailSupportedObject
     {
         // ----- CONSTANTS -----
 
@@ -21,6 +23,17 @@ namespace Galactic.ActiveDirectory
 
 
         // ----- PROPERTIES -----
+
+        /// <summary>
+        /// The date and time that the object was created.
+        /// </summary>
+        public DateTime? CreationTime
+        {
+            get
+            {
+                return CreateTimeStamp;
+            }
+        }
 
         /// <summary>
         /// A description of the security principal.
@@ -103,6 +116,64 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// A list of the object's e-mail addresses.
+        /// The object's primary e-mail address will always be first in the list.
+        /// </summary>
+        List<string> IMailSupportedObject.EmailAddresses
+        {
+            get
+            {
+                // Create a list of e-mail addresses to return.
+                List<string> emailAddresses = new();
+
+                // Get the principal's primary e-mail address.
+                string primaryEmailAddress = PrimaryEmailAddress;
+
+                // Get other e-mail addresses associated with the principal.
+                List<string> otherEmailAddresses = EmailAddresses;
+
+                // Remove the primary e-mail address from the list of other addresses.
+                otherEmailAddresses.Remove(primaryEmailAddress);
+
+                // Create the list with the primary first.
+                emailAddresses.Add(primaryEmailAddress);
+                emailAddresses.AddRange(otherEmailAddresses);
+
+                // Return the list.
+                return emailAddresses;
+                
+            }
+            set
+            {
+                if (value != null)
+                {
+                    // Get the current list of email addresses associated with the principal.
+                    List<string> currentAddresses = EmailAddresses;
+
+                    // Remove addresses that should no longer be associated with the principal.
+                    // Those in currentAddresses but not value.
+                    foreach (string address in currentAddresses.Except(value))
+                    {
+                        RemoveProxyAddress(address);
+                    }
+
+                    // Add addresses that are new. Those in value but not in current addresses.
+                    foreach (string address in value.Except(currentAddresses))
+                    {
+                        AddProxyAddress(address);
+                    }
+
+                    // Set the primary e-mail address.
+                    if (value.Count > 0)
+                    {
+                        SetPrimaryProxyAddress(value[0]);
+                        EMailAddress = value[0];
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// The principal's Microsoft Exchange Alias.
         /// </summary>
         public string ExchangeAlias
@@ -110,6 +181,38 @@ namespace Galactic.ActiveDirectory
             get
             {
                 return GetStringAttributeValue("mailNickname");
+            }
+        }
+
+        /// <summary>
+        /// The list of groups this object is a member of.
+        /// </summary>
+        List<IGroup> IIdentityObject.Groups
+        {
+            get
+            {
+                List<string> groupDns = Groups;
+                if (groupDns != null)
+                {
+                    List<IGroup> groups = new();
+                    foreach (string groupDn in groupDns)
+                    {
+                        try
+                        {
+                            groups.Add(new Group(AD, AD.GetGUIDByDistinguishedName(groupDn)));
+                        }
+                        catch
+                        {
+                            // Skip adding this group. There was an error getting its GUID.
+                        }
+                    }
+                    return groups;
+                }
+                else
+                {
+                    // The principal is not a member of any groups.
+                    return new();
+                }
             }
         }
 
@@ -209,6 +312,28 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// The object's primary e-mail address.
+        /// </summary>
+        string IMailSupportedObject.PrimaryEmailAddress
+        {
+            get
+            {
+                return PrimaryEmailAddress;
+            }
+            set
+            {
+                if (!EmailAddresses.Contains(value))
+                {
+                    // The address is not associated with the principal. Add it.
+                    AddProxyAddress(value);
+                }
+                // Set the address as primary.
+                SetPrimaryProxyAddress(value);
+                EMailAddress = value;
+            }
+        }
+
+        /// <summary>
         /// The principal's SAM Account Name.
         /// </summary>
         public string SAMAccountName
@@ -239,6 +364,39 @@ namespace Galactic.ActiveDirectory
             set
             {
                 SetStringAttribute("targetAddress", value);
+            }
+        }
+
+        /// <summary>
+        /// The type or category of the object. Empty if unknown.
+        /// </summary>
+        virtual public string Type
+        {
+            get
+            {
+                if (IsGroup)
+                {
+                    return "group";
+                }
+                else if (IsUser)
+                {
+                    return "user";
+                }
+                else
+                {
+                    return "";
+                }
+            }
+        }
+
+        /// <summary>
+        /// The object's unique ID in the system. (GUID)
+        /// </summary>
+        public string UniqueId
+        {
+            get
+            {
+                return GUID.ToString();
             }
         }
 
@@ -395,18 +553,111 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
-        /// Removes this principal from the supplied group.
+        /// Compares this identity object to another identity object.
         /// </summary>
-        /// <param name="guid">The GUID of the group to add the principal to.</param>
-        /// <returns>True if the principal was removed, false otherwise.</returns>
-        public bool RemoveFromGroup(Guid guid)
+        /// <param name="other">The other identity object to compare this one to.</param>
+        /// <returns>1 iif the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
+        public int CompareTo(IIdentityObject other)
         {
-            if (guid != Guid.Empty)
+            return ((IIdentityObject)this).CompareTo(other);
+        }
+
+        /// <summary>
+        /// Compares this SecurityPrincipal to another SecurityPrincipal.
+        /// </summary>
+        /// <param name="other">The other SecurityPrincipal to compare this one to.</param>
+        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
+        public int CompareTo(SecurityPrincipal other)
+        {
+            return CompareTo((ActiveDirectoryObject)other);
+        }
+
+        /// <summary>
+        /// Checks whether x and y are equal (have the same UniqueIds).
+        /// </summary>
+        /// <param name="x">The first identity object to check.</param>
+        /// <param name="y">The second identity object to check.</param>
+        /// <returns>True if the identity objects are equal, false otherwise.</returns>
+        public bool Equals(IIdentityObject x, IIdentityObject y)
+        {
+            return ((IIdentityObject)this).Equals(x, y);
+        }
+
+        /// <summary>
+        /// Checks whether x and y are equal (using GUIDs).
+        /// </summary>
+        /// <param name="x">The first SecurityPrincipal to check.</param>
+        /// <param name="y">The second SecurityPrincipal to check against.</param>
+        /// <returns>True if the objects are equal, false otherwise.</returns>
+        public bool Equals(SecurityPrincipal x, SecurityPrincipal y)
+        {
+            return base.Equals(x, y);
+        }
+
+        /// <summary>
+        /// Gets the values of the attributes associated with the supplied names.
+        /// </summary>
+        /// <param name="names">The names of the attributes to get the values of.</param>
+        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.
+        /// If a returned value is null, there was an error retrieving that value.</returns>
+        public List<IdentityAttribute<object>> GetAttributes(List<string> names)
+        {
+            List<IdentityAttribute<object>> attributes = new();
+            if (names != null)
             {
-                Group group = new Group(AD, guid);
-                return group.RemoveMembers(new List<SecurityPrincipal>() { this });
+                foreach (string name in names)
+                {
+                    // TODO: See if its possible to determine type via the AD Schema.
+                    // Try getting the value by each possible type it could be.
+                    object value = GetStringAttributeValue(name);
+                    if (value == null)
+                    {
+                        // It wasn't a string.
+                        value = GetStringAttributeValues(name);
+                        if (value == null)
+                        {
+                            // It wasn't a list of strings.
+                            value = GetByteAttributeValue(name);
+                            if (value == null)
+                            {
+                                // It wasn't a byte.
+                                value = GetByteAttributeValues(name);
+                                if (value == null)
+                                {
+                                    // It wasn't a byte array.
+                                    value = GetIntervalAttributeValue(name);
+                                }
+                            }
+                        }
+                    }
+
+                    // Add the attribute and it's value.
+                    attributes.Add(new(name, value));
+                }
             }
-            return false;
+
+            // Return the list of attributes.
+            return attributes;
+        }
+
+        /// <summary>
+        /// Generates a hash code for the identity object supplied.
+        /// </summary>
+        /// <param name="obj">The identity object to generate a hash code for.</param>
+        /// <returns>An integer hash code for the identity object.</returns>
+        public int GetHashCode(IIdentityObject obj)
+        {
+            return IIdentityObject.GetHashCode(obj);
+        }
+
+        /// <summary>
+        /// Generates a hash code for the SecurityPrincipal supplied.
+        /// </summary>
+        /// <param name="obj">The SecurityPrincipal to generate a hash code for.</param>
+        /// <returns>An integer hash code for the object.</returns>
+        public int GetHashCode(SecurityPrincipal obj)
+        {
+            return GetHashCode((ActiveDirectoryObject)obj);
         }
 
         /// <summary>
@@ -452,6 +703,33 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Checks if the identity object is a member of the supplied group.
+        /// </summary>
+        /// <param name="group">The group to check.</param>
+        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
+        /// <returns>True if the object is a member, false otherwise.</returns>
+        public bool MemberOfGroup(IGroup group, bool recursive)
+        {
+            if (group != null)
+            {
+                try
+                {
+                    Guid guid = Guid.Parse(group.UniqueId);
+                    return MemberOfGroup(guid, recursive);
+                }
+                catch
+                {
+                    throw new ArgumentException("Invalid group supplied. GUID not found.", nameof(group));
+                }
+            }
+            else
+            {
+                // A group was not supplied.
+                throw new ArgumentNullException(nameof(group));
+            }
+        }
+
+        /// <summary>
         /// Moves and / or renames this object.
         /// </summary>
         /// <param name="newParentObjectGuid">(Optional: Required only if moving) The GUID of the new parent object for the object (if moving).</param>
@@ -478,6 +756,21 @@ namespace Galactic.ActiveDirectory
 
                     return true;
                 }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes this principal from the supplied group.
+        /// </summary>
+        /// <param name="guid">The GUID of the group to add the principal to.</param>
+        /// <returns>True if the principal was removed, false otherwise.</returns>
+        public bool RemoveFromGroup(Guid guid)
+        {
+            if (guid != Guid.Empty)
+            {
+                Group group = new Group(AD, guid);
+                return group.RemoveMembers(new List<SecurityPrincipal>() { this });
             }
             return false;
         }
@@ -546,6 +839,45 @@ namespace Galactic.ActiveDirectory
         }
 
         /// <summary>
+        /// Sets attribute values of an identity object. If null or empty values are supplied the attribute's value will be deleted.
+        /// </summary>
+        /// <param name="attributes">The attribute to set.</param>
+        /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
+        public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<object>> attributes)
+        {
+            if (attributes != null)
+            {
+                // Create the list of results attributes to return.
+                List<IdentityAttribute<bool>> resultAttributes = new();
+
+                // Iterate over all the attributes and set their values.
+                foreach (IdentityAttribute<object> attribute in attributes)
+                {
+                    if (attribute.Value is string)
+                    {
+                        // The value is a string, set it using the string version of the method.
+                        bool result = SetStringAttribute(attribute.Name, attribute.Value as string);
+                        resultAttributes.Add(new(attribute.Name, result));
+                    }
+                    else if (attribute.Value is IEnumerable<object>)
+                    {
+                        // The value is a collection of objects. Use the default method.
+                        bool result = SetAttribute(attribute.Name, attribute.Value as object[]);
+                        resultAttributes.Add(new(attribute.Name, result));
+                    }
+                }
+
+                // Return the results.
+                return resultAttributes;
+            }
+            else
+            {
+                // The list of attributes was null.
+                throw new ArgumentNullException(nameof(attributes));
+            }
+        }
+
+        /// <summary>
         /// Sets the supplied e-mail address to be the primary e-mail address for receiving mail.
         /// Note: This e-mail address must already be associated with the account.
         /// If there is account currently has a primary e-mail address, it will be set as a secondary.
@@ -594,37 +926,6 @@ namespace Galactic.ActiveDirectory
             }
             // An e-mail address was not supplied or there was an error setting the primary address.
             return false;
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (using GUIDs).
-        /// </summary>
-        /// <param name="x">The first SecurityPrincipal to check.</param>
-        /// <param name="y">The second SecurityPrincipal to check against.</param>
-        /// <returns>True if the objects are equal, false otherwise.</returns>
-        public bool Equals(SecurityPrincipal x, SecurityPrincipal y)
-        {
-            return base.Equals(x, y);
-        }
-
-        /// <summary>
-        /// Generates a hash code for the SecurityPrincipal supplied.
-        /// </summary>
-        /// <param name="obj">The SecurityPrincipal to generate a hash code for.</param>
-        /// <returns>An integer hash code for the object.</returns>
-        public int GetHashCode(SecurityPrincipal obj)
-        {
-            return GetHashCode((ActiveDirectoryObject)obj);
-        }
-
-        /// <summary>
-        /// Compares this SecurityPrincipal to another SecurityPrincipal.
-        /// </summary>
-        /// <param name="other">The other SecurityPrincipal to compare this one to.</param>
-        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
-        public int CompareTo(SecurityPrincipal other)
-        {
-            return CompareTo((ActiveDirectoryObject)other);
         }
     }
 }
