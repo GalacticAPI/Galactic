@@ -33,6 +33,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Sql.Oracle", "Gala
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Identity", "Galactic.Identity\Galactic.Identity.csproj", "{6C5A9E5C-8B4D-4345-9AE2-3A321E60CA8F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Identity.Okta", "Galactic.Identity.Okta\Galactic.Identity.Okta.csproj", "{F882CA82-C737-4CF6-8113-0C708EAA00A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.REST", "Galactic.REST\Galactic.REST.csproj", "{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +91,14 @@ Global
 		{6C5A9E5C-8B4D-4345-9AE2-3A321E60CA8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C5A9E5C-8B4D-4345-9AE2-3A321E60CA8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C5A9E5C-8B4D-4345-9AE2-3A321E60CA8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F882CA82-C737-4CF6-8113-0C708EAA00A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F882CA82-C737-4CF6-8113-0C708EAA00A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F882CA82-C737-4CF6-8113-0C708EAA00A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F882CA82-C737-4CF6-8113-0C708EAA00A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

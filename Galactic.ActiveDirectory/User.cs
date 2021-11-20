@@ -137,7 +137,7 @@ namespace Galactic.ActiveDirectory
         {
             get
             {
-                return ActiveDirectory.UserAccountControlContains(UserAccountControl, ActiveDirectory.UserAccountControl.Accountdisable);
+                return ActiveDirectoryClient.UserAccountControlContains(UserAccountControl, ActiveDirectoryClient.UserAccountControl.Accountdisable);
             }
         }
 
@@ -296,10 +296,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         public string Login
         {
-            get
-            {
-                return SAMAccountName;
-            }
+            get => SAMAccountName;
             set
             {
                 SAMAccountName = value;
@@ -418,7 +415,7 @@ namespace Galactic.ActiveDirectory
                 DateTime? passwordLastSetTime = GetIntervalAttributeValue("pwdLastSet");
                 if (passwordLastSetTime.HasValue)
                 {
-                    if (passwordLastSetTime.Value == JAN_01_1601 && !ActiveDirectory.UserAccountControlContains(UserAccountControl, ActiveDirectory.UserAccountControl.DontExpirePassword))
+                    if (passwordLastSetTime.Value == JAN_01_1601 && !ActiveDirectoryClient.UserAccountControlContains(UserAccountControl, ActiveDirectoryClient.UserAccountControl.DontExpirePassword))
                     {
                         // The password last set time is not set, and the don't expire password bit in the UserAccountControl attribute isn't set.
                         // The user must change their password at next logon.
@@ -431,7 +428,7 @@ namespace Galactic.ActiveDirectory
             {
                 if (value)
                 {
-                    SetAttribute("pwdLastSet", new object[] { ActiveDirectory.ToInterval(0) });
+                    SetAttribute("pwdLastSet", new object[] { ActiveDirectoryClient.ToInterval(0) });
                 }
                 else
                 {
@@ -458,13 +455,7 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Whether the user has to change their password at their next login.
         /// </summary>
-        public bool PasswordChangeRequiredAtNextLogin
-        {
-            get
-            {
-                return MustChangePasswordAtNextLogon;
-            }
-        }
+        public bool PasswordChangeRequiredAtNextLogin => MustChangePasswordAtNextLogon;
         
 
         /// <summary>
@@ -474,7 +465,7 @@ namespace Galactic.ActiveDirectory
         {
             get
             {
-                return ActiveDirectory.UserAccountControlContains(UserAccountControlComputed, ActiveDirectory.UserAccountControl.PasswordExpired);
+                return ActiveDirectoryClient.UserAccountControlContains(UserAccountControlComputed, ActiveDirectoryClient.UserAccountControl.PasswordExpired);
             }
         }
 
@@ -517,10 +508,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         public string PhyscialAddress
         {
-            get
-            {
-                return StreetAddress;
-            }
+            get => StreetAddress;
             set
             {
                 StreetAddress = value;
@@ -562,10 +550,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         public string PrimaryPhone
         {
-            get
-            {
-                return PhoneNumber;
-            }
+            get => PhoneNumber;
             set
             {
                 PhoneNumber = value;
@@ -684,9 +669,9 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Gets a user object from Active Directory with the supplied GUID.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to query and manipulate the user.</param>
+        /// <param name="ad">An Active Directory client used to query and manipulate the user.</param>
         /// <param name="guid">The GUID of the user.</param>
-        public User(ActiveDirectory ad, Guid guid)
+        public User(ActiveDirectoryClient ad, Guid guid)
             : base(ad, guid)
         {
             if (ad != null && guid != Guid.Empty)
@@ -717,9 +702,9 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Gets a user object from a supplied search result entry.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to manipulate the user.</param>
+        /// <param name="ad">An Active Directory client used to manipulate the user.</param>
         /// <param name="entry">The SearchResultEntry object containing attributes necessary to populate the object.</param>
-        public User(ActiveDirectory ad, SearchResultEntry entry)
+        public User(ActiveDirectoryClient ad, SearchResultEntry entry)
             : base(ad, entry)
         {
         }
@@ -739,12 +724,12 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Creates a new user within Active Directory given it's proposed name, the distinguished name of the OU to place it in, and other optional attributes.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to create the user.</param>
+        /// <param name="ad">An Active Directory client used to create the user.</param>
         /// <param name="sAMAccountName">The proposed SAM Account name for the user.</param>
         /// <param name="ouDn">The distinguished name for the OU to place the user within.</param>
         /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user.</param>
         /// <returns>The newly created user object.</returns>
-        static public User Create(ActiveDirectory ad, string sAMAccountName, string ouDn, List<DirectoryAttribute> additionalAttributes = null)
+        static public User Create(ActiveDirectoryClient ad, string sAMAccountName, string ouDn, List<DirectoryAttribute> additionalAttributes = null)
         {
             // Check that an active directory instance, SAM Account name, and distinguished name of the OU to
             // place the user within are provided.
@@ -811,7 +796,7 @@ namespace Galactic.ActiveDirectory
         /// <returns>True if the account is disabled successfully or was not enabled. False if the account could not be disabled.</returns>
         public bool Disable()
         {
-            return SetUserAccountControlFlag(ActiveDirectory.UserAccountControl.Accountdisable);
+            return SetUserAccountControlFlag(ActiveDirectoryClient.UserAccountControl.Accountdisable);
         }
 
         /// <summary>
@@ -820,7 +805,7 @@ namespace Galactic.ActiveDirectory
         /// <returns>True if the account is enabled successfully or was not disabled. False if the account could not be enabled.</returns>
         public bool Enable()
         {
-            return RemoveUserAccountControlFlag(ActiveDirectory.UserAccountControl.Accountdisable);
+            return RemoveUserAccountControlFlag(ActiveDirectoryClient.UserAccountControl.Accountdisable);
         }
 
         /// <summary>
@@ -839,7 +824,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         /// <param name="ad">The Active Directory to retrieve users from.</param>
         /// <returns>A list of all users in the Active Directory.</returns>
-        static public List<User> GetAllUsers(ActiveDirectory ad)
+        static public List<User> GetAllUsers(ActiveDirectoryClient ad)
         {
             // The LDAP search filter to use to find all the users.
             const string FILTER = "(&(objectCategory=person)(objectClass=user))";
@@ -886,11 +871,11 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Gets of all user accounts that were modified within the specified time frame.
         /// </summary>
-        /// <param name="ad">The Active Directory to retrieve users from.</param>
+        /// <param name="ad">The Active Directory client to retrieve users with.</param>
         /// <param name="startDate">The lower boundary of the time frame.</param>
         /// <param name="endDate">The upper boundary of the time frame.</param>
         /// <returns>Returns a list of all users that were during the specified period of time.</returns>
-        static public List<User> GetModifiedUsers(ActiveDirectory ad, DateTime startDate, DateTime endDate)
+        static public List<User> GetModifiedUsers(ActiveDirectoryClient ad, DateTime startDate, DateTime endDate)
         {
             // The LDAP search filter to use to find all the users.
             string FILTER = String.Format("(&(objectCategory=person)(objectClass=user)(whenChanged>={0})(whenChanged<={1}))", startDate.ToUniversalTime().ToString("yyyyMMddHHmmss.s") + "Z", endDate.ToUniversalTime().ToString("yyyyMMddHHmmss.s") + "Z");
@@ -951,7 +936,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         /// <param name="flag">A flag from the predefined UserAccountControl flags.</param>
         /// <returns>True if set, false otherwise.</returns>
-        public bool SetUserAccountControlFlag(ActiveDirectory.UserAccountControl flag)
+        public bool SetUserAccountControlFlag(ActiveDirectoryClient.UserAccountControl flag)
         {
             // Use the normal user account control attribute.
             uint newUserAccountControl = UserAccountControl | (uint)flag;
@@ -969,7 +954,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         /// <param name="flag">A flag from the predefined UserAccountControl flags.</param>
         /// <returns>True if removed, false otherwise.</returns>
-        public bool RemoveUserAccountControlFlag(ActiveDirectory.UserAccountControl flag)
+        public bool RemoveUserAccountControlFlag(ActiveDirectoryClient.UserAccountControl flag)
         {
             // Use the normal user account control attribute.
             uint newUserAccountControl = UserAccountControl & ~(uint)flag;

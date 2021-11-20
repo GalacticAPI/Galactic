@@ -190,22 +190,22 @@ namespace Galactic.ActiveDirectory
                 // Get the attribute value and convert it to a usable enum.
                 byte[] groupBits = GetByteAttributeValue("groupType");
                 uint groupTypeNum = BitConverter.ToUInt32(groupBits);
-                ActiveDirectory.GroupType groupType = (ActiveDirectory.GroupType)groupTypeNum;
+                ActiveDirectoryClient.GroupType groupType = (ActiveDirectoryClient.GroupType)groupTypeNum;
 
                 // Check if the flag is set for various types of groups.
-                if (groupType.HasFlag(ActiveDirectory.GroupType.DomainLocal))
+                if (groupType.HasFlag(ActiveDirectoryClient.GroupType.DomainLocal))
                 {
                     return "DomainLocal";
                 }
-                else if (groupType.HasFlag(ActiveDirectory.GroupType.Global))
+                else if (groupType.HasFlag(ActiveDirectoryClient.GroupType.Global))
                 {
                     return "Global";
                 }
-                else if (groupType.HasFlag(ActiveDirectory.GroupType.Security))
+                else if (groupType.HasFlag(ActiveDirectoryClient.GroupType.Security))
                 {
                     return "Security";
                 }
-                else if (groupType.HasFlag(ActiveDirectory.GroupType.Universal))
+                else if (groupType.HasFlag(ActiveDirectoryClient.GroupType.Universal))
                 {
                     return "Universal";
                 }
@@ -260,9 +260,9 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Gets a group object from Active Directory with the supplied GUID.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to query and manipulate the directory object.</param>
+        /// <param name="ad">An Active Directory client used to query and manipulate the directory object.</param>
         /// <param name="guid">The GUID of the user.</param>
-        public Group(ActiveDirectory ad, Guid guid)
+        public Group(ActiveDirectoryClient ad, Guid guid)
             : base(ad, guid)
         {
             if (ad != null && guid != Guid.Empty)
@@ -293,9 +293,9 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Gets a group object from a supplied search result entry.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to manipulate the group.</param>
+        /// <param name="ad">An Active Directory client used to manipulate the group.</param>
         /// <param name="entry">The SearchResultEntry object containing attributes necessary to populate the object.</param>
-        public Group(ActiveDirectory ad, SearchResultEntry entry)
+        public Group(ActiveDirectoryClient ad, SearchResultEntry entry)
             : base(ad, entry)
         {
         }
@@ -370,20 +370,20 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Creates a new group within Active Directory given its proposed name, the distinguished name of the OU to place it in, and other optional attributes.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to create the group.</param>
+        /// <param name="ad">An Active Directory client used to create the group.</param>
         /// <param name="sAMAccountName">The proposed SAM Account name for the group.</param>
         /// <param name="ouDn">The distinguished name for the OU to place the group within.</param>
         /// <param name="type">A uint from the ActiveDirectory.GroupType enum representing the type of group to create.</param>
         /// <param name="additionalAttributes">Optional: Additional attributes to set when creating the group.</param>
         /// <returns>The newly created group object.</returns>
-        static public Group Create(ActiveDirectory ad, string sAMAccountName, string ouDn, uint type, List<DirectoryAttribute> additionalAttributes = null)
+        static public Group Create(ActiveDirectoryClient ad, string sAMAccountName, string ouDn, uint type, List<DirectoryAttribute> additionalAttributes = null)
         {
             // Check that an active directory instance, SAM Account name, and distinguished name of the OU to
             // place the group within are provided.
             if (ad != null && !String.IsNullOrWhiteSpace(sAMAccountName) && !String.IsNullOrWhiteSpace(ouDn))
             {
                 // Checks whether the group name supplied is valid. Otherwise, throws an exception.
-                if (!ActiveDirectory.IsGroupNameValid(ouDn))
+                if (!ActiveDirectoryClient.IsGroupNameValid(ouDn))
                 {
                     // The group name isn't valid.
                     throw new ArgumentException("The SAM Account Name provided is not a valid group name.");
@@ -442,10 +442,10 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Deletes a group from Active Directory.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to delete the group.</param>
+        /// <param name="ad">An Active Directory client used to delete the group.</param>
         /// <param name="guid">The GUID of the group.</param>
         /// <returns>True if the group was deleted, false otherwise.</returns>
-        static public bool Delete(ActiveDirectory ad, Guid guid)
+        static public bool Delete(ActiveDirectoryClient ad, Guid guid)
         {
             if (ad != null && guid != Guid.Empty)
             {

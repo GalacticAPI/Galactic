@@ -27,14 +27,14 @@ namespace Galactic.Identity
         public List<IGroup> Groups { get; }
 
         /// <summary>
-        /// The object's unique ID in the system.
-        /// </summary>
-        public string UniqueId { get; }
-
-        /// <summary>
         /// The type or category of the object. Empty if unknown.
         /// </summary>
         public string Type { get; }
+
+        /// <summary>
+        /// The object's unique ID in the system.
+        /// </summary>
+        public string UniqueId { get; }
 
         // ----- STATIC CONSTRUCTORS -----
 

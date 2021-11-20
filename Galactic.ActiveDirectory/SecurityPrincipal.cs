@@ -27,13 +27,7 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
-        public DateTime? CreationTime
-        {
-            get
-            {
-                return CreateTimeStamp;
-            }
-        }
+        public DateTime? CreationTime => CreateTimeStamp;
 
         /// <summary>
         /// A description of the security principal.
@@ -420,9 +414,9 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Gets a security principal object from Active Directory with the supplied GUID.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to query and manipulate the security principal.</param>
+        /// <param name="ad">An Active Directory client used to query and manipulate the security principal.</param>
         /// <param name="guid">The GUID of the security principal</param>
-        public SecurityPrincipal(ActiveDirectory ad, Guid guid)
+        public SecurityPrincipal(ActiveDirectoryClient ad, Guid guid)
             : base(ad, guid)
         {
             if (ad != null && guid != Guid.Empty)
@@ -455,7 +449,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         /// <param name="ad">An Active Directory object used to manipulate the security principal.</param>
         /// <param name="entry">The SearchResultEntry object containing attributes necessary to populate the object.</param>
-        public SecurityPrincipal(ActiveDirectory ad, SearchResultEntry entry)
+        public SecurityPrincipal(ActiveDirectoryClient ad, SearchResultEntry entry)
             : base(ad, entry)
         {
         }

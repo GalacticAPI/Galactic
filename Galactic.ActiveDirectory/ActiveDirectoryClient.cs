@@ -1,7 +1,7 @@
 ﻿using DnsClient;
 using DnsClient.Protocol;
 using Galactic.Identity;
-using Galactic_LDAP = Galactic.LDAP.LDAP;
+using Galactic.LDAP;
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
@@ -14,12 +14,12 @@ using System.Text;
 namespace Galactic.ActiveDirectory
 {
     /// <summary>
-    /// ActiveDirectory is a class that allows for the query and manipulation
+    /// ActiveDirectoryClient is a class that allows for the query and manipulation
     /// of Active Directory objects.
     /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class ActiveDirectory : IDirectorySystem, IDisposable
+    public class ActiveDirectoryClient : IDirectorySystem, IDisposable
     {
         // ----- CONSTANTS -----
 
@@ -83,8 +83,8 @@ namespace Galactic.ActiveDirectory
             Security = 0x80000000
         }
 
-        // The object that manages the LDAP connection with the AD controller.
-        private readonly Galactic_LDAP ldap = null;
+        // The client that manages the LDAP connection with the AD controller.
+        private readonly LDAPClient ldap = null;
 
         /// <summary>
         /// Flags for use with the UserAccountControl and ms-DS-User-Account-Control-Computed properties of a user.
@@ -378,7 +378,7 @@ namespace Galactic.ActiveDirectory
         /// <param name="password">The password of the account.</param>
         /// <param name="ouDn">(Optional) The distinguished name of the OU to use as a base for operations. Defaults to the distinguished name of the domain if not supplied.</param>
         /// <param name="siteName">(Optional) The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
-        public ActiveDirectory(string domainName, string userName, SecureString password, string ouDn = "", string siteName = DEFAULT_FIRST_SITE_NAME)
+        public ActiveDirectoryClient(string domainName, string userName, SecureString password, string ouDn = "", string siteName = DEFAULT_FIRST_SITE_NAME)
         {
             if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(ouDn) && !string.IsNullOrWhiteSpace(userName) && password != null)
             {
@@ -394,12 +394,12 @@ namespace Galactic.ActiveDirectory
                     if (domainControllers.Count == 0)
                     {
                         // Create the connection to the domain controller serving the current computer.
-                        ldap = new Galactic_LDAP(new List<string> { domainName }, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
+                        ldap = new LDAPClient(new List<string> { domainName }, LDAPClient.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
                     }
                     else
                     {
                         // Create the connection to the domain controllers serving the specified site.
-                        ldap = new Galactic_LDAP(domainControllers, Galactic_LDAP.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
+                        ldap = new LDAPClient(domainControllers, LDAPClient.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
                     }
 
                     // Set the search base and scope.

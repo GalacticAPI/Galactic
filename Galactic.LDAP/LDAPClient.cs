@@ -8,9 +8,13 @@ using System.DirectoryServices.Protocols;
 
 namespace Galactic.LDAP
 {
+    /// <summary>
+    /// LDAPClient is a class that allows for the query and manipulation
+    /// of LDAP directory objects.
+    /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class LDAP : IDisposable
+    public class LDAPClient : IDisposable
     {
         // ----- CONSTANTS -----
 
@@ -98,7 +102,7 @@ namespace Galactic.LDAP
         /// <param name="domainName">(Optional) The domain or computer name associated with the user credentials provided.</param>
         /// <param name="useLogonCredentials">(Optional) If enabled, the LDAP connection will use the logon credentials from the current session. Disabled by default.</param>
         /// </summary>
-        public LDAP(List<string> servers, int portNumber, AuthType authType = AuthType.Anonymous, string userName = null, SecureString password = null, string domainName = null, bool useLogonCredentials = false)
+        public LDAPClient(List<string> servers, int portNumber, AuthType authType = AuthType.Anonymous, string userName = null, SecureString password = null, string domainName = null, bool useLogonCredentials = false)
         {
             if ((servers != null && servers.Count > 0 && portNumber > 0 && !string.IsNullOrWhiteSpace(userName) && password != null) || (servers != null && servers.Count > 0 && portNumber > 0 && useLogonCredentials))
             {

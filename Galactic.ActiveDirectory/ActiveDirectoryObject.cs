@@ -18,8 +18,8 @@ namespace Galactic.ActiveDirectory
 
         // ----- VARIABLES -----
 
-        // The object used to query and manipulate Active Directory.
-        protected ActiveDirectory AD = null;
+        // The client used to query and manipulate Active Directory.
+        protected ActiveDirectoryClient AD = null;
 
         // The date for January 1st, 1601. Used as a start date for intervals in various object attribute properties.
         protected DateTime JAN_01_1601 = new DateTime(1601, 1, 1);
@@ -57,7 +57,7 @@ namespace Galactic.ActiveDirectory
                 string timeStamp = GetStringAttributeValue("createTimeStamp");
                 if (!string.IsNullOrWhiteSpace(timeStamp))
                 {
-                    return ActiveDirectory.GetDateTimeFromUTCCodedTime(timeStamp);
+                    return ActiveDirectoryClient.GetDateTimeFromUTCCodedTime(timeStamp);
                 }
                 else
                 {
@@ -125,9 +125,9 @@ namespace Galactic.ActiveDirectory
         /// <summary>
         /// Gets a directory object from AD with the supplied GUID.
         /// </summary>
-        /// <param name="ad">An Active Directory object used to query and manipulate the directory object.</param>
+        /// <param name="ad">An Active Directory client used to query and manipulate the directory object.</param>
         /// <param name="guid">The GUID of the object.</param>
-        public ActiveDirectoryObject(ActiveDirectory ad, Guid guid)
+        public ActiveDirectoryObject(ActiveDirectoryClient ad, Guid guid)
         {
             if (ad != null && guid != Guid.Empty)
             {
@@ -157,7 +157,7 @@ namespace Galactic.ActiveDirectory
         /// </summary>
         /// <param name="ad">An Active Directory object used to manipulate the directory object.</param>
         /// <param name="entry">The SearchResultEntry object containing attributes necessary to populate the object.</param>
-        public ActiveDirectoryObject(ActiveDirectory ad, SearchResultEntry entry)
+        public ActiveDirectoryObject(ActiveDirectoryClient ad, SearchResultEntry entry)
         {
             // Check that an Active Directory object and search result entry have been provided.
             if (ad == null)

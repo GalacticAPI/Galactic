@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <ReleaseVersion>2.0.0.0</ReleaseVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Galactic.Identity\Galactic.Identity.csproj" />
+    <ProjectReference Include="..\Galactic.REST\Galactic.REST.csproj" />
+  </ItemGroup>
+</Project>
