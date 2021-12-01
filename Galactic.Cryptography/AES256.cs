@@ -13,6 +13,12 @@ namespace Galactic.Cryptography
     {
         // ----- CONSTANTS -----
 
+        // The name of the algorithm to use when creating the Aes object.
+        private const string ALGORITHM_NAME = "AesManaged";
+
+        // The size of the key in bits to use with the algorithm.
+        private const int KEY_SIZE = 256;
+
         // ----- VARIABLES -----
 
         // ----- PROPERTIES -----
@@ -31,13 +37,14 @@ namespace Galactic.Cryptography
             // Generate a random initialization vector.
             try
             {
-                RijndaelManaged rm = new RijndaelManaged();
-                rm.GenerateIV();
-                return rm.IV;
+                Aes aes = Aes.Create(ALGORITHM_NAME);
+                aes.KeySize = KEY_SIZE;
+                aes.GenerateIV();
+                return aes.IV;
             }
-            catch (InvalidOperationException)
+            catch
             {
-                // The RijndaelManaged class is not compliant with the FIPS algorithm.
+                // There was an error generating the IV.
                 return new byte[0];
             }
         }
@@ -119,13 +126,14 @@ namespace Galactic.Cryptography
             // Generate a random key.
             try
             {
-                RijndaelManaged rm = new RijndaelManaged();
-                rm.GenerateKey();
-                return rm.Key;
+                Aes aes = Aes.Create(ALGORITHM_NAME);
+                aes.KeySize = KEY_SIZE;
+                aes.GenerateKey();
+                return aes.Key;
             }
-            catch (InvalidOperationException)
+            catch
             {
-                // The RijndaelManaged class is not compliant with the FIPS algorithm.
+                // There was an error generating the key.
                 return new byte[0];
             }
         }
@@ -157,25 +165,26 @@ namespace Galactic.Cryptography
             // Declare the stream used to encrypt to an in memory array of bytes.
             MemoryStream msEncrypt = null;
 
-            // Declare the RijndaelManaged object used to encrypt the data.
-            RijndaelManaged aesAlg = null;
+            // Declare the Aes object used to encrypt the data.
+            Aes aes = null;
 
             try
             {
-                // Create a RijndaelManaged object with the specified key and IV.
-                aesAlg = new RijndaelManaged();
+                // Create an Aes object with the specified key and IV.
+                aes = Aes.Create(ALGORITHM_NAME);
+                aes.KeySize = KEY_SIZE;
                 try
                 {
-                    aesAlg.Key = key;
+                    aes.Key = key;
                     try
                     {
-                        aesAlg.IV = iv;
+                        aes.IV = iv;
 
                         // Create an encryptor to perform the stream transform.
                         ICryptoTransform encryptor = null;
                         try
                         {
-                            encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+                            encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
 
                             // Create the streams used for encryption.
                             msEncrypt = new MemoryStream();
@@ -267,17 +276,17 @@ namespace Galactic.Cryptography
                     return new byte[0];
                 }
             }
-            catch (InvalidOperationException)
+            catch
             {
-                // The RijndaelManaged class is not compliant with the FIPS algorithm.
+                // There was an error creating the Aes object.
                 return new byte[0];
             }
             finally
             {
-                // Clear the RijndaelManaged object.
-                if (aesAlg != null)
+                // Clear the Aes object.
+                if (aes != null)
                 {
-                    aesAlg.Clear();
+                    aes.Clear();
                 }
             }
 
@@ -308,28 +317,29 @@ namespace Galactic.Cryptography
                 throw new ArgumentNullException("iv");
             }
 
-            // Declare the RijndaelManaged object used to decrypt the data.
-            RijndaelManaged aesAlg = null;
+            // Declare the Aes object used to decrypt the data.
+            Aes aes = null;
 
             // Declare the string used to hold the decrypted text.
             string text = null;
 
             try
             {
-                // Create a RijndaelManaged object with the specified key and IV.
-                aesAlg = new RijndaelManaged();
+                // Create an Aes object with the specified key and IV.
+                aes = Aes.Create(ALGORITHM_NAME);
+                aes.KeySize = KEY_SIZE;
                 try
                 {
-                    aesAlg.Key = key;
+                    aes.Key = key;
                     try
                     {
-                        aesAlg.IV = iv;
+                        aes.IV = iv;
 
                         // Create a decryptor to perform the stream transform.
                         ICryptoTransform decryptor = null;
                         try
                         {
-                            decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+                            decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
                             // Create the streams used for decryption.
                             using (MemoryStream msDecrypt = new MemoryStream(cipherText))
                             {
@@ -423,16 +433,16 @@ namespace Galactic.Cryptography
                     return null;
                 }
             }
-            catch (InvalidOperationException)
+            catch
             {
-                // The RijndaelManaged class is not compliant with the FIPS algorithm.
+                // There was an error creating the Aes object.
                 return null;
             }
             finally
             {
-                // Clear the RijndaelManaged object.
-                if (aesAlg != null)
-                    aesAlg.Clear();
+                // Clear the AesR object.
+                if (aes != null)
+                    aes.Clear();
             }
 
             return text;

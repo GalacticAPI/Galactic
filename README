@@ -3,4 +3,4 @@ This is the main project for the Galactic API.
 -------------------------------------------------------------------------------
 Build Requirements:
 
-This solution targets .NET 5.0.
+This solution targets .NET 6.0.

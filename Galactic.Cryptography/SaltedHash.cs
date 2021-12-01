@@ -26,7 +26,7 @@ namespace Galactic.Cryptography
         static public int GenerateSalt()
         {
             // Generate a random number as the salt for secure data.
-            RNGCryptoServiceProvider randGen = new RNGCryptoServiceProvider();
+            RandomNumberGenerator randGen = RandomNumberGenerator.Create();
             byte[] randArray = new byte[4];
             randGen.GetBytes(randArray);
             return BitConverter.ToInt32(randArray, 0);
