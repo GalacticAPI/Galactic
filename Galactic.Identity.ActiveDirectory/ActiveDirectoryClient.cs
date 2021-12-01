@@ -1,6 +1,5 @@
 ﻿using DnsClient;
 using DnsClient.Protocol;
-using Galactic.Identity;
 using Galactic.LDAP;
 using System;
 using System.Collections.Generic;
@@ -11,7 +10,7 @@ using System.Security;
 using System.Security.Principal;
 using System.Text;
 
-namespace Galactic.ActiveDirectory
+namespace Galactic.Identity.ActiveDirectory
 {
     /// <summary>
     /// ActiveDirectoryClient is a class that allows for the query and manipulation

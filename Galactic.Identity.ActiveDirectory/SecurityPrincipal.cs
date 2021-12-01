@@ -1,12 +1,11 @@
-﻿using Galactic.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
-namespace Galactic.ActiveDirectory
+namespace Galactic.Identity.ActiveDirectory
 {
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]

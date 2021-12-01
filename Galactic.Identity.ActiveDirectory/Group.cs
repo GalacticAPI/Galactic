@@ -1,12 +1,10 @@
-﻿using Galactic.Identity;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
-using System.Linq;
 using System.Runtime.Versioning;
 
-namespace Galactic.ActiveDirectory
+namespace Galactic.Identity.ActiveDirectory
 {
     /// <summary>
     /// Group is a class that allows for the query and manipulation of

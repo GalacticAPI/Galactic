@@ -1,11 +1,10 @@
-﻿using Galactic.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 using System.Text;
 
-namespace Galactic.ActiveDirectory
+namespace Galactic.Identity.ActiveDirectory
 {
     /// <summary>
     /// User is a class that allows for the query and manipulation of

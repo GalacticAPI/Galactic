@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{07475970-751A-4A8D-AE1B-227C6E9410BE}"
 	ProjectSection(SolutionItems) = preProject
@@ -9,33 +9,33 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README = README
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.LDAP", "Galactic.LDAP\Galactic.LDAP.csproj", "{0967B06C-52D1-4057-815F-D4AD80EDB46C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.LDAP", "Galactic.LDAP\Galactic.LDAP.csproj", "{0967B06C-52D1-4057-815F-D4AD80EDB46C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.ActiveDirectory", "Galactic.ActiveDirectory\Galactic.ActiveDirectory.csproj", "{7E7C9DBD-05C2-4387-BA62-0C790CABD41D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Cryptography", "Galactic.Cryptography\Galactic.Cryptography.csproj", "{98C3FFFC-D575-4F37-B31E-02E5720D59C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Cryptography", "Galactic.Cryptography\Galactic.Cryptography.csproj", "{98C3FFFC-D575-4F37-B31E-02E5720D59C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.EventLog", "Galactic.EventLog\Galactic.EventLog.csproj", "{AD2AA73A-ACD9-4940-BC48-C7EDDD8B7294}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.EventLog", "Galactic.EventLog\Galactic.EventLog.csproj", "{AD2AA73A-ACD9-4940-BC48-C7EDDD8B7294}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Sql", "Galactic.Sql\Galactic.Sql.csproj", "{9407ED43-F361-4F8D-ACC9-7913B0E7F6ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Sql", "Galactic.Sql\Galactic.Sql.csproj", "{9407ED43-F361-4F8D-ACC9-7913B0E7F6ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.FileSystem", "Galactic.FileSystem\Galactic.FileSystem.csproj", "{334B3952-D86B-4853-A4C1-03486142822B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.FileSystem", "Galactic.FileSystem\Galactic.FileSystem.csproj", "{334B3952-D86B-4853-A4C1-03486142822B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.EventLog.Sql", "Galactic.EventLog.Sql\Galactic.EventLog.Sql.csproj", "{355D337F-CEF6-4FCC-8CEF-EF1A6BF29388}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.EventLog.Sql", "Galactic.EventLog.Sql\Galactic.EventLog.Sql.csproj", "{355D337F-CEF6-4FCC-8CEF-EF1A6BF29388}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.NoSql", "Galactic.NoSql\Galactic.NoSql.csproj", "{27A959B2-D4C8-4AD1-80C2-0A4BD4028F23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.NoSql", "Galactic.NoSql\Galactic.NoSql.csproj", "{27A959B2-D4C8-4AD1-80C2-0A4BD4028F23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.PowerShell", "Galactic.PowerShell\Galactic.PowerShell.csproj", "{CF247196-C768-4F87-ADD2-3CB5CCCE9857}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.PowerShell", "Galactic.PowerShell\Galactic.PowerShell.csproj", "{CF247196-C768-4F87-ADD2-3CB5CCCE9857}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Sql.MSSql", "Galactic.Sql.MSSql\Galactic.Sql.MSSql.csproj", "{5F40396D-8526-47E5-AC6E-588719210DAC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Sql.MSSql", "Galactic.Sql.MSSql\Galactic.Sql.MSSql.csproj", "{5F40396D-8526-47E5-AC6E-588719210DAC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Sql.Oracle", "Galactic.Sql.Oracle\Galactic.Sql.Oracle.csproj", "{1026D6F7-DEC0-4FF6-BB36-5AFA466C6305}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Sql.Oracle", "Galactic.Sql.Oracle\Galactic.Sql.Oracle.csproj", "{1026D6F7-DEC0-4FF6-BB36-5AFA466C6305}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Identity", "Galactic.Identity\Galactic.Identity.csproj", "{6C5A9E5C-8B4D-4345-9AE2-3A321E60CA8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Identity", "Galactic.Identity\Galactic.Identity.csproj", "{6C5A9E5C-8B4D-4345-9AE2-3A321E60CA8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Identity.Okta", "Galactic.Identity.Okta\Galactic.Identity.Okta.csproj", "{F882CA82-C737-4CF6-8113-0C708EAA00A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.Identity.Okta", "Galactic.Identity.Okta\Galactic.Identity.Okta.csproj", "{F882CA82-C737-4CF6-8113-0C708EAA00A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.REST", "Galactic.REST\Galactic.REST.csproj", "{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.REST", "Galactic.REST\Galactic.REST.csproj", "{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Identity.ActiveDirectory", "Galactic.Identity.ActiveDirectory\Galactic.Identity.ActiveDirectory.csproj", "{74BA568A-58DB-415D-907D-55BB4B91D7D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +47,6 @@ Global
 		{0967B06C-52D1-4057-815F-D4AD80EDB46C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0967B06C-52D1-4057-815F-D4AD80EDB46C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0967B06C-52D1-4057-815F-D4AD80EDB46C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7E7C9DBD-05C2-4387-BA62-0C790CABD41D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E7C9DBD-05C2-4387-BA62-0C790CABD41D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E7C9DBD-05C2-4387-BA62-0C790CABD41D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E7C9DBD-05C2-4387-BA62-0C790CABD41D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{98C3FFFC-D575-4F37-B31E-02E5720D59C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{98C3FFFC-D575-4F37-B31E-02E5720D59C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98C3FFFC-D575-4F37-B31E-02E5720D59C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -99,9 +95,16 @@ Global
 		{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{612B9CC3-3E70-479F-9E3D-CBCF0BB91F65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74BA568A-58DB-415D-907D-55BB4B91D7D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74BA568A-58DB-415D-907D-55BB4B91D7D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74BA568A-58DB-415D-907D-55BB4B91D7D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74BA568A-58DB-415D-907D-55BB4B91D7D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C11D0DC6-99CE-429B-ABA4-F30B95CF91C7}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		version = 2.0.0.0

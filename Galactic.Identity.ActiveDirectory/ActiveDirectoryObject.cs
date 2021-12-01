@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
 using System.Runtime.Versioning;
 
-namespace Galactic.ActiveDirectory
+namespace Galactic.Identity.ActiveDirectory
 {
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
