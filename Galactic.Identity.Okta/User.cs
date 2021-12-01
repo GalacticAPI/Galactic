@@ -13,7 +13,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The object used to query and manipulate Okta.
         /// </summary>
-        protected Okta okta = null;
+        protected OktaClient okta = null;
 
         /// <summary>
         /// The backing JSON data representing the User in Okta.
@@ -462,7 +462,7 @@ namespace Galactic.Identity.Okta
         /// </summary>
         /// <param name="okta">An Okta object used to query and manipulate the user.</param>
         /// <param name="json">An object representing this user's JSON properties.</param>
-        public User(Okta okta, UserJson json)
+        public User(OktaClient okta, UserJson json)
         {
             if (okta != null && json != null)
             {

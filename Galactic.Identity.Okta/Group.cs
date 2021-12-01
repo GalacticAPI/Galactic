@@ -14,7 +14,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The object used to query and manipulate Okta.
         /// </summary>
-        protected Okta okta = null;
+        protected OktaClient okta = null;
 
         /// <summary>
         /// The backing JSON data representing the Group in Okta.
@@ -114,7 +114,7 @@ namespace Galactic.Identity.Okta
         /// </summary>
         /// <param name="okta">An Okta object used to query and manipulate the group.</param>
         /// <param name="json">An object representing this group's JSON properties.</param>
-        public Group(Okta okta, GroupJson json)
+        public Group(OktaClient okta, GroupJson json)
         {
             if (okta != null && json != null)
             {

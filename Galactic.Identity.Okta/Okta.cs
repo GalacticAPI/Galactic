@@ -5,9 +5,9 @@ using System.Collections.Generic;
 namespace Galactic.Identity.Okta
 {
     /// <summary>
-    /// Okta is a class that allows for the query and manipulation of Okta objects.
+    /// OktaClient is a class that allows for the query and manipulation of Okta objects.
     /// </summary>
-    public class Okta : IDirectorySystem
+    public class OktaClient : IDirectorySystem
     {
         // ----- CONSTANTS -----
 
@@ -64,7 +64,7 @@ namespace Galactic.Identity.Okta
         /// <param name="oktaTenantName">The subdomain name of your Okta tenant.</param>
         /// <param name="apiKey">The API key the client should use when authenticating.</param>
         /// <param name="preview">(Optional) Whether you want to interact with the preview organization instead of production. Defaults to production.</param>
-        public Okta(string oktaTenantName, string apiKey, bool preview = false)
+        public OktaClient(string oktaTenantName, string apiKey, bool preview = false)
         {
             if (!string.IsNullOrWhiteSpace(oktaTenantName) && !string.IsNullOrWhiteSpace(apiKey) && rest != null)
             {
