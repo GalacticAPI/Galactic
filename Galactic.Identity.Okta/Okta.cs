@@ -1,6 +1,7 @@
 ﻿using Galactic.REST;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 
 namespace Galactic.Identity.Okta
 {
@@ -231,6 +232,34 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets a list of groups that the user is a member of.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user.</param>
+        /// <returns>A list of GroupJsons objects representing each group the user is a member of.</returns>
+        public List<GroupJson> GetUserGroups(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                // Return the result.
+                GroupJson[] jsonArray = rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups");
+                if (jsonArray != default)
+                {
+                    // Return the list of Groups.
+                    return new(jsonArray);
+                }
+                else
+                {
+                    // Nothing was returned. Return an empty list.
+                    return new ();
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Moves an object in the directory system.
         /// </summary>
         /// <param name="uniqueId">The unique id of the object to move.</param>
@@ -250,6 +279,106 @@ namespace Galactic.Identity.Okta
         public bool RenameObject(string uniqueId, string name)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Suspends a user, preventing them from logging in.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to suspend.</param>
+        /// <returns>True if the user was suspended, false otherwise.</returns>
+        public bool SuspendUser(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/suspend");
+
+                // Check that the request was a success.
+                if (message.IsSuccessStatusCode)
+                {
+                    // The request was successful. The user was suspended.
+                    return true;
+                }
+                else
+                {
+                    // The request was not successful. The user was not suspended.
+                    return false;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
+        /// Unsuspends a user returning them to an active state and allowing them to log in.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to unsuspend.</param>
+        /// <returns>True if the user was unsuspended, false otherwise.</returns>
+        public bool UnsuspendUser(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/unsuspend");
+
+                // Check that the request was a success.
+                if (message.IsSuccessStatusCode)
+                {
+                    // The request was successful. The user was unsuspended.
+                    return true;
+                }
+                else
+                {
+                    // The request was not successful. The user was not unsuspended.
+                    return false;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
+        /// Updates a user's profile and/or credentials. If both are supplied, they will be updated in one request.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to updated.</param>
+        /// <param name="profile">(Optional) The json representing the properties that should be updated. Only the properties that need to be updated should be populated.</param>
+        /// <param name="creds">(Optional) The json representing the credentials that should be updated.</param>
+        /// <returns>A new UserJson object representing the new state of the user after the update, or null if the update was not completed.</returns>
+        public UserJson UpdateUser(string uniqueId, UserProfileJson profile = null, UserCredentialsJson creds = null)
+        {
+            if (string.IsNullOrWhiteSpace(uniqueId))
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+
+            // TODO: Collapse these into a single request, if both aren't null.
+            if (profile != null || creds != null)
+            {
+                // The JSON object representing the updated user.
+                UserJson user = null;
+
+                if (profile != null)
+                {
+                    // Update the properties.
+                    user = rest.PostAsJson<UserJson>("/users/" + uniqueId, profile);
+                }
+
+                if (creds != null)
+                {
+                    // Update the credentials.
+                    user = rest.PostAsJson<UserJson>("/users/" + uniqueId, creds);
+                }
+
+                // Return the user's JSON object.
+                return user;
+            }
+            else
+            {
+                // There was nothing to update.
+                return null;
+            }
         }
     }
 }

@@ -58,7 +58,7 @@ namespace Galactic.Identity
         /// Compares this identity object to another identity object.
         /// </summary>
         /// <param name="other">The other identity object to compare this one to.</param>
-        /// <returns>1 iif the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
+        /// <returns>1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
         public new virtual int CompareTo(IIdentityObject other)
         {
             if (other != null)

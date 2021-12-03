@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace Galactic.Identity.Okta
 {
@@ -33,7 +35,17 @@ namespace Galactic.Identity.Okta
         public string City
         {
             get => json.Profile.City;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    City = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -42,7 +54,17 @@ namespace Galactic.Identity.Okta
         public string CostCenter
         {
             get => json.Profile.CostCenter;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    CostCenter = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -51,7 +73,17 @@ namespace Galactic.Identity.Okta
         public string CountryCode
         {
             get => json.Profile.CountryCode;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    CountryCode = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -73,7 +105,17 @@ namespace Galactic.Identity.Okta
         public string Department
         {
             get => json.Profile.Department;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    Department = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -82,7 +124,17 @@ namespace Galactic.Identity.Okta
         public string DisplayName
         {
             get => json.Profile.DisplayName;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    DisplayName = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -91,7 +143,17 @@ namespace Galactic.Identity.Okta
         public string Division
         {
             get => json.Profile.Division;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    Division = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -100,7 +162,17 @@ namespace Galactic.Identity.Okta
         public string Email
         {
             get => json.Profile.Email;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    Email = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -135,7 +207,17 @@ namespace Galactic.Identity.Okta
         public string EmployeeNumber
         {
             get => json.Profile.EmployeeNumber;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    EmployeeNumber = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -144,13 +226,42 @@ namespace Galactic.Identity.Okta
         public string FirstName
         {
             get => json.Profile.FirstName;
-            set => throw new NotImplementedException();
+            set
+            {
+                {
+                    // Create the profile object with the value set.
+                    UserProfileJson profile = new UserProfileJson
+                    {
+                        FirstName = value
+                    };
+
+                    // Update the user with the new value.
+                    okta.UpdateUser(UniqueId, profile);
+                }
+            }
         }
 
         /// <summary>
         /// The list of groups this object is a member of.
         /// </summary>
-        public List<IGroup> Groups => throw new NotImplementedException();
+        public List<IGroup> Groups
+        {
+            get
+            {
+                // Retrieve the list of JSON objects representing the groups.
+                List<GroupJson> groupJsonList = okta.GetUserGroups(UniqueId);
+
+                // Create Group objects from the JSON.
+                List<IGroup> groups = new();
+                foreach (GroupJson json in groupJsonList)
+                {
+                    groups.Add(new Group(okta, json) as IGroup);
+                }
+
+                // Return the groups.
+                return groups;
+            }
+        }
 
         /// <summary>
         /// The honorific prefix(es) of the User, or title in most Western languages.
@@ -158,7 +269,17 @@ namespace Galactic.Identity.Okta
         public string HonorificPrefix
         {
             get => json.Profile.HonorificPrefix;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    HonorificPrefix = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -167,7 +288,17 @@ namespace Galactic.Identity.Okta
         public string HonorificSuffix
         {
             get => json.Profile.HonorificSuffix;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    HonorificSuffix = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -179,7 +310,20 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Whether the user is disabled or suspended in the system.
         /// </summary>
-        public bool IsDisabled => throw new NotImplementedException();
+        public bool IsDisabled
+        {
+            get
+            {
+                if (json.Status == "SUSPENDED")
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         /// <summary>
         /// Timestamp of User's last login.
@@ -192,7 +336,17 @@ namespace Galactic.Identity.Okta
         public string LastName
         {
             get => json.Profile.LastName;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    LastName = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -207,7 +361,17 @@ namespace Galactic.Identity.Okta
         public string Locale
         {
             get => json.Profile.Locale;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    Locale = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -216,7 +380,17 @@ namespace Galactic.Identity.Okta
         public string Login
         {
             get => json.Profile.Login;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    Login = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -225,7 +399,17 @@ namespace Galactic.Identity.Okta
         public string Manager
         {
             get => json.Profile.Manager;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    Manager = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -234,7 +418,17 @@ namespace Galactic.Identity.Okta
         public string ManagerId
         {
             get => json.Profile.ManagerId;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    ManagerId = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -248,7 +442,17 @@ namespace Galactic.Identity.Okta
         public string MiddleName
         {
             get => json.Profile.MiddleName;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    MiddleName = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -257,7 +461,17 @@ namespace Galactic.Identity.Okta
         public string MobilePhone
         {
             get => json.Profile.MobilePhone;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    MobilePhone = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -266,7 +480,17 @@ namespace Galactic.Identity.Okta
         public string NickName
         {
             get => json.Profile.NickName;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    NickName = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -275,7 +499,17 @@ namespace Galactic.Identity.Okta
         public string Organization
         {
             get => json.Profile.Organization;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    Organization = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -286,12 +520,38 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Whether the user has to change their password at their next login.
         /// </summary>
-        public bool PasswordChangeRequiredAtNextLogin => throw new NotImplementedException();
+        public bool PasswordChangeRequiredAtNextLogin
+        {
+            get
+            {
+                if (json.Status == "PASSWORD_EXPIRED" || json.Status == "RECOVERY")
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         /// <summary>
         /// Whether the user's password has expired.
         /// </summary>
-        public bool PasswordExpired => throw new NotImplementedException();
+        public bool PasswordExpired
+        {
+            get
+            {
+                if (json.Status == "PASSWORD_EXPIRED")
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         /// <summary>
         /// The date and time that the user's password was last set.
@@ -316,7 +576,17 @@ namespace Galactic.Identity.Okta
         public string PostalAddress
         {
             get => json.Profile.PostalAddress;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    PostalAddress = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -349,7 +619,17 @@ namespace Galactic.Identity.Okta
         public string PrimaryPhone
         {
             get => json.Profile.PrimaryPhone;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    PrimaryPhone = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -358,7 +638,17 @@ namespace Galactic.Identity.Okta
         public string ProfileUrl
         {
             get => json.Profile.ProfileUrl;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    ProfileUrl = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -368,7 +658,17 @@ namespace Galactic.Identity.Okta
         public string SecondEmail
         {
             get => json.Profile.SecondEmail;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    SecondEmail = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -377,7 +677,17 @@ namespace Galactic.Identity.Okta
         public string State
         {
             get => json.Profile.State;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    State = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -396,7 +706,17 @@ namespace Galactic.Identity.Okta
         public string StreetAddress
         {
             get => json.Profile.StreetAddress;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                   StreetAddress = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -405,7 +725,17 @@ namespace Galactic.Identity.Okta
         public string TimeZone
         {
             get => json.Profile.TimeZone;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    TimeZone = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -443,7 +773,17 @@ namespace Galactic.Identity.Okta
         public string UserType
         {
             get => json.Profile.UserType;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                    UserType = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -452,7 +792,17 @@ namespace Galactic.Identity.Okta
         public string ZipCode
         {
             get => json.Profile.ZipCode;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                UserProfileJson profile = new UserProfileJson
+                {
+                   ZipCode = value
+                };
+
+                // Update the user with the new value.
+                okta.UpdateUser(UniqueId, profile);
+            }
         }
 
         // ----- CONSTRUCTORS -----
@@ -487,51 +837,115 @@ namespace Galactic.Identity.Okta
 
         // ----- METHODS -----
 
-        public int CompareTo(IIdentityObject other)
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Compares this identity object to another identity object.
+        /// </summary>
+        /// <param name="other">The other identity object to compare this one to.</param>
+        /// <returns>1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
+        public int CompareTo(IIdentityObject other) => CompareTo(other);
 
+        /// <summary>
+        /// Disables the user's account if it is enabled.
+        /// </summary>
+        /// <returns>True if the account is disabled successfully or was not enabled. False if the account could not be disabled.</returns>
         public bool Disable()
         {
-            throw new NotImplementedException();
+            return okta.SuspendUser(UniqueId);
         }
 
+        /// <summary>
+        /// Enables the user's account if it is disabled.
+        /// </summary>
+        /// <returns>True if the account is enabled successfully or was not disabled. False if the account could not be enabled.</returns>
         public bool Enable()
         {
-            throw new NotImplementedException();
+            return okta.UnsuspendUser(UniqueId);
         }
 
-        public bool Equals(IIdentityObject x, IIdentityObject y)
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Checks whether x and y are equal (have the same UniqueIds).
+        /// </summary>
+        /// <param name="x">The first identity object to check.</param>
+        /// <param name="y">The second identity object to check.</param>
+        /// <returns>True if the identity objects are equal, false otherwise.</returns>
+        public bool Equals(IIdentityObject x, IIdentityObject y) => Equals(x, y);
 
+        /// <summary>
+        /// Gets the values of the attributes associated with the supplied names.
+        /// </summary>
+        /// <param name="names">The names of the attributes to get the values of.</param>
+        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
         public List<IdentityAttribute<object>> GetAttributes(List<string> names)
         {
+            // TODO: Implement this such that Okta attributes map to the User object's properties, possibly via Custom Attributes?
             throw new NotImplementedException();
+            /*if (names != null)
+            {
+                // Create a dictionary of properties in this class keyed by name.
+                PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
+                Dictionary<string, PropertyInfo> properties = new ();
+                foreach (PropertyInfo propertyInfo in propertyInfoList)
+                {
+                    foreach (JsonPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<JsonPropertyNameAttribute>())
+                    {
+                        properties.Add(attribute.Name, propertyInfo);
+                    }
+                }
+                
+                // Create a list of IdentityAttributes that contain the name and value of the attribute with the name supplied.
+                List<IdentityAttribute<object>> attributes = new ();
+                foreach (string name in names)
+                {
+                    if (properties.ContainsKey(name))
+                    {
+                        attributes.Add(new(name, properties[name].GetValue(json)));
+                    }
+                }
+            }*/
         }
 
-        public int GetHashCode([DisallowNull] IIdentityObject obj)
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Generates a hash code for the identity object supplied.
+        /// </summary>
+        /// <param name="obj">The identity object to generate a hash code for.</param>
+        /// <returns>An integer hash code for the identity object.</returns>
+        public int GetHashCode([DisallowNull] IIdentityObject obj) => IIdentityObject.GetHashCode(obj);
 
+        /// <summary>
+        /// Checks if the identity object is a member of the supplied group.
+        /// </summary>
+        /// <param name="group">The group to check.</param>
+        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
+        /// <returns>True if the object is a member, false otherwise.</returns>
         public bool MemberOfGroup(IGroup group, bool recursive)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Sets attribute values of an identity object. If null or empty values are supplied the attribute's value will be deleted.
+        /// </summary>
+        /// <param name="attributes">The attribute to set.</param>
+        /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
         public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<object>> attributes)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Sets the password of the user.
+        /// </summary>
+        /// <param name="password">The new password to use for the user.</param>
+        /// <returns>True if the password was set, false otherwise.</returns>
         public bool SetPassword(string password)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Unlocks the user's account if it is locked.
+        /// </summary>
+        /// <returns>True if the account is unlocked successfully or was not locked. False if the account could not be unlocked.</returns>
         public bool Unlock()
         {
             throw new NotImplementedException();

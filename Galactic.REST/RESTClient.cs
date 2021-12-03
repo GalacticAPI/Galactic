@@ -84,6 +84,38 @@ namespace Galactic.REST
         }
 
         /// <summary>
+        /// Posts to a API endpoint at the supplied path, where the body of the message isn't relevant.
+        /// </summary>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <returns>An object with the response message of the request, or null if the request could not be completed.</returns>
+        public HttpResponseMessage Post(string path)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                try
+                {
+                    // Send the POST request.
+                    Task<HttpResponseMessage> responseTask = httpClient.PostAsync(path, null);
+
+                    // Wait for the response to complete.
+                    responseTask.Wait();
+
+                    // Return the response.
+                    return responseTask.Result;
+                }
+                catch
+                {
+                    // There was an error sending the request.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+        }
+
+        /// <summary>
         /// Posts to a JSON API endpoint at the supplied path.
         /// </summary>
         /// <typeparam name="T">The type of object returned.</typeparam>
