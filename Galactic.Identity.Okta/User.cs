@@ -881,7 +881,10 @@ namespace Galactic.Identity.Okta
         /// </summary>
         /// <param name="other">The other identity object to compare this one to.</param>
         /// <returns>1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
-        public int CompareTo(IIdentityObject other) => CompareTo(other);
+        public int CompareTo(IIdentityObject other)
+        {
+            return ((IIdentityObject)this).CompareTo(other);
+        }
 
         /// <summary>
         /// Disables the user's account if it is enabled.
@@ -907,7 +910,10 @@ namespace Galactic.Identity.Okta
         /// <param name="x">The first identity object to check.</param>
         /// <param name="y">The second identity object to check.</param>
         /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public bool Equals(IIdentityObject x, IIdentityObject y) => Equals(x, y);
+        public bool Equals(IIdentityObject x, IIdentityObject y)
+        {
+            return ((IIdentityObject)this).Equals(x, y);
+        }
 
         /// <summary>
         /// Gets the values of the attributes associated with the supplied names.
@@ -916,31 +922,34 @@ namespace Galactic.Identity.Okta
         /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
         public List<IdentityAttribute<object>> GetAttributes(List<string> names)
         {
-            // TODO: Implement this such that Okta attributes map to the User object's properties, possibly via Custom Attributes.
-            throw new NotImplementedException();
-            /*if (names != null)
+            // Create a list of IdentityAttributes to return.
+            List<IdentityAttribute<object>> attributes = new();
+
+            if (names != null)
             {
                 // Create a dictionary of properties in this class keyed by name.
                 PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
                 Dictionary<string, PropertyInfo> properties = new ();
                 foreach (PropertyInfo propertyInfo in propertyInfoList)
                 {
-                    foreach (JsonPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<JsonPropertyNameAttribute>())
+                    foreach (OktaPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<OktaPropertyNameAttribute>())
                     {
                         properties.Add(attribute.Name, propertyInfo);
                     }
                 }
                 
-                // Create a list of IdentityAttributes that contain the name and value of the attribute with the name supplied.
-                List<IdentityAttribute<object>> attributes = new ();
+                // Fill the list of IdentityAttributes with the name and value of the attribute with the supplied name.
                 foreach (string name in names)
                 {
                     if (properties.ContainsKey(name))
                     {
-                        attributes.Add(new(name, properties[name].GetValue(json)));
+                        attributes.Add(new(name, properties[name].GetValue(this)));
                     }
                 }
-            }*/
+            }
+
+            // Return the attributes found.
+            return attributes;
         }
 
         /// <summary>
@@ -958,7 +967,7 @@ namespace Galactic.Identity.Okta
         /// <returns>True if the object is a member, false otherwise.</returns>
         public bool MemberOfGroup(IGroup group, bool recursive)
         {
-            throw new NotImplementedException();
+            return ((IIdentityObject)this).MemberOfGroup(group, recursive);
         }
 
         /// <summary>
@@ -968,7 +977,48 @@ namespace Galactic.Identity.Okta
         /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
         public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<object>> attributes)
         {
-            throw new NotImplementedException();
+            // TODO: Rework so all attributes are set in a single request.
+
+            // Create a list of IdentityAttributes to return with success or failure.
+            List<IdentityAttribute<bool>> attributeResults = new();
+
+            if (attributes != null)
+            {
+                // Create a dictionary of properties in this class keyed by name.
+                PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
+                Dictionary<string, PropertyInfo> properties = new();
+                foreach (PropertyInfo propertyInfo in propertyInfoList)
+                {
+                    foreach (OktaPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<OktaPropertyNameAttribute>())
+                    {
+                        properties.Add(attribute.Name, propertyInfo);
+                    }
+                }
+
+                // Iterate over all the attributes supplied, setting their values and marking success or failure in the attribute list to return.
+                foreach (IdentityAttribute<object> attribute in attributes)
+                {
+                    // Check if the attribute supplied matches a property of the User.
+                    if (properties.ContainsKey(attribute.Name))
+                    {
+                        // Set the property with the attribute value supplied.
+                        try
+                        {
+                            properties[attribute.Name].SetValue(this, attribute.Value);
+                            attributeResults.Add(new(attribute.Name, true));
+                        }
+                        catch
+                        {
+                            // There was an error setting the attribute's value.
+                            attributeResults.Add(new(attribute.Name, false));
+
+                        }
+                    }
+                }
+            }
+
+            // Return the success / failure results of settings the attributes.
+            return attributeResults;
         }
 
         /// <summary>
@@ -978,7 +1028,29 @@ namespace Galactic.Identity.Okta
         /// <returns>True if the password was set, false otherwise.</returns>
         public bool SetPassword(string password)
         {
-            throw new NotImplementedException();
+            // Create the password object with the value of the password set.
+            UserPasswordJson passwordJson = new()
+            {
+                Value = password
+            };
+
+            // Create the credentials object with the password set.
+            UserCredentialsJson creds = new()
+            {
+                Password = passwordJson
+            };
+
+            // Update the user with the new credentials.
+            if (okta.UpdateUser(UniqueId, creds: creds) != null)
+            {
+                // The credentials were updated.
+                return true;
+            }
+            else
+            {
+                // The credentials were not updated.
+                return false;
+            }
         }
 
         /// <summary>
@@ -987,7 +1059,7 @@ namespace Galactic.Identity.Okta
         /// <returns>True if the account is unlocked successfully or was not locked. False if the account could not be unlocked.</returns>
         public bool Unlock()
         {
-            throw new NotImplementedException();
+            return okta.UnlockUser(UniqueId);
         }
     }
 }

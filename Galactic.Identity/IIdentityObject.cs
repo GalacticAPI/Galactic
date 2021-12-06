@@ -126,7 +126,27 @@ namespace Galactic.Identity
         /// <param name="group">The group to check.</param>
         /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
         /// <returns>True if the object is a member, false otherwise.</returns>
-        public bool MemberOfGroup(IGroup group, bool recursive);
+        public bool MemberOfGroup(IGroup group, bool recursive)
+        {
+            if (group != null)
+            {
+                // Search all the groups which this object is a member.
+                foreach (IGroup memberGroup in Groups)
+                {
+                    if (group.UniqueId == memberGroup.UniqueId)
+                    {
+                        // A group with the same unique id was found.
+                        return true;
+                    }
+                }
+                // No groups were found that matched by unique id.
+                return false;
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(group));
+            }
+        }
 
         /// <summary>
         /// Removes the identity object from the supplied group.

@@ -638,10 +638,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="obj">The identity object to generate a hash code for.</param>
         /// <returns>An integer hash code for the identity object.</returns>
-        public int GetHashCode(IIdentityObject obj)
-        {
-            return IIdentityObject.GetHashCode(obj);
-        }
+        public int GetHashCode(IIdentityObject obj) => IIdentityObject.GetHashCode(obj);
 
         /// <summary>
         /// Generates a hash code for the SecurityPrincipal supplied.
@@ -703,23 +700,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// <returns>True if the object is a member, false otherwise.</returns>
         public bool MemberOfGroup(IGroup group, bool recursive)
         {
-            if (group != null)
-            {
-                try
-                {
-                    Guid guid = Guid.Parse(group.UniqueId);
-                    return MemberOfGroup(guid, recursive);
-                }
-                catch
-                {
-                    throw new ArgumentException("Invalid group supplied. GUID not found.", nameof(group));
-                }
-            }
-            else
-            {
-                // A group was not supplied.
-                throw new ArgumentNullException(nameof(group));
-            }
+            return ((IIdentityObject)this).MemberOfGroup(group, recursive);
         }
 
         /// <summary>

@@ -16,9 +16,13 @@ namespace Galactic.Identity.Okta
         // ----- CONSTANTS -----
 
         // ----- VARIABLES -----
-        private string name = null;
 
         // ----- PROPERTIES -----
+
+        /// <summary>
+        /// The name of the property in Okta.
+        /// </summary>
+        public string Name { get; set; }
 
         // ----- CONSTRUCTORS -----
 
@@ -28,7 +32,7 @@ namespace Galactic.Identity.Okta
         /// <param name="name">The name of the property in Okta.</param>
         public OktaPropertyNameAttribute(string name)
         {
-            this.name = name;
+            Name = name;
         }
 
         // ----- METHODS -----

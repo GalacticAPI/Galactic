@@ -311,6 +311,35 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Unlocks a user returning them to an active state and allowing them to log in.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to unlock.</param>
+        /// <returns>True if the user was unlocked, false otherwise.</returns>
+        public bool UnlockUser(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/unlock");
+
+                // Check that the request was a success.
+                if (message.IsSuccessStatusCode)
+                {
+                    // The request was successful. The user was unlocked.
+                    return true;
+                }
+                else
+                {
+                    // The request was not successful. The user was not unlocked.
+                    return false;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Unsuspends a user returning them to an active state and allowing them to log in.
         /// </summary>
         /// <param name="uniqueId">The unique id of the user to unsuspend.</param>
