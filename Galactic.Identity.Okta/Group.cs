@@ -44,18 +44,29 @@ namespace Galactic.Identity.Okta
         public string Description
         {
             get => json.Profile.Description;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                GroupProfileJson profile = new()
+                {
+                    Description = value,
+                    Name = Name
+                };
+
+                // Update the group with the new value.
+                okta.UpdateGroup(UniqueId, profile);
+            }
         }
 
         /// <summary>
         /// The list of groups this object is a member of.
         /// </summary>
-        public List<IGroup> Groups => new();
+        public List<IGroup> Groups => new();    // Okta doesn't support nested groups.
 
         /// <summary>
         /// Groups that are a member of the group.
         /// </summary>
-        public List<IGroup> GroupMembers => new();
+        public List<IGroup> GroupMembers => new();    // Okta doesn't support nested groups.
 
         /// <summary>
         /// Unique key for Group.
@@ -88,7 +99,18 @@ namespace Galactic.Identity.Okta
         public string Name
         {
             get => json.Profile.Name;
-            set => throw new NotImplementedException();
+            set
+            {
+                // Create the profile object with the value set.
+                GroupProfileJson profile = new()
+                {
+                    Description = Description,
+                    Name = value
+                };
+
+                // Update the group with the new value.
+                okta.UpdateGroup(UniqueId, profile);
+            }
         }
 
         /// <summary>
@@ -104,7 +126,18 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Users that are a member of the group. (Not including subgroups.)
         /// </summary>
-        public List<IUser> UserMembers => throw new NotImplementedException();
+        public List<IUser> UserMembers
+        {
+            get
+            {
+                List<IUser> users = new();
+                foreach (UserJson userJson in okta.GetGroupMembership(UniqueId))
+                {
+                    users.Add(new User(okta, userJson));
+                }
+                return users;
+            }
+        }
 
 
         // ----- CONSTRUCTORS -----

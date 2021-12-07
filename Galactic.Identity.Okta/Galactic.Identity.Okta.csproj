@@ -7,6 +7,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Galactic.Identity\Galactic.Identity.csproj" />
-    <ProjectReference Include="..\Galactic.REST\Galactic.REST.csproj" />
+    <ProjectReference Include="..\Galactic.Rest\Galactic.Rest.csproj" />
   </ItemGroup>
 </Project>

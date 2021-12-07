@@ -1,4 +1,4 @@
-﻿using Galactic.REST;
+﻿using Galactic.Rest;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -16,6 +16,10 @@ namespace Galactic.Identity.Okta
         /// The version of the API that this client utilizes.
         /// </summary>
         private const string API_VERSION = "v1";
+
+
+        // The maximum number of items to gather with each request.
+        private const int MAX_PAGE_SIZE = 200;
 
         /// <summary>
         /// The domain portion of the URL to use when connecting to a preview organization.
@@ -53,7 +57,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The REST client to use when making API calls.
         /// </summary>
-        private RESTClient rest = null;
+        private RestClient rest = null;
 
         // ----- PROPERTIES -----
 
@@ -130,10 +134,10 @@ namespace Galactic.Identity.Okta
                 };
 
                 // Send the POST request.
-                GroupJson json = rest.PostAsJson<GroupJson>("/groups", profile);
-                if (json != default)
+                OktaJsonRestResponse<GroupJson> response = (OktaJsonRestResponse<GroupJson>)rest.PostAsJson<GroupJson>("/groups", profile);
+                if (response != null)
                 {
-                    return new Group(this, json);
+                    return new Group(this, response.Value);
                 }
                 else
                 {
@@ -189,10 +193,10 @@ namespace Galactic.Identity.Okta
             if (!string.IsNullOrWhiteSpace(id))
             {
                 // Return the result.
-                GroupJson json = rest.GetFromJson<GroupJson>("/groups/" + id);
-                if (json != default)
+                OktaJsonRestResponse<GroupJson> response = (OktaJsonRestResponse<GroupJson>)rest.GetFromJson<GroupJson>("/groups/" + id);
+                if (response != null)
                 {
-                    return new Group(this, json);
+                    return new Group(this, response.Value);
                 }
                 else
                 {
@@ -203,6 +207,46 @@ namespace Galactic.Identity.Okta
             else
             {
                 throw new ArgumentNullException(nameof(id));
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of users that are a member of the supplied group.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the group.</param>
+        /// <returns>A list of UserJsons objects representing each user that is a member of the group.</returns>
+        public List<UserJson> GetGroupMembership(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                // Return the result.
+                OktaJsonRestResponse<UserJson[]> response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/groups/" + uniqueId + "/users&limit=" + MAX_PAGE_SIZE);
+                if (response != null)
+                {
+                    // Create the list of UserJson objects to return.
+                    List<UserJson> jsonList = new(response.Value);
+
+                    // Get additional pages.
+                    while (response.NextPage != null)
+                    {
+                        // Get the next page.
+                        response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(response.NextPage.ToString());
+
+                        // Add the additional users to the list.
+                        jsonList.AddRange(response.Value);
+                    }
+
+                    return jsonList;
+                }
+                else
+                {
+                    // Nothing was returned. Return an empty list.
+                    return new();
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
             }
         }
 
@@ -241,7 +285,7 @@ namespace Galactic.Identity.Okta
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
                 // Return the result.
-                GroupJson[] jsonArray = rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups");
+                GroupJson[] jsonArray = rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups").Value;
                 if (jsonArray != default)
                 {
                     // Return the list of Groups.
@@ -290,7 +334,7 @@ namespace Galactic.Identity.Okta
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
-                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/suspend");
+                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/suspend").Message;
 
                 // Check that the request was a success.
                 if (message.IsSuccessStatusCode)
@@ -319,7 +363,7 @@ namespace Galactic.Identity.Okta
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
-                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/unlock");
+                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/unlock").Message;
 
                 // Check that the request was a success.
                 if (message.IsSuccessStatusCode)
@@ -348,7 +392,7 @@ namespace Galactic.Identity.Okta
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
-                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/unsuspend");
+                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/unsuspend").Message;
 
                 // Check that the request was a success.
                 if (message.IsSuccessStatusCode)
@@ -369,9 +413,43 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Updates a group's profile attributes.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the group to update.</param>
+        /// <param name="profile">The json representing the all the properties of the group. Note: Include all properties, not just those that will be updated.</param>
+        /// <returns>A new GroupJson object representing the new state of the group after the update, or null if the update was not completed.</returns>
+        public GroupJson UpdateGroup(string uniqueId, GroupProfileJson profile)
+        {
+            if (string.IsNullOrWhiteSpace(uniqueId))
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+
+            if (profile != null)
+            {
+                // The JSON object representing the updated group.
+                GroupJson group = null;
+
+                if (profile != null)
+                {
+                    // Update the properties.
+                    group = rest.PostAsJson<GroupJson>("/groups/" + uniqueId, profile).Value;
+                }
+
+                // Return the group's JSON object.
+                return group;
+            }
+            else
+            {
+                // There was nothing to update.
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Updates a user's profile and/or credentials. If both are supplied, they will be updated in one request.
         /// </summary>
-        /// <param name="uniqueId">The unique id of the user to updated.</param>
+        /// <param name="uniqueId">The unique id of the user to update.</param>
         /// <param name="profile">(Optional) The json representing the properties that should be updated. Only the properties that need to be updated should be populated.</param>
         /// <param name="creds">(Optional) The json representing the credentials that should be updated.</param>
         /// <returns>A new UserJson object representing the new state of the user after the update, or null if the update was not completed.</returns>
@@ -391,13 +469,13 @@ namespace Galactic.Identity.Okta
                 if (profile != null)
                 {
                     // Update the properties.
-                    user = rest.PostAsJson<UserJson>("/users/" + uniqueId, profile);
+                    user = rest.PostAsJson<UserJson>("/users/" + uniqueId, profile).Value;
                 }
 
                 if (creds != null)
                 {
                     // Update the credentials.
-                    user = rest.PostAsJson<UserJson>("/users/" + uniqueId, creds);
+                    user = rest.PostAsJson<UserJson>("/users/" + uniqueId, creds).Value;
                 }
 
                 // Return the user's JSON object.

@@ -18,7 +18,7 @@
     <PackageReference Include="DnsClient" Version="1.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Galactic.LDAP\Galactic.LDAP.csproj" />
     <ProjectReference Include="..\Galactic.Identity\Galactic.Identity.csproj" />
+    <ProjectReference Include="..\Galactic.Ldap\Galactic.Ldap.csproj" />
   </ItemGroup>
 </Project>

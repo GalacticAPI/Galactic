@@ -6,7 +6,7 @@ using System.Runtime.Versioning;
 using System.Security;
 using System.DirectoryServices.Protocols;
 
-namespace Galactic.LDAP
+namespace Galactic.Ldap
 {
     /// <summary>
     /// LDAPClient is a class that allows for the query and manipulation
@@ -14,7 +14,7 @@ namespace Galactic.LDAP
     /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class LDAPClient : IDisposable
+    public class LdapClient : IDisposable
     {
         // ----- CONSTANTS -----
 
@@ -102,7 +102,7 @@ namespace Galactic.LDAP
         /// <param name="domainName">(Optional) The domain or computer name associated with the user credentials provided.</param>
         /// <param name="useLogonCredentials">(Optional) If enabled, the LDAP connection will use the logon credentials from the current session. Disabled by default.</param>
         /// </summary>
-        public LDAPClient(List<string> servers, int portNumber, AuthType authType = AuthType.Anonymous, string userName = null, SecureString password = null, string domainName = null, bool useLogonCredentials = false)
+        public LdapClient(List<string> servers, int portNumber, AuthType authType = AuthType.Anonymous, string userName = null, SecureString password = null, string domainName = null, bool useLogonCredentials = false)
         {
             if ((servers != null && servers.Count > 0 && portNumber > 0 && !string.IsNullOrWhiteSpace(userName) && password != null) || (servers != null && servers.Count > 0 && portNumber > 0 && useLogonCredentials))
             {

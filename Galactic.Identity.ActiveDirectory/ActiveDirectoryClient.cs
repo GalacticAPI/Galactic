@@ -1,6 +1,6 @@
 ﻿using DnsClient;
 using DnsClient.Protocol;
-using Galactic.LDAP;
+using Galactic.Ldap;
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
@@ -83,7 +83,7 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         // The client that manages the LDAP connection with the AD controller.
-        private readonly LDAPClient ldap = null;
+        private readonly LdapClient ldap = null;
 
         /// <summary>
         /// Flags for use with the UserAccountControl and ms-DS-User-Account-Control-Computed properties of a user.
@@ -393,12 +393,12 @@ namespace Galactic.Identity.ActiveDirectory
                     if (domainControllers.Count == 0)
                     {
                         // Create the connection to the domain controller serving the current computer.
-                        ldap = new LDAPClient(new List<string> { domainName }, LDAPClient.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
+                        ldap = new LdapClient(new List<string> { domainName }, LdapClient.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
                     }
                     else
                     {
                         // Create the connection to the domain controllers serving the specified site.
-                        ldap = new LDAPClient(domainControllers, LDAPClient.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
+                        ldap = new LdapClient(domainControllers, LdapClient.LDAP_SSL_PORT, AuthType.Negotiate, userName, password, domainName);
                     }
 
                     // Set the search base and scope.

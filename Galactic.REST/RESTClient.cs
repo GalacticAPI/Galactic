@@ -4,12 +4,12 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
-namespace Galactic.REST
+namespace Galactic.Rest
 {
     /// <summary>
     /// An HTTP based client for interacting with RESTful APIs.
     /// </summary>
-    public class RESTClient
+    public class RestClient
     {
         // ----- CONSTANTS -----
 
@@ -29,7 +29,7 @@ namespace Galactic.REST
         /// </summary>
         /// <param name="baseUri">The base URI to use for requests to the API.</param>
         /// <param name="authorizationHeader">(Optional)The value to use for the HTTP Authorization header of requests.</param>
-        public RESTClient(string baseUri, string authorizationHeader = "")
+        public RestClient(string baseUri, string authorizationHeader = "")
         {
             if (!string.IsNullOrWhiteSpace(baseUri))
             {
@@ -55,26 +55,26 @@ namespace Galactic.REST
         /// </summary>
         /// <typeparam name="T">The type of object returned.</typeparam>
         /// <param name="path">The path to the endpoint from the baseUri.</param>
-        /// <returns>An object with the result of the request, or default(T) if the request could not be completed.</returns>
-        public T GetFromJson<T>(string path)
+        /// <returns>An object with the request response, or null if the request could not be completed.</returns>
+        public JsonRestResponse<T> GetFromJson<T>(string path)
         {
             if (!string.IsNullOrWhiteSpace(path))
             {
                 try
                 {
                     // Send the GET request.
-                    Task<T> responseTask = httpClient.GetFromJsonAsync<T>(path);
+                    Task<HttpResponseMessage> responseTask = httpClient.GetAsync(path);
 
                     // Wait for the response to complete.
                     responseTask.Wait();
 
                     // Return the result.
-                    return responseTask.Result;
+                    return new(responseTask.Result);
                 }
                 catch
                 {
                     // There was an error and the endpoint couldn't be queried.
-                    return default;
+                    return null;
                 }
             }
             else
@@ -87,8 +87,8 @@ namespace Galactic.REST
         /// Posts to a API endpoint at the supplied path, where the body of the message isn't relevant.
         /// </summary>
         /// <param name="path">The path to the endpoint from the baseUri.</param>
-        /// <returns>An object with the response message of the request, or null if the request could not be completed.</returns>
-        public HttpResponseMessage Post(string path)
+        /// <returns>An object with the request response, or null if the request could not be completed.</returns>
+        public EmptyRestResponse Post(string path)
         {
             if (!string.IsNullOrWhiteSpace(path))
             {
@@ -101,7 +101,7 @@ namespace Galactic.REST
                     responseTask.Wait();
 
                     // Return the response.
-                    return responseTask.Result;
+                    return new(responseTask.Result);
                 }
                 catch
                 {
@@ -121,8 +121,8 @@ namespace Galactic.REST
         /// <typeparam name="T">The type of object returned.</typeparam>
         /// <param name="path">The path to the endpoint from the baseUri.</param>
         /// <param name="content">An object that can be serialized to JSON and used as the content of the requst.</param>
-        /// <returns>An object with the result of the request, or default(T) if the request could not be completed.</returns>
-        public T PostAsJson<T>(string path, object content)
+        /// <returns>An object with the request reponse, or null if the request could not be completed.</returns>
+        public JsonRestResponse<T> PostAsJson<T>(string path, object content)
         {
             if (!string.IsNullOrWhiteSpace(path) && content != null)
             {
@@ -135,19 +135,13 @@ namespace Galactic.REST
                 // Check whether the response was successful.
                 if (responseTask.Result.IsSuccessStatusCode)
                 {
-                    // Read the content from the response.
-                    Task<T> jsonReadTask = responseTask.Result.Content.ReadFromJsonAsync<T>();
-
-                    // Wait for the read to complete.
-                    jsonReadTask.Wait();
-
-                    // Create a new group object from the JSON data.
-                    return jsonReadTask.Result;
+                    // Return the response object.
+                    return new(responseTask.Result);
                 }
                 else
                 {
                     // The resquest wasn't successful.
-                    return default;
+                    return null;
                 }
             }
             else
