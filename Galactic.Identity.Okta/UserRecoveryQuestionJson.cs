@@ -8,16 +8,30 @@ namespace Galactic.Identity.Okta
     /// </summary>
     public record UserRecoveryQuestionJson
     {
+        // ----- CONSTANTS -----
+
+        /// <summary>
+        /// Answer JSON property name.
+        /// </summary>
+        public const string ANSWER = "answer";
+
+        /// <summary>
+        /// Question JSON property name.
+        /// </summary>
+        public const string QUESTION = "question";
+
+        // ----- PROPERTIES -----
+
         /// <summary>
         /// The answer component of the User's recovery question.
         /// </summary>
-        [JsonPropertyName("answer")]
+        [JsonPropertyName(ANSWER)]
         public string Answer { get; init; } = default!;
 
         /// <summary>
         /// The question component of the User's recovery question.
         /// </summary>
-        [JsonPropertyName("question")]
+        [JsonPropertyName(QUESTION)]
         public string Question { get; init; } = default!;
     }
 }

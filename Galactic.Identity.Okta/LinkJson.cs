@@ -10,12 +10,56 @@ namespace Galactic.Identity.Okta
     /// </summary>
     public record LinkJson
     {
+        // ----- CONSTANTS -----
+
+        /// <summary>
+        /// Deprecation JSON property name.
+        /// </summary>
+        public const string DEPRECATION = "deprecation";
+
+        /// <summary>
+        /// Href JSON property name.
+        /// </summary>
+        public const string HREF = "href";
+
+        /// <summary>
+        /// HrefLang JSON property name.
+        /// </summary>
+        public const string HREF_LANG = "hrefLang";
+
+        /// <summary>
+        /// Name JSON property name.
+        /// </summary>
+        public const string NAME = "name";
+
+        /// <summary>
+        /// Profile JSON property name.
+        /// </summary>
+        public const string PROFILE = "profile";
+
+        /// <summary>
+        /// Templated JSON property name.
+        /// </summary>
+        public const string TEMPLATED = "templated";
+
+        /// <summary>
+        /// Title JSON property name.
+        /// </summary>
+        public const string TITLE = "title";
+
+        /// <summary>
+        /// Type JSON property name.
+        /// </summary>
+        public const string TYPE = "type";
+
+        // ----- PROPERTIES -----
+
         /// <summary>
         /// (Optional) Its presence indicates that the link is to be deprecated
         /// (i.e. removed) at a future date.Its value is a URL that SHOULD provide
         /// further information about the deprecation.
         /// </summary>
-        [JsonPropertyName("deprecation")]
+        [JsonPropertyName(DEPRECATION)]
         public string Deprecation { get; init; } = default!;
 
         /// <summary>
@@ -23,28 +67,28 @@ namespace Galactic.Identity.Okta
         /// If the value is a URI Template then the Link Object SHOULD have a
         /// "templated" attribute whose value is true.
         /// </summary>
-        [JsonPropertyName("href")]
+        [JsonPropertyName(HREF)]
         public string Href { get; init; } = default!;
 
         /// <summary>
         /// (Optional) Its value is a string and is intended for indicating the 
         /// language of the target resource(as defined by [RFC5988]).
         /// </summary>
-        [JsonPropertyName("hreflang")]
+        [JsonPropertyName(HREF_LANG)]
         public string HrefLang { get; init; } = default!;
 
         /// <summary>
         /// (Optional) Its value MAY be used as a secondary key for selecting Link
         /// Objects which share the same relation type.
         /// </summary>
-        [JsonPropertyName("name")]
+        [JsonPropertyName(NAME)]
         public string Name { get; init; } = default!;
 
         /// <summary>
         /// (Optional) Its value is a string which is a URI that hints about the
         /// profile of the target resource.
         /// </summary>
-        [JsonPropertyName("profile")]
+        [JsonPropertyName(PROFILE)]
         public string Profile { get; init; } = default!;
 
         /// <summary>
@@ -53,21 +97,21 @@ namespace Galactic.Identity.Okta
         /// Its value SHOULD be considered false if it is undefined or any other
         /// value than true.
         /// </summary>
-        [JsonPropertyName("templated")]
+        [JsonPropertyName(TEMPLATED)]
         public bool Templated { get; init; } = default!;
 
         /// <summary>
         /// (Optional) Its value is a string and is intended for labelling the
         /// link with a human-readable identifier(as defined by [RFC5988]).
         /// </summary>
-        [JsonPropertyName("title")]
+        [JsonPropertyName(TITLE)]
         public string Title { get; init; } = default!;
 
         /// <summary>
         /// (Optional) Its value is a string used as a hint to indicate the media
         /// type expected when dereferencing the target resource.
         /// </summary>
-        [JsonPropertyName("type")]
+        [JsonPropertyName(TYPE)]
         public string Type { get; init; } = default!;
     }
 }

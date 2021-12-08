@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text.Json.Serialization;
 
 namespace Galactic.Identity.Okta
 {
@@ -27,13 +26,13 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Timestamp when User's transition to ACTIVE status completed.
         /// </summary>
-        [OktaPropertyName("activated")]
+        [OktaPropertyName(UserJson.ACTIVATED)]
         public DateTime? Activated => json.Activated;
 
         /// <summary>
         /// The user's city.
         /// </summary>
-        [OktaPropertyName("city")]
+        [OktaPropertyName(UserProfileJson.CITY)]
         public string City
         {
             get => json.Profile.City;
@@ -53,7 +52,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Name of a cost center assigned to the User.
         /// </summary>
-        [OktaPropertyName("costCenter")]
+        [OktaPropertyName(UserProfileJson.COST_CENTER)]
         public string CostCenter
         {
             get => json.Profile.CostCenter;
@@ -73,7 +72,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's country code as defined in ISO 3166-1 alpha-2.
         /// </summary>
-        [OktaPropertyName("countryCode")]
+        [OktaPropertyName(UserProfileJson.COUNTRY_CODE)]
         public string CountryCode
         {
             get => json.Profile.CountryCode;
@@ -93,7 +92,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Timestamp when User was created.
         /// </summary>
-        [OktaPropertyName("created")]
+        [OktaPropertyName(UserJson.CREATED)]
         public DateTime? Created
         {
             get => json.Created;
@@ -107,7 +106,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's department.
         /// </summary>
-        [OktaPropertyName("department")]
+        [OktaPropertyName(UserProfileJson.DEPARTMENT)]
         public string Department
         {
             get => json.Profile.Department;
@@ -127,7 +126,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's display name.
         /// </summary>
-        [OktaPropertyName("displayName")]
+        [OktaPropertyName(UserProfileJson.DISPLAY_NAME)]
         public string DisplayName
         {
             get => json.Profile.DisplayName;
@@ -147,7 +146,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The User's division.
         /// </summary>
-        [OktaPropertyName("division")]
+        [OktaPropertyName(UserProfileJson.DIVISION)]
         public string Division
         {
             get => json.Profile.Division;
@@ -167,7 +166,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The User's primary e-mail address.
         /// </summary>
-        [OktaPropertyName("email")]
+        [OktaPropertyName(UserProfileJson.EMAIL)]
         public string Email
         {
             get => json.Profile.Email;
@@ -213,7 +212,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// An organization assigned identifier for the user.
         /// </summary>
-        [OktaPropertyName("employeeNumber")]
+        [OktaPropertyName(UserProfileJson.EMPLOYEE_NUMBER)]
         public string EmployeeNumber
         {
             get => json.Profile.EmployeeNumber;
@@ -233,7 +232,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's first name.
         /// </summary>
-        [OktaPropertyName("firstName")]
+        [OktaPropertyName(UserProfileJson.FIRST_NAME)]
         public string FirstName
         {
             get => json.Profile.FirstName;
@@ -253,7 +252,7 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
-        /// The list of groups this object is a member of.
+        /// The list of groups this object is a member of, or null if they couldn't be retrieved.
         /// </summary>
         public List<IGroup> Groups
         {
@@ -262,22 +261,30 @@ namespace Galactic.Identity.Okta
                 // Retrieve the list of JSON objects representing the groups.
                 List<GroupJson> groupJsonList = okta.GetUserGroups(UniqueId);
 
-                // Create Group objects from the JSON.
-                List<IGroup> groups = new();
-                foreach (GroupJson json in groupJsonList)
+                if (groupJsonList != null)
                 {
-                    groups.Add(new Group(okta, json) as IGroup);
-                }
+                    // Create Group objects from the JSON.
+                    List<IGroup> groups = new();
+                    foreach (GroupJson json in groupJsonList)
+                    {
+                        groups.Add(new Group(okta, json) as IGroup);
+                    }
 
-                // Return the groups.
-                return groups;
+                    // Return the groups.
+                    return groups;
+                }
+                else
+                {
+                    // There was an error retrieving the list of groups.
+                    return null;
+                }
             }
         }
 
         /// <summary>
         /// The honorific prefix(es) of the User, or title in most Western languages.
         /// </summary>
-        [OktaPropertyName("honorificPrefix")]
+        [OktaPropertyName(UserProfileJson.HONORIFIC_PREFIX)]
         public string HonorificPrefix
         {
             get => json.Profile.HonorificPrefix;
@@ -297,7 +304,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The honorific suffix(es) of the User.
         /// </summary>
-        [OktaPropertyName("honorificSuffix")]
+        [OktaPropertyName(UserProfileJson.HONORIFIC_SUFFIX)]
         public string HonorificSuffix
         {
             get => json.Profile.HonorificSuffix;
@@ -317,7 +324,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The User's unique key.
         /// </summary>
-        [OktaPropertyName("id")]
+        [OktaPropertyName(UserJson.ID)]
         public string Id => json.Id;
 
 
@@ -342,13 +349,13 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Timestamp of User's last login.
         /// </summary>
-        [OktaPropertyName("lastLogin")]
+        [OktaPropertyName(UserJson.LAST_LOGIN)]
         public DateTime? LastLogin => json.LastLogin;
 
         /// <summary>
         /// The user's last name.
         /// </summary>
-        [OktaPropertyName("lastName")]
+        [OktaPropertyName(UserProfileJson.LAST_NAME)]
         public string LastName
         {
             get => json.Profile.LastName;
@@ -368,14 +375,14 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Timestamp when User was last updated.
         /// </summary>
-        [OktaPropertyName("lastUpdated")]
+        [OktaPropertyName(UserJson.LAST_UPDATED)]
         public DateTime? LastUpdated => json.LastUpdated;
 
         /// <summary>
         /// The User's default location for purposes of localizing items such as
         /// currency, date time format, numerical representations, etc.
         /// </summary>
-        [OktaPropertyName("locale")]
+        [OktaPropertyName(UserProfileJson.LOCALE)]
         public string Locale
         {
             get => json.Profile.Locale;
@@ -395,7 +402,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The login name for the user in the system.
         /// </summary>
-        [OktaPropertyName("login")]
+        [OktaPropertyName(UserProfileJson.LOGIN)]
         public string Login
         {
             get => json.Profile.Login;
@@ -415,7 +422,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The display name of the User's manager.
         /// </summary>
-        [OktaPropertyName("manager")]
+        [OktaPropertyName(UserProfileJson.MANAGER)]
         public string Manager
         {
             get => json.Profile.Manager;
@@ -435,7 +442,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The unique ID of the user's manager in the system.
         /// </summary>
-        [OktaPropertyName("managerId")]
+        [OktaPropertyName(UserProfileJson.MANAGER_ID)]
         public string ManagerId
         {
             get => json.Profile.ManagerId;
@@ -460,7 +467,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's middle name.
         /// </summary>
-        [OktaPropertyName("middleName")]
+        [OktaPropertyName(UserProfileJson.MIDDLE_NAME)]
         public string MiddleName
         {
             get => json.Profile.MiddleName;
@@ -480,7 +487,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's mobile phone number.
         /// </summary>
-        [OktaPropertyName("mobilePhone")]
+        [OktaPropertyName(UserProfileJson.MOBILE_PHONE)]
         public string MobilePhone
         {
             get => json.Profile.MobilePhone;
@@ -500,7 +507,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The casual way to address the User in real life.
         /// </summary>
-        [OktaPropertyName("nickName")]
+        [OktaPropertyName(UserProfileJson.NICK_NAME)]
         public string NickName
         {
             get => json.Profile.NickName;
@@ -520,7 +527,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The name of the organization the user belong's to.
         /// </summary>
-        [OktaPropertyName("organization")]
+        [OktaPropertyName(UserProfileJson.ORGANIZATION)]
         public string Organization
         {
             get => json.Profile.Organization;
@@ -540,7 +547,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Timestamp when User's password was last changed.
         /// </summary>
-        [OktaPropertyName("passwordChanged")]
+        [OktaPropertyName(UserJson.PASSWORD_CHANGED)]
         public DateTime? PasswordChanged => json.PasswordChanged;
 
         /// <summary>
@@ -599,7 +606,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's postal (mailing) address.
         /// </summary>
-        [OktaPropertyName("postalAddress")]
+        [OktaPropertyName(UserProfileJson.POSTAL_ADDRESS)]
         public string PostalAddress
         {
             get => json.Profile.PostalAddress;
@@ -643,7 +650,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's primary phone number.
         /// </summary>
-        [OktaPropertyName("primaryPhone")]
+        [OktaPropertyName(UserProfileJson.PRIMARY_PHONE)]
         public string PrimaryPhone
         {
             get => json.Profile.PrimaryPhone;
@@ -663,7 +670,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The URL of the User's online profile (e.g. web page).
         /// </summary>
-        [OktaPropertyName("profileUrl")]
+        [OktaPropertyName(UserProfileJson.PROFILE_URL)]
         public string ProfileUrl
         {
             get => json.Profile.ProfileUrl;
@@ -684,7 +691,7 @@ namespace Galactic.Identity.Okta
         /// The secondary e-mail address of the User, typically used for account
         /// recovery.
         /// </summary>
-        [OktaPropertyName("secondEmail")]
+        [OktaPropertyName(UserProfileJson.SECOND_EMAIL)]
         public string SecondEmail
         {
             get => json.Profile.SecondEmail;
@@ -704,7 +711,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's state.
         /// </summary>
-        [OktaPropertyName("state")]
+        [OktaPropertyName(UserProfileJson.STATE)]
         public string State
         {
             get => json.Profile.State;
@@ -724,19 +731,19 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The User's current status.
         /// </summary>
-        [OktaPropertyName("status")]
+        [OktaPropertyName(UserJson.STATUS)]
         public string Status => json.Status;
 
         /// <summary>
         /// Timestamp when User's status last changed.
         /// </summary>
-        [OktaPropertyName("statusChanged")]
+        [OktaPropertyName(UserJson.STATUS_CHANGED)]
         public DateTime? StatusChanged => json.StatusChanged;
 
         /// <summary>
         /// The full street address component of the User's address.
         /// </summary>
-        [OktaPropertyName("streetAddress")]
+        [OktaPropertyName(UserProfileJson.STREET_ADDRESS)]
         public string StreetAddress
         {
             get => json.Profile.StreetAddress;
@@ -756,7 +763,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The User's time zone.
         /// </summary>
-        [OktaPropertyName("timezone")]
+        [OktaPropertyName(UserProfileJson.TIME_ZONE)]
         public string TimeZone
         {
             get => json.Profile.TimeZone;
@@ -789,13 +796,13 @@ namespace Galactic.Identity.Okta
         /// The target status of an in-progress asynchronous status transition
         /// of the User.
         /// </summary>
-        [OktaPropertyName("transitioningToStatus")]
+        [OktaPropertyName(UserJson.TRANSITIONING_TO_STATUS)]
         public string TransitioningToStatus => json.TransitioningToStatus;
 
         /// <summary>
         /// The type or category of the object. Empty if unknown.
         /// </summary>
-        [OktaPropertyName("type")]
+        [OktaPropertyName(UserJson.TYPE)]
         public string Type => json.Type;
 
         /// <summary>
@@ -807,7 +814,7 @@ namespace Galactic.Identity.Okta
         /// Used to describe the organization to user relationship such as "Employee"
         /// or "Contractor".
         /// </summary>
-        [OktaPropertyName("userType")]
+        [OktaPropertyName(UserProfileJson.USER_TYPE)]
         public string UserType
         {
             get => json.Profile.UserType;
@@ -827,7 +834,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The ZIP code or postal code component of the User's address.
         /// </summary>
-        [OktaPropertyName("zipCode")]
+        [OktaPropertyName(UserProfileJson.ZIP_CODE)]
         public string ZipCode
         {
             get => json.Profile.ZipCode;

@@ -51,6 +51,38 @@ namespace Galactic.Rest
         // ----- METHODS -----
 
         /// <summary>
+        /// Sends a Delete request to a API endpoint at the supplied path.
+        /// </summary>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <returns>An object with the request response, or null if the request could not be completed.</returns>
+        public EmptyRestResponse Delete(string path)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                try
+                {
+                    // Send the DELETE request.
+                    Task<HttpResponseMessage> responseTask = httpClient.DeleteAsync(path);
+
+                    // Wait for the response to complete.
+                    responseTask.Wait();
+
+                    // Return the response.
+                    return new(responseTask.Result);
+                }
+                catch
+                {
+                    // There was an error sending the request.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+        }
+
+        /// <summary>
         /// Gets JSON data from an API endpoint at the supplied path.
         /// </summary>
         /// <typeparam name="T">The type of object returned.</typeparam>

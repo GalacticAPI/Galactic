@@ -8,12 +8,41 @@ namespace Galactic.Identity.Okta
     /// </summary>
     public record UserHashedPasswordJson
     {
+        // ----- CONSTANTS -----
+
+        /// <summary>
+        /// Algorithm JSON property name.
+        /// </summary>
+        public const string ALGORITHM = "algorithm";
+
+        /// <summary>
+        /// Value JSON property name.
+        /// </summary>
+        public const string VALUE = "value";
+
+        /// <summary>
+        /// Salt JSON property name.
+        /// </summary>
+        public const string SALT = "salt";
+
+        /// <summary>
+        /// SaltOrder JSON property name.
+        /// </summary>
+        public const string SALT_ORDER = "saltOrder";
+
+        /// <summary>
+        /// WorkFactor JSON property name.
+        /// </summary>
+        public const string WORK_FACTOR = "workFactor";
+
+        // ----- PROPERTIES -----
+
         /// <summary>
         /// The algorithm used to generate the hash using the password (and salt,
         /// when applicable). Must be set to BCRYPT, SHA-512, SHA-256, SHA-1 or
         /// MD5.
         /// </summary>
-        [JsonPropertyName("algorithm")]
+        [JsonPropertyName(ALGORITHM)]
         public string Algorithm { get; init; } = default!;
 
         /// <summary>
@@ -26,7 +55,7 @@ namespace Galactic.Identity.Okta
         /// SHA-512/SHA-256/SHA-1/MD5 digest. For BCRYPT, This is the actual
         /// radix64-encoded hashed password.
         /// </summary>
-        [JsonPropertyName("value")]
+        [JsonPropertyName(VALUE)]
         public string Value { get; init; } = default!;
 
         /// <summary>
@@ -35,14 +64,14 @@ namespace Galactic.Identity.Okta
         /// characters long. For other salted hashes, this specifies the
         /// base64-encoded salt used to generate the hash.
         /// </summary>
-        [JsonPropertyName("salt")]
+        [JsonPropertyName(SALT)]
         public string Salt { get; init; } = default!;
 
         /// <summary>
         /// Specifies whether salt was pre- or postfixed to the password before
         /// hashing. Only required for salted algorithms.
         /// </summary>
-        [JsonPropertyName("saltOrder")]
+        [JsonPropertyName(SALT_ORDER)]
         public string SaltOrder { get; init; } = default!;
 
         /// <summary>
@@ -50,7 +79,7 @@ namespace Galactic.Identity.Okta
         /// Only required for BCRYPT algorithm. Minimum value is 1, and maximum
         /// is 20.
         /// </summary>
-        [JsonPropertyName("workFactor")]
+        [JsonPropertyName(WORK_FACTOR)]
         public int? WorkFactor { get; init; } = default!;
     }
 }

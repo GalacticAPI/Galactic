@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace Galactic.Identity.Okta
 {
@@ -102,52 +104,104 @@ namespace Galactic.Identity.Okta
         // ----- METHODS -----
 
         /// <summary>
+        /// Add a user to a group.
+        /// </summary>
+        /// <param name="userId">The unique id of the user to add.</param>
+        /// <param name="groupId">The unique id of the group to add the user to.</param>
+        /// <returns>True if the user was added, false otherwise.</returns>
+        public bool AddUserToGroup(string userId, string groupId)
+        {
+            if (!string.IsNullOrWhiteSpace(userId) && !string.IsNullOrWhiteSpace(groupId))
+            {
+                EmptyRestResponse response = rest.Post("/groups/" + groupId + "/users/" + userId);
+
+                if (response != null)
+                {
+                    HttpResponseMessage message =response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The user was added.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The user was not addded.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The user was not added.
+                    return false;
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentNullException(nameof(userId));
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(groupId));
+            }
+        }
+
+        /// <summary>
         /// Create a new group within the directory system given its proposed name, its type, and other optional attributes.
         /// </summary>
         /// <param name="name">The proposed name of the group.</param>
         /// <param name="type">(Ignored) The type of group to create. All Okta groups that are manually created are of the type OKTA_GROUP.</param>
-        /// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the group. Defaults to the standard group create location for the system if not supplied or invalid.</param>
+        /// <param name="parentUniqueId">(Ignored) The unique id of the object that will be the parent of the group. Defaults to the standard group create location for the system if not supplied or invalid.</param>
         /// <param name="additionalAttributes">(Optional) Additional attributes to set when creating the group.</param>
         /// <returns>The newly created group object, or null if it could not be created.</returns>
         public IGroup CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
-            try
+            if (!string.IsNullOrEmpty(name))
             {
-                // Set the description if supplied.
-                string description = "";
-                if (additionalAttributes != null)
+                try
                 {
-                    foreach (IdentityAttribute<Object> attribute in additionalAttributes)
+                    // Set the description if supplied.
+                    string description = "";
+                    if (additionalAttributes != null)
                     {
-                        if (attribute.Name == "description")
+                        foreach (IdentityAttribute<Object> attribute in additionalAttributes)
                         {
-                            description = (string)attribute.Value;
+                            if (attribute.Name == "description")
+                            {
+                                description = (string)attribute.Value;
+                            }
                         }
                     }
-                }
 
-                // Create the profile for the group to submit with the request.
-                GroupProfileJson profile = new()
-                {
-                    Name = name,
-                    Description = description
-                };
+                    // Create the profile for the group to submit with the request.
+                    GroupProfileJson profile = new()
+                    {
+                        Name = name,
+                        Description = description
+                    };
 
-                // Send the POST request.
-                OktaJsonRestResponse<GroupJson> response = (OktaJsonRestResponse<GroupJson>)rest.PostAsJson<GroupJson>("/groups", profile);
-                if (response != null)
-                {
-                    return new Group(this, response.Value);
+                    // Send the POST request.
+                    OktaJsonRestResponse<GroupJson> response = (OktaJsonRestResponse<GroupJson>)rest.PostAsJson<GroupJson>("/groups", profile);
+                    if (response != null)
+                    {
+                        return new Group(this, response.Value);
+                    }
+                    else
+                    {
+                        // The resquest wasn't successful.
+                        return null;
+                    }
                 }
-                else
+                catch
                 {
-                    // The resquest wasn't successful.
+                    // There was an error and the group was not created.
                     return null;
                 }
             }
-            catch
+            else
             {
-                // There was an error and the group was not created.
+                // A name wasn't specified.
                 return null;
             }
         }
@@ -156,12 +210,253 @@ namespace Galactic.Identity.Okta
         /// Creates a user within the directory system given it's login, and other options attributes.
         /// </summary>
         /// <param name="login">The proposed login of the user.</param>
-        /// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
-        /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user.</param>
-        /// <returns>The newly creaTed user object, or null if it could not be created.</returns>
+        /// <param name="parentUniqueId">(Ignored) The unique id of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
+        /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user. (Malformed or incorrect attributes are skipped.)</param>
+        /// <returns>The newly created user object, or null if it could not be created.</returns>
         public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrWhiteSpace(login))
+            {
+                try
+                {
+                    // Set the additional attributes if supplied.
+
+                    // Profile properties.
+                    string city = null;
+                    string costCenter = null;
+                    string countryCode = null;
+                    string department = null;
+                    string displayName = null;
+                    string division = null;
+                    string email = null;
+                    string employeeNumber = null;
+                    string firstName = null;
+                    string honorificPrefix = null;
+                    string honorificSuffix = null;
+                    string lastName = null;
+                    string locale = null;
+                    string manager = null;
+                    string managerId = null;
+                    string middleName = null;
+                    string mobilePhone = null;
+                    string nickName = null;
+                    string organization = null;
+                    string postalAddress = null;
+                    string primaryPhone = null;
+                    string profileUrl = null;
+                    string secondEmail = null;
+                    string state = null;
+                    string streetAddress = null;
+                    string timeZone = null;
+                    string userType = null;
+                    string zipCode = null;
+
+                    // Credentials properties.
+                    UserPasswordJson password = null;
+                    UserRecoveryQuestionJson recoveryQuestion = null;
+                    UserProviderJson provider = null;
+
+                    if (additionalAttributes != null)
+                    {
+                        foreach (IdentityAttribute<Object> attribute in additionalAttributes)
+                        {
+                            switch (attribute.Name)
+                            {
+                                case UserProfileJson.CITY:
+                                    city = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.COST_CENTER:
+                                    costCenter = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.COUNTRY_CODE:
+                                    countryCode = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.DEPARTMENT:
+                                    department = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.DISPLAY_NAME:
+                                    displayName = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.DIVISION:
+                                    division = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.EMAIL:
+                                    email = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.EMPLOYEE_NUMBER:
+                                    employeeNumber = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.FIRST_NAME:
+                                    firstName = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.HONORIFIC_PREFIX:
+                                    honorificPrefix = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.HONORIFIC_SUFFIX:
+                                    honorificSuffix = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.LAST_NAME:
+                                    lastName = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.LOCALE:
+                                    locale = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.MANAGER:
+                                    manager = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.MANAGER_ID:
+                                    managerId = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.MIDDLE_NAME:
+                                    middleName = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.MOBILE_PHONE:
+                                    mobilePhone = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.NICK_NAME:
+                                    nickName = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.ORGANIZATION:
+                                    organization = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.POSTAL_ADDRESS:
+                                    postalAddress = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.PRIMARY_PHONE:
+                                    primaryPhone = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.PROFILE_URL:
+                                    profileUrl = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.SECOND_EMAIL:
+                                    secondEmail = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.STATE:
+                                    state = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.STREET_ADDRESS:
+                                    streetAddress = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.TIME_ZONE:
+                                    timeZone = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.USER_TYPE:
+                                    userType = (string)attribute.Value;
+                                    break;
+                                case UserProfileJson.ZIP_CODE:
+                                    zipCode = (string)attribute.Value;
+                                    break;
+                                case UserCredentialsJson.PASSWORD:
+                                    if (attribute.Value is UserPasswordJson)
+                                    {
+                                        password = (UserPasswordJson)attribute.Value;
+                                    }
+                                    break;
+                                case UserCredentialsJson.RECOVERY_QUESTION:
+                                    if (attribute.Value is UserRecoveryQuestionJson)
+                                    {
+                                        recoveryQuestion = (UserRecoveryQuestionJson)attribute.Value;
+                                    }
+                                    break;
+                                case UserCredentialsJson.PROVIDER:
+                                    if (attribute.Value is UserProviderJson)
+                                    {
+                                        provider = (UserProviderJson)attribute.Value;
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+
+                    // Create the profile for the user to submit with the request.
+                    UserProfileJson profile = new()
+                    {
+                        City = city,
+                        CostCenter = costCenter,
+                        CountryCode = countryCode,
+                        Department = department,
+                        DisplayName = displayName,
+                        Division = division,
+                        Email = email,
+                        EmployeeNumber = employeeNumber,
+                        FirstName = firstName,
+                        HonorificPrefix = honorificPrefix,
+                        HonorificSuffix = honorificSuffix,
+                        LastName = lastName,
+                        Locale = locale,
+                        Login = login,
+                        Manager = manager,
+                        ManagerId = managerId,
+                        MiddleName = middleName,
+                        MobilePhone = mobilePhone,
+                        NickName = nickName,
+                        Organization = organization,
+                        PostalAddress = postalAddress,
+                        PrimaryPhone = primaryPhone,
+                        ProfileUrl = profileUrl,
+                        SecondEmail = secondEmail,
+                        State = state,
+                        StreetAddress = streetAddress,
+                        TimeZone = timeZone,
+                        UserType = userType,
+                        ZipCode = zipCode
+                    };
+
+                    // Create the credentials profile for the user to submit with the request.
+                    UserCredentialsJson credentials = null;
+
+                    // Check whether credentials properties were defined.
+                    if (password != null || recoveryQuestion != null || provider != null)
+                    {
+                        credentials = new()
+                        {
+                            Password = password,
+                            RecoveryQuestion = recoveryQuestion,
+                            Provider = provider
+                        };
+                    }
+
+                    // Send the POST request.
+                    OktaJsonRestResponse<UserJson> response = null;
+
+                    if (credentials != null)
+                    {
+                        // Create a request with both profile and credentials data.
+                        UserProfileAndCredentialsJson profileAndCredentials = new()
+                        {
+                            Profile = profile,
+                            Credentials = credentials
+                        };
+                        response = (OktaJsonRestResponse<UserJson>)rest.PostAsJson<UserJson>("/users", profileAndCredentials);
+
+                    }
+                    else
+                    {
+                        // Create a request with profile data only.
+                        response = (OktaJsonRestResponse<UserJson>)rest.PostAsJson<UserJson>("/users", profile);
+                    }
+
+                    if (response != null)
+                    {
+                        return new User(this, response.Value);
+                    }
+                    else
+                    {
+                        // The resquest wasn't successful.
+                        return null;
+                    }
+                }
+                catch
+                {
+                    // There was an error and the user was not created.
+                    return null;
+                }
+            }
+            else
+            {
+                // A login wasn't specified.
+                return null;
+            }
         }
 
         /// <summary>
@@ -279,22 +574,31 @@ namespace Galactic.Identity.Okta
         /// Gets a list of groups that the user is a member of.
         /// </summary>
         /// <param name="uniqueId">The unique id of the user.</param>
-        /// <returns>A list of GroupJsons objects representing each group the user is a member of.</returns>
+        /// <returns>A list of GroupJsons objects representing each group the user is a member of, or null if there was an error retrieving the list.</returns>
         public List<GroupJson> GetUserGroups(string uniqueId)
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
                 // Return the result.
-                GroupJson[] jsonArray = rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups").Value;
-                if (jsonArray != default)
+                OktaJsonRestResponse<GroupJson[]> response = (OktaJsonRestResponse<GroupJson[]>)rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups");
+                if (response != null)
                 {
-                    // Return the list of Groups.
-                    return new(jsonArray);
+                    GroupJson[] jsonArray = response.Value;
+                    if (jsonArray != default)
+                    {
+                        // Return the list of Groups.
+                        return new(jsonArray);
+                    }
+                    else
+                    {
+                        // Nothing was returned. Return an empty list.
+                        return new();
+                    }
                 }
                 else
                 {
-                    // Nothing was returned. Return an empty list.
-                    return new ();
+                    // There was an error with the request.
+                    return null;
                 }
             }
             else
@@ -312,6 +616,50 @@ namespace Galactic.Identity.Okta
         public bool MoveObject(string uniqueId, string parentUniqueId)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Remove a user from a group.
+        /// </summary>
+        /// <param name="userId">The unique id of the user to remove.</param>
+        /// <param name="groupId">The unique id of the group to remove the user from.</param>
+        /// <returns>True if the user was removed, false otherwise.</returns>
+        public bool RemoveUserFromGroup(string userId, string groupId)
+        {
+            if (!string.IsNullOrWhiteSpace(userId) && !string.IsNullOrWhiteSpace(groupId))
+            {
+                EmptyRestResponse response = rest.Delete("/groups/" + groupId + "/users/" + userId);
+
+                if (response != null)
+                {
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The user was removed.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The user was not removed.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The user was not removed.
+                    return false;
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentNullException(nameof(userId));
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(groupId));
+            }
         }
 
         /// <summary>
@@ -334,17 +682,26 @@ namespace Galactic.Identity.Okta
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
-                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/suspend").Message;
-
-                // Check that the request was a success.
-                if (message.IsSuccessStatusCode)
+                EmptyRestResponse response = rest.Post("/users/" + uniqueId + "/lifecycle/suspend");
+                if (response != null)
                 {
-                    // The request was successful. The user was suspended.
-                    return true;
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The user was suspended.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The user was not suspended.
+                        return false;
+                    }
                 }
                 else
                 {
-                    // The request was not successful. The user was not suspended.
+                    // There was an error with the requestion.
                     return false;
                 }
             }
@@ -363,17 +720,26 @@ namespace Galactic.Identity.Okta
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
-                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/unlock").Message;
-
-                // Check that the request was a success.
-                if (message.IsSuccessStatusCode)
+                EmptyRestResponse response = rest.Post("/users/" + uniqueId + "/lifecycle/unlock");
+                if (response != null)
                 {
-                    // The request was successful. The user was unlocked.
-                    return true;
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The user was unlocked.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The user was not unlocked.
+                        return false;
+                    }
                 }
                 else
                 {
-                    // The request was not successful. The user was not unlocked.
+                    // There was an error with the request.
                     return false;
                 }
             }
@@ -392,17 +758,26 @@ namespace Galactic.Identity.Okta
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
-                HttpResponseMessage message = rest.Post("/users/" + uniqueId + "/lifecycle/unsuspend").Message;
-
-                // Check that the request was a success.
-                if (message.IsSuccessStatusCode)
+                EmptyRestResponse response = rest.Post("/users/" + uniqueId + "/lifecycle/unsuspend");
+                if (response != null)
                 {
-                    // The request was successful. The user was unsuspended.
-                    return true;
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The user was unsuspended.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The user was not unsuspended.
+                        return false;
+                    }
                 }
                 else
                 {
-                    // The request was not successful. The user was not unsuspended.
+                    // There was an error with the request.
                     return false;
                 }
             }
@@ -433,7 +808,16 @@ namespace Galactic.Identity.Okta
                 if (profile != null)
                 {
                     // Update the properties.
-                    group = rest.PostAsJson<GroupJson>("/groups/" + uniqueId, profile).Value;
+                    OktaJsonRestResponse<GroupJson> response = (OktaJsonRestResponse<GroupJson>)rest.PostAsJson<GroupJson>("/groups/" + uniqueId, profile);
+                    if (response != null)
+                    {
+                        group = response.Value;
+                    }
+                    else
+                    {
+                        // There was an error with the request.
+                        return null;
+                    }
                 }
 
                 // Return the group's JSON object.
@@ -455,36 +839,56 @@ namespace Galactic.Identity.Okta
         /// <returns>A new UserJson object representing the new state of the user after the update, or null if the update was not completed.</returns>
         public UserJson UpdateUser(string uniqueId, UserProfileJson profile = null, UserCredentialsJson creds = null)
         {
-            if (string.IsNullOrWhiteSpace(uniqueId))
+            if (!string.IsNullOrWhiteSpace(uniqueId))
             {
-                throw new ArgumentNullException(nameof(uniqueId));
-            }
-
-            // TODO: Collapse these into a single request, if both aren't null.
-            if (profile != null || creds != null)
-            {
-                // The JSON object representing the updated user.
-                UserJson user = null;
-
-                if (profile != null)
+                // TODO: Collapse these into a single request, if both aren't null.
+                if (profile != null || creds != null)
                 {
-                    // Update the properties.
-                    user = rest.PostAsJson<UserJson>("/users/" + uniqueId, profile).Value;
-                }
+                    // The JSON object representing the updated user.
+                    UserJson user = null;
 
-                if (creds != null)
+                    if (profile != null)
+                    {
+                        // Update the properties.
+                        OktaJsonRestResponse<UserJson> response = (OktaJsonRestResponse<UserJson>)rest.PostAsJson<UserJson>("/users/" + uniqueId, profile);
+                        if (response != null)
+                        {
+                            user = response.Value;
+                        }
+                        else
+                        {
+                            // There was an error with the request.
+                            return null;
+                        }
+                    }
+
+                    if (creds != null)
+                    {
+                        // Update the credentials.
+                        OktaJsonRestResponse<UserJson> response = (OktaJsonRestResponse<UserJson>)rest.PostAsJson<UserJson>("/users/" + uniqueId, creds);
+                        if (response != null)
+                        {
+                            user = response.Value;
+                        }
+                        else
+                        {
+                            // There was an error with the request.
+                            return null;
+                        }
+                    }
+
+                    // Return the user's JSON object.
+                    return user;
+                }
+                else
                 {
-                    // Update the credentials.
-                    user = rest.PostAsJson<UserJson>("/users/" + uniqueId, creds).Value;
+                    // There was nothing to update.
+                    return null;
                 }
-
-                // Return the user's JSON object.
-                return user;
             }
             else
-            {
-                // There was nothing to update.
-                return null;
+            { 
+                throw new ArgumentNullException(nameof(uniqueId));
             }
         }
     }

@@ -8,17 +8,36 @@ namespace Galactic.Identity.Okta
     /// </summary>
     public record UserCredentialsJson
     {
+        // ----- CONSTANTS -----
+
+        /// <summary>
+        /// Password JSON property name.
+        /// </summary>
+        public const string PASSWORD = "password";
+
+        /// <summary>
+        /// RecoveryQuestion JSON property name.
+        /// </summary>
+        public const string RECOVERY_QUESTION = "recovery_question";
+
+        /// <summary>
+        /// Provider JSON property name.
+        /// </summary>
+        public const string PROVIDER = "provider";
+
+        // ----- PROPERTIES -----
+
         /// <summary>
         /// Specifies a password for the User.
         /// </summary>
-        [JsonPropertyName("password")]
+        [JsonPropertyName(PASSWORD)]
         public UserPasswordJson Password { get; init; } = default!;
 
         /// <summary>
         /// Specifies a secret question and answer that is validated (case insensitive)
         /// when a user forgets their password or unlocks their account.
         /// </summary>
-        [JsonPropertyName("recovery_question")]
+        [JsonPropertyName(RECOVERY_QUESTION)]
         public UserRecoveryQuestionJson RecoveryQuestion { get; init; } = default!;
 
         /// <summary>
@@ -26,7 +45,7 @@ namespace Galactic.Identity.Okta
         /// credential. The User's current provider is managed by the Delegated
         /// Authentication settings for the organization.
         /// </summary>
-        [JsonPropertyName("provider")]
+        [JsonPropertyName(PROVIDER)]
         public UserProviderJson Provider { get; init; } = default!;
     }
 }

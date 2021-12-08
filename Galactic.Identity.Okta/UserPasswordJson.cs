@@ -8,16 +8,35 @@ namespace Galactic.Identity.Okta
     /// </summary>
     public record UserPasswordJson
     {
+        // ----- CONSTANTS -----
+
+        /// <summary>
+        /// Value JSON property name.
+        /// </summary>
+        public const string VALUE = "value";
+
+        /// <summary>
+        /// Hash JSON property name.
+        /// </summary>
+        public const string HASH = "hash";
+
+        /// <summary>
+        /// Hook JSON property name.
+        /// </summary>
+        public const string HOOK = "hook";
+
+        // ----- PROPERTIES -----
+
         /// <summary>
         /// The value of the User's password.
         /// </summary>
-        [JsonPropertyName("value")]
+        [JsonPropertyName(VALUE)]
         public string Value { get; init; } = default!;
 
         /// <summary>
         /// Specifies the User's hashed password.
         /// </summary>
-        [JsonPropertyName("hash")]
+        [JsonPropertyName(HASH)]
         public UserHashedPasswordJson Hash { get; init; } = default!;
 
         /// <summary>
@@ -25,7 +44,7 @@ namespace Galactic.Identity.Okta
         /// handle verification of the User's password the first time the User
         /// logs in.
         /// </summary>
-        [JsonPropertyName("hook")]
+        [JsonPropertyName(HOOK)]
         public UserPasswordHookJson Hook { get; init; } = default!;
     }
 }

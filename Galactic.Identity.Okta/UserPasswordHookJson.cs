@@ -8,10 +8,19 @@ namespace Galactic.Identity.Okta
     /// </summary>
     public record UserPasswordHookJson
     {
+        // ----- CONSTANTS -----
+
+        /// <summary>
+        /// Type JSON property name.
+        /// </summary>
+        public const string TYPE = "type";
+
+        // ----- PROPERTIES -----
+
         /// <summary>
         /// The type of Password Inline Hook. Currently, must be set to default.
         /// </summary>
-        [JsonPropertyName("type")]
+        [JsonPropertyName(TYPE)]
         public string Type { get; init; } = default!;
     }
 }

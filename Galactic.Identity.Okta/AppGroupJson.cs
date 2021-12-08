@@ -8,10 +8,19 @@ namespace Galactic.Identity.Okta
     /// </summary>
     public record AppGroupJson : GroupJson
     {
+        // ----- CONSTANTS -----
+
+        /// <summary>
+        /// Source JSON property name.
+        /// </summary>
+        public const string SOURCE = "source";
+
+        // ----- PROPERTIES -----
+
         /// <summary>
         /// The ID of the source application of the group.
         /// </summary>
-        [JsonPropertyName("source")]
+        [JsonPropertyName(SOURCE)]
         public string[] Source { get; init; } = default!;
     }
 }
