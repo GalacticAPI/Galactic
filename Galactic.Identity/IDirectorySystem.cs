@@ -39,11 +39,18 @@ namespace Galactic.Identity
         public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null);
 
         /// <summary>
-        /// Deletes an object with the specified unique id from the directory system.
+        /// Deletes a group with the specified unique id from the directory system.
         /// </summary>
-        /// <param name="uniqueId">The unique id of the object to delete.</param>
-        /// <returns>True if the object was deleted, false otherwise.</returns>
-        public bool DeleteObject(string uniqueId);
+        /// <param name="uniqueId">The unique id of the group to delete.</param>
+        /// <returns>True if the group was deleted, false otherwise.</returns>
+        public bool DeleteGroup(string uniqueId);
+
+        /// <summary>
+        /// Deletes a user with the specified unique id from the directory system.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to delete.</param>
+        /// <returns>True if the user was deleted, false otherwise.</returns>
+        public bool DeleteUser(string uniqueId);
 
         /// <summary>
         /// Get's all users in the directory system.
@@ -58,27 +65,19 @@ namespace Galactic.Identity
         public List<string> GetGroupTypes();
 
         /// <summary>
-        /// Gets identity objects that match wildcarded (*) attribute value in the supplied attribute.
+        /// Gets IGroups that match wildcarded (*) attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
-        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the object found. If not supplied, the default list of attributes is returned.</param>
-        /// <returns>A list of idenity objects that match the attribute value supplied.</returns>
-        public List<IIdentityObject> GetObjectsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null);
+        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
+        /// <returns>A list of users that match the attribute value supplied.</returns>
+        public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null);
 
         /// <summary>
-        /// Moves an object in the directory system.
+        /// Gets IUsers that match wildcarded (*) attribute value in the supplied attribute.
         /// </summary>
-        /// <param name="uniqueId">The unique id of the object to move.</param>
-        /// <param name="parentUniqueId">The unique id of the object that will be the new parent of the object.</param>
-        /// <returns>True if the object was moved, false otherwise.</returns>
-        public bool MoveObject(string uniqueId, string parentUniqueId);
-
-        /// <summary>
-        /// Renames an object in the directory system.
-        /// </summary>
-        /// <param name="uniqueId">The unique id of the object to rename.</param>
-        /// <param name="name"The new name of the object.</param>
-        /// <returns>True if the object was renamed, false otherwise.</returns>
-        public bool RenameObject(string uniqueId, string name);
+        /// <param name="attribute">The attribute with name and value to search against.</param>
+        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
+        /// <returns>A list of users that match the attribute value supplied.</returns>
+        public List<IUser> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null);
     }
 }

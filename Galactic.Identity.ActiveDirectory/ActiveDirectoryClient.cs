@@ -701,11 +701,28 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Deletes an object with the specified unique id from the directory system.
+        /// Deletes a group with the specified unique id from the directory system.
         /// </summary>
-        /// <param name="uniqueId">The unique id (GUID) of the object to delete.</param>
-        /// <returns>True if the object was deleted, false otherwise.</returns>
-        public bool DeleteObject(string uniqueId)
+        /// <param name="uniqueId">The unique id of the group to delete.</param>
+        /// <returns>True if the group was deleted, false otherwise.</returns>
+        public bool DeleteGroup(string uniqueId)
+        {
+            try
+            {
+                return Delete(Guid.Parse(uniqueId));
+            }
+            catch
+            {
+                throw new ArgumentException("Invalid GUID supplied.", nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
+        /// Deletes a user with the specified unique id from the directory system.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to delete.</param>
+        /// <returns>True if the user was deleted, false otherwise.</returns>
+        public bool DeleteUser(string uniqueId)
         {
             try
             {
@@ -1217,6 +1234,51 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Gets IGroups that match wildcarded (*) attribute value in the supplied attribute.
+        /// </summary>
+        /// <param name="attribute">The attribute with name and value to search against.</param>
+        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
+        /// <returns>A list of users that match the attribute value supplied.</returns>
+        public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
+        {
+            if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
+            {
+                // Get the names of any attributes to return.
+                List<string> attributeNames = new();
+                if (returnedAttributes != null)
+                {
+                    foreach (IdentityAttribute<object> returnedAttribute in returnedAttributes)
+                    {
+                        attributeNames.Add(returnedAttribute.Name);
+                    }
+                }
+
+                // Search for entries that match the wildcarded attribute value supplied.
+                List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value, attributeNames);
+
+                // Filter the list of entries returned so that only Groups are returned.
+                List<IGroup> matchedGroups = new();
+                if (entries != null)
+                {
+                    foreach (SearchResultEntry entry in entries)
+                    {
+                        SecurityPrincipal principal = new(this, entry);
+                        if (principal.IsGroup)
+                        {
+                            matchedGroups.Add((Group)principal);
+                        }
+                    }
+                }
+
+                return matchedGroups;
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(attribute));
+            }
+        }
+
+        /// <summary>
         /// Gets a list of the types of groups supported by the directory system.
         /// </summary>
         /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
@@ -1322,12 +1384,12 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Gets identity objects that match wildcarded (*) attribute value in the supplied attribute.
+        /// Gets IUsers that match wildcarded (*) attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
-        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the object found. If not supplied, the default list of attributes is returned.</param>
-        /// <returns>A list of idenity objects that match the attribute value supplied.</returns>
-        public List<IIdentityObject> GetObjectsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
+        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
+        /// <returns>A list of users that match the attribute value supplied.</returns>
+        public List<IUser> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
             if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
             {
@@ -1344,21 +1406,21 @@ namespace Galactic.Identity.ActiveDirectory
                 // Search for entries that match the wildcarded attribute value supplied.
                 List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value, attributeNames);
 
-                // Filter the list of entries returned so that only Users and Groups are returned.
-                List<IIdentityObject> matchedObjects = new();
+                // Filter the list of entries returned so that only Users are returned.
+                List<IUser> matchedUsers = new();
                 if (entries != null)
                 {
                     foreach (SearchResultEntry entry in entries)
                     {
                         SecurityPrincipal principal = new(this, entry);
-                        if (principal.IsGroup || principal.IsUser)
+                        if (principal.IsUser)
                         {
-                            matchedObjects.Add(principal);
+                            matchedUsers.Add((User)principal);
                         }
                     }
                 }
 
-                return matchedObjects;
+                return matchedUsers;
             }
             else
             {
@@ -1427,41 +1489,6 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Moves an object in the directory system.
-        /// </summary>
-        /// <param name="uniqueId">The unique id (GUID) of the object to move.</param>
-        /// <param name="parentUniqueId">The unique id (GUID) of the object that will be the new parent of the object.</param>
-        /// <returns>True if the object was moved, false otherwise.</returns>
-        public bool MoveObject(string uniqueId, string parentUniqueId)
-        {
-            if (!String.IsNullOrWhiteSpace(uniqueId) && !String.IsNullOrWhiteSpace(parentUniqueId))
-            {
-                try
-                {
-                    Guid guid = Guid.Parse(uniqueId);
-                    Guid parentGuid = Guid.Parse(parentUniqueId);
-                    return MoveRenameObject(guid, parentGuid);
-                }
-                catch
-                {
-                    // There was an error parsing the GUID or moving the object.
-                    return false;
-                }
-            }
-            else
-            {
-                if (String.IsNullOrWhiteSpace(uniqueId))
-                {
-                    throw new ArgumentNullException(nameof(uniqueId));
-                }
-                else
-                {
-                    throw new ArgumentNullException(nameof(parentUniqueId));
-                }
-            }
-        }
-
-        /// <summary>
         /// Moves and / or renames an object in Active Directory.
         /// </summary>
         /// <param name="objectGuid">The GUID of the object to move and / or rename.</param>
@@ -1510,40 +1537,6 @@ namespace Galactic.Identity.ActiveDirectory
                 }
             }
             return false;
-        }
-
-        /// <summary>
-        /// Renames an object in the directory system.
-        /// </summary>
-        /// <param name="uniqueId">The unique id (GUID) of the object to rename.</param>
-        /// <param name="name"The new name of the object (Common Name).</param>
-        /// <returns>True if the object was renamed, false otherwise.</returns>
-        public bool RenameObject(string uniqueId, string name)
-        {
-            if (!String.IsNullOrWhiteSpace(uniqueId) && !String.IsNullOrWhiteSpace(name))
-            {
-                try
-                {
-                    Guid guid = Guid.Parse(uniqueId);
-                    return MoveRenameObject(guid, null, name);
-                }
-                catch
-                {
-                    // There was an error parsing the GUID or renaming the object.
-                    return false;
-                }
-            }
-            else
-            {
-                if (String.IsNullOrWhiteSpace(uniqueId))
-                {
-                    throw new ArgumentNullException(nameof(uniqueId));
-                }
-                else
-                {
-                    throw new ArgumentNullException(nameof(name));
-                }
-            }
         }
 
         /// <summary>
