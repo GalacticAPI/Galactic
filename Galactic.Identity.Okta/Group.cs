@@ -294,6 +294,62 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets the correct property name to use when searching or filtering for the property with the supplied name.
+        /// </summary>
+        /// <param name="name">The name of the Group property to get the search name of.</param>
+        /// <param name="groupType">The Okta type of the group.</param>
+        /// <returns>The property's name to use while searching, or null if that property is not supported.</returns>
+        public static string GetSearchPropertyName(string name, OktaClient.GroupType groupType)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                // Check where the property is sourced from.
+                if (OktaClient.GetAllJsonPropertyNames(typeof(GroupJson)).Contains(name))
+                {
+                    // The property is sourced from UserJson.
+                    switch (name)
+                    {
+                        case GroupJson.CREATED:
+                            return GroupJson.CREATED;
+                        case GroupJson.ID:
+                            return GroupJson.ID;
+                        case GroupJson.LAST_UPDATED:
+                            return GroupJson.LAST_UPDATED;
+                        case GroupJson.LAST_MEMBERSHIP_UPDATED:
+                            return GroupJson.LAST_MEMBERSHIP_UPDATED;
+                        case UserJson.TYPE:
+                            return GroupJson.TYPE;
+                        default:
+                            return null;
+                    }
+                }
+                else if (OktaClient.GetAllJsonPropertyNames(typeof(GroupProfileJson)).Contains(name))
+                {
+                    // A prefix to use before all profile properties.
+                    const string PROFILE_PREFIX = "profile.";
+
+                    // The property is sourced from GroupProfileJson.
+                    return PROFILE_PREFIX + name;
+                }
+                else if (name == "source" && groupType == OktaClient.GroupType.APP_GROUP)
+                {
+                    // Returns the property name for the property with the application source id of the group.
+                    return "source.id";
+                }
+                else
+                {
+                    // Who knows where this is sourced?
+                    return null;
+                }
+            }
+            else
+            {
+                // No property name supplied.
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Checks if the identity object is a member of the supplied group. (Okta doesn't support nested groups.)
         /// </summary>
         /// <param name="group">The group to check.</param>

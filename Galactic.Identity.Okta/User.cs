@@ -967,6 +967,60 @@ namespace Galactic.Identity.Okta
         public int GetHashCode([DisallowNull] IIdentityObject obj) => IIdentityObject.GetHashCode(obj);
 
         /// <summary>
+        /// Gets the correct property name to use when searching or filtering for the property with the supplied name.
+        /// </summary>
+        /// <param name="name">The name of the User property to get the search name of.</param>
+        /// <returns>The property's name to use while searching, or null if that property is not supported.</returns>
+        public static string GetSearchPropertyName(string name)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                // Check where the property is sourced from.
+                if (OktaClient.GetAllJsonPropertyNames(typeof(UserJson)).Contains(name))
+                {
+                    // The property is sourced from UserJson.
+                    switch (name)
+                    {
+                        case UserJson.ACTIVATED:
+                            return UserJson.ACTIVATED;
+                        case UserJson.CREATED:
+                            return UserJson.CREATED;
+                        case UserJson.ID:
+                            return UserJson.ID;
+                        case UserJson.LAST_UPDATED:
+                            return UserJson.LAST_UPDATED;
+                        case UserJson.STATUS:
+                            return UserJson.STATUS;
+                        case UserJson.STATUS_CHANGED:
+                            return UserJson.STATUS_CHANGED;
+                        case UserJson.TYPE:
+                            return "type.id";
+                        default:
+                            return null;
+                    }
+                }
+                else if (OktaClient.GetAllJsonPropertyNames(typeof(UserProfileJson)).Contains(name))
+                {
+                    // A prefix to use before all profile properties.
+                    const string PROFILE_PREFIX = "profile.";
+
+                    // The property is sourced from UserProfileJson.
+                    return PROFILE_PREFIX + name;
+                }
+                else
+                {
+                    // Who knows where this is sourced?
+                    return null;
+                }
+            }
+            else
+            {
+                // No property name supplied.
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Checks if the identity object is a member of the supplied group.
         /// </summary>
         /// <param name="group">The group to check.</param>

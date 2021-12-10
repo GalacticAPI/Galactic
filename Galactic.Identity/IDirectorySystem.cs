@@ -65,15 +65,15 @@ namespace Galactic.Identity
         public List<string> GetGroupTypes();
 
         /// <summary>
-        /// Gets IGroups that match wildcarded (*) attribute value in the supplied attribute.
+        /// Gets IGroups that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
-        /// <returns>A list of users that match the attribute value supplied.</returns>
+        /// <returns>A list of groups that match the attribute value supplied.</returns>
         public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null);
 
         /// <summary>
-        /// Gets IUsers that match wildcarded (*) attribute value in the supplied attribute.
+        /// Gets IUsers that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>

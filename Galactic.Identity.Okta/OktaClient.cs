@@ -36,6 +36,20 @@ namespace Galactic.Identity.Okta
         // ----- VARIABLES -----
 
         /// <summary>
+        /// Okta User properties that can be used in a filter request.
+        /// </summary>
+        private readonly List<string> filterableUserProperties = new()
+        {
+            UserJson.STATUS,
+            UserJson.LAST_UPDATED,
+            UserJson.ID,
+            UserProfileJson.LOGIN,
+            UserProfileJson.EMAIL,
+            UserProfileJson.FIRST_NAME,
+            UserProfileJson.LAST_NAME
+        };
+
+        /// <summary>
         /// The types of groups supported by Okta. These constrain how the Group's Profile and memberships are managed.
         /// </summary>
         public enum GroupType
@@ -466,7 +480,36 @@ namespace Galactic.Identity.Okta
         /// <returns>True if the group was deleted, false otherwise.</returns>
         public bool DeleteGroup(string uniqueId)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                EmptyRestResponse response = rest.Delete("/groups/" + uniqueId);
+
+                if (response != null)
+                {
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The group was deleted.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The group was not deleted.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The group was not deleted.
+                    return false;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
         }
 
         /// <summary>
@@ -476,7 +519,54 @@ namespace Galactic.Identity.Okta
         /// <returns>True if the user was deleted, false otherwise.</returns>
         public bool DeleteUser(string uniqueId)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                EmptyRestResponse response = rest.Delete("/users/" + uniqueId);
+
+                if (response != null)
+                {
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The user was deleted.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The user was not deleted.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The user was not deleted.
+                    return false;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
+        /// Gets all the JSON property names associated with the supplied type.
+        /// </summary>
+        public static List<string> GetAllJsonPropertyNames(Type type)
+        {
+            // Create a list of all the JSON property names.
+            PropertyInfo[] propertyInfoList = type.GetProperties();
+            List<string> names = new();
+            foreach (PropertyInfo propertyInfo in propertyInfoList)
+            {
+                foreach (JsonPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<JsonPropertyNameAttribute>())
+                {
+                    names.Add(attribute.Name);
+                }
+            }
+            return names;
         }
 
         /// <summary>
@@ -485,7 +575,38 @@ namespace Galactic.Identity.Okta
         /// <returns>A list of all users in the directory system.</returns>
         public List<IUser> GetAllUsers()
         {
-            throw new NotImplementedException();
+            // Return the result.
+            OktaJsonRestResponse<UserJson[]> response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/users/?limit=" + MAX_PAGE_SIZE);
+            if (response != null)
+            {
+                // Create the list of user JSON objects.
+                List<UserJson> jsonList = new(response.Value);
+
+                // Get additional pages.
+                while (response.NextPage != null)
+                {
+                    // Get the next page.
+                    response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(response.NextPage.ToString());
+
+                    // Add the additional users to the list.
+                    jsonList.AddRange(response.Value);
+                }
+
+                // Create the list users to return.
+                List<IUser> users = new();
+                foreach (UserJson userJson in jsonList)
+                {
+                    users.Add(new User(this, userJson));
+                }
+
+                // Return the list of users.
+                return users;
+            }
+            else
+            {
+                // Nothing was returned.
+                return new();
+            }
         }
 
         /// <summary>
@@ -525,7 +646,7 @@ namespace Galactic.Identity.Okta
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
                 // Return the result.
-                OktaJsonRestResponse<UserJson[]> response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/groups/" + uniqueId + "/users&limit=" + MAX_PAGE_SIZE);
+                OktaJsonRestResponse<UserJson[]> response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/groups/" + uniqueId + "/users?limit=" + MAX_PAGE_SIZE);
                 if (response != null)
                 {
                     // Create the list of UserJson objects to return.
@@ -570,25 +691,153 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
-        /// Gets IGroups that match wildcarded (*) attribute value in the supplied attribute.
+        /// Gets IGroups that start with the attribute value in the supplied attribute.
+        /// Note: Only searches Okta groups of type OKTA_GROUP.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
-        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
+        /// <param name="returnedAttributes">(Ignored: N/A for Okta) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of users that match the attribute value supplied.</returns>
         public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
         {
-            throw new NotImplementedException();
+            return GetGroupsByAttribute(attribute, returnedAttributes);
         }
 
         /// <summary>
-        /// Gets IUsers that match wildcarded (*) attribute value in the supplied attribute.
+        /// Gets IGroups that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
-        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
+        /// <param name="returnedAttributes">(Ignored: N/A for Okta) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
+        /// <param name="groupType">(Optional) The Okta type of the group to search for. Defaults to OKTA_GROUP.</param>
+        /// <returns>A list of groups that match the attribute value supplied.</returns>
+        public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null, GroupType groupType = GroupType.OKTA_GROUP)
+        {
+            // Check whether an attribute was supplied.
+            if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name))
+            {
+                // An attribute was supplied.
+                OktaJsonRestResponse<GroupJson[]> response = null;
+
+                // Get the name of the property for use when searching.
+                string searchPropertyName = Group.GetSearchPropertyName(attribute.Name, groupType);
+
+                // Check if the name is a valid property name.
+                if (!string.IsNullOrWhiteSpace(searchPropertyName))
+                {
+                    // The name is a valid property named.
+
+                    // Use a search request to search for the group.
+                    response = (OktaJsonRestResponse<GroupJson[]>)rest.GetFromJson<GroupJson[]>("/groups/?search=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                }
+
+                if (response != null)
+                {
+                    // Create the list of group JSON objects.
+                    List<GroupJson> jsonList = new(response.Value);
+
+                    // Get additional pages.
+                    while (response.NextPage != null)
+                    {
+                        // Get the next page.
+                        response = (OktaJsonRestResponse<GroupJson[]>)rest.GetFromJson<GroupJson[]>(response.NextPage.ToString());
+
+                        // Add the additional users to the list.
+                        jsonList.AddRange(response.Value);
+                    }
+
+                    // Create the list groups to return.
+                    List<IGroup> groups = new();
+                    foreach (GroupJson groupJson in jsonList)
+                    {
+                        groups.Add(new Group(this, groupJson));
+                    }
+
+                    // Return the list of groups.
+                    return groups;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // An attribute was not supplied.
+                return new();
+            }
+        }
+
+        /// <summary>
+        /// Gets IUsers that start with the attribute value in the supplied attribute.
+        /// </summary>
+        /// <param name="attribute">The attribute with name and value to search against.</param>
+        /// <param name="returnedAttributes">(Ignored: N/A for Okta) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of users that match the attribute value supplied.</returns>
         public List<IUser> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
         {
-            throw new NotImplementedException();
+            // Check whether an attribute was supplied.
+            if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name))
+            {
+                // An attribute was supplied.
+                OktaJsonRestResponse<UserJson[]> response = null;
+
+                // Get the name of the property for use when searching.
+                string searchPropertyName = User.GetSearchPropertyName(attribute.Name);
+
+                // Check if the name is a valid property name.
+                if (!string.IsNullOrWhiteSpace(searchPropertyName))
+                {
+                    // The name is a valid property named.
+
+                    // Check whether to send a filter or search request.
+                    if (filterableUserProperties.Contains(attribute.Name))
+                    {
+                        // Use a filter request to search for the user. (This uses the most up to date information in Okta.)
+                        response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/users/?filter=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                    }
+                    else
+                    {
+                        // Use a search request to search for the user. (This uses a search index which may not contain the most up to date information in Okta.)
+                        response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/users/?search=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                    }
+                }
+
+                if (response != null)
+                {
+                    // Create the list of user JSON objects.
+                    List<UserJson> jsonList = new(response.Value);
+
+                    // Get additional pages.
+                    while (response.NextPage != null)
+                    {
+                        // Get the next page.
+                        response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(response.NextPage.ToString());
+
+                        // Add the additional users to the list.
+                        jsonList.AddRange(response.Value);
+                    }
+
+                    // Create the list users to return.
+                    List<IUser> users = new();
+                    foreach (UserJson userJson in jsonList)
+                    {
+                        users.Add(new User(this, userJson));
+                    }
+
+                    // Return the list of users.
+                    return users;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // An attribute was not supplied.
+                return new ();
+            }
         }
 
         /// <summary>

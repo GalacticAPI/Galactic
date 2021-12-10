@@ -1234,11 +1234,11 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Gets IGroups that match wildcarded (*) attribute value in the supplied attribute.
+        /// Gets IGroups that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
-        /// <returns>A list of users that match the attribute value supplied.</returns>
+        /// <returns>A list of groups that match the attribute value supplied.</returns>
         public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
             if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
@@ -1254,7 +1254,7 @@ namespace Galactic.Identity.ActiveDirectory
                 }
 
                 // Search for entries that match the wildcarded attribute value supplied.
-                List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value, attributeNames);
+                List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value + "*", attributeNames);
 
                 // Filter the list of entries returned so that only Groups are returned.
                 List<IGroup> matchedGroups = new();
@@ -1384,7 +1384,7 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Gets IUsers that match wildcarded (*) attribute value in the supplied attribute.
+        /// Gets IUsers that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
@@ -1404,7 +1404,7 @@ namespace Galactic.Identity.ActiveDirectory
                 }
 
                 // Search for entries that match the wildcarded attribute value supplied.
-                List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value, attributeNames);
+                List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value + "*", attributeNames);
 
                 // Filter the list of entries returned so that only Users are returned.
                 List<IUser> matchedUsers = new();
