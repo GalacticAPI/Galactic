@@ -486,6 +486,32 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Adds the attribute value(s) in the supplied entry.
+        /// </summary>
+        /// <param name="name">The name of the attribute to set.</param>
+        /// <param name="values">The value(s) to set the attribute to.</param>
+        /// <param name="entry">The SearchResultEntry to set the attribute value in.</param>
+        /// <returns>True if it was set, false otherwise.</returns>
+        public bool AddAttributeValue(string name, object[] values, SearchResultEntry entry)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(name) && values != null && entry != null)
+                {
+                    return ldap.AddAttribute(entry.DistinguishedName, name, values);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Appends the distinguished name of this Active Directory domain to the relative path to the root supplied.
         /// </summary>
         /// <param name="pathToRoot">The relative path to the root of this domain.</param>

@@ -419,6 +419,62 @@ namespace Galactic.Ldap
         }
 
         /// <summary>
+        /// Adds an attribute's value in the specified entry in the directory.
+        /// </summary>
+        /// <param name="dn">The distinguished name of the entry to add or replace an attribute of.</param>
+        /// <param name="attributeName">The name of the attribute to add or replace a value for.</param>
+        /// <param name="values">The values associated with the attribute to add.</param>
+        /// <returns>True if added, false otherwise.</returns>
+        public bool AddAttribute(string dn, string attributeName, object[] values)
+        {
+            if (!string.IsNullOrWhiteSpace(dn) && !string.IsNullOrWhiteSpace(attributeName))
+            {
+                ModifyRequest request = new ModifyRequest(dn, DirectoryAttributeOperation.Add, attributeName, values);
+
+                try
+                {
+                    ModifyResponse response = (ModifyResponse)connection.SendRequest(request);
+
+                    // Check that a response was received.
+                    if (response != null)
+                    {
+                        // A response was received.
+                        if (response.ResultCode == ResultCode.Success)
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        // A response was not received.
+                        return false;
+                    }
+                }
+                catch (DirectoryOperationException)
+                {
+                    // Error. Attempt retry. 
+                    ModifyResponse response = (ModifyResponse)connection.SendRequest(request);
+
+                    // Check that a response was received.
+                    if (response != null)
+                    {
+                        // A response was received.
+                        if (response.ResultCode == ResultCode.Success)
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        // A response was not received.
+                        return false;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Deletes an entry from the LDAP directory with the specified distinguished name.
         /// </summary>
         /// <param name="dn">The distinguished name of the entry to delete.</param>

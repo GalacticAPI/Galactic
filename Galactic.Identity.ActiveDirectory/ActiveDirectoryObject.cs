@@ -447,6 +447,27 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Sets multi value attribute of an object. If a null or empty values object is supplied no modifications will be made.
+        /// </summary>
+        /// <param name="attributeName">The name of the attribute to set.</param>
+        /// <param name="values">The value(s) to set the attribute to.</param>
+        /// <returns>True if the attribute was set successfully, false otherwise.</returns>
+        public bool SetMultiValueAttribute(string attributeName, object[] values)
+        {
+            // Check that an attribute name and associated value(s) are supplied.
+            if (!string.IsNullOrWhiteSpace(attributeName) && values != null && values.Length > 0)
+            {
+                // Check if the attribute already has a value.
+                if (AD.AddAttributeValue(attributeName, values, Entry))
+                {
+                    // Refresh the object to reflect the change.
+                    return Refresh();
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Sets a single value string attribute of an object. If a null or empty value is supplied,
         /// the attribute will be cleared / deleted.
         /// </summary>

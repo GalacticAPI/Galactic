@@ -337,7 +337,7 @@ namespace Galactic.Identity.ActiveDirectory
                 {
                     dns.Add(principal.DistinguishedName);
                 }
-                return SetAttribute("member", dns.ToArray());
+                return SetMultiValueAttribute("member", dns.ToArray());
             }
             else
             {
