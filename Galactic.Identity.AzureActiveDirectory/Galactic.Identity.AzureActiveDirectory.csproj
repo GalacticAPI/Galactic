@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ReleaseVersion>2.0.0.0</ReleaseVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Galactic.Identity\Galactic.Identity.csproj" />
+    <ProjectReference Include="..\Galactic.Rest\Galactic.Rest.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Microsoft.Graph.Core" />
+    <None Remove="Microsoft.Graph" />
+    <None Remove="Azure.Identity" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Graph.Core" Version="2.0.7" />
+    <PackageReference Include="Microsoft.Graph" Version="4.12.0" />
+    <PackageReference Include="Azure.Identity" Version="1.5.0" />
+  </ItemGroup>
+</Project>
