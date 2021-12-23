@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.Graph;
+using System.Collections.Generic;
 using GraphUser = Microsoft.Graph.User;
+using GraphGroup = Microsoft.Graph.Group;
 
 namespace Galactic.Identity.AzureActiveDirectory
 {
@@ -189,7 +191,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return "Not Supported";
+                // Middle name not supported.
+                return "";
             }
             set
             {
@@ -368,7 +371,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return new ();
+                return aad.GetGroupMembership(UniqueId, true);
             }
         }
 
