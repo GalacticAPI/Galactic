@@ -4,6 +4,7 @@ using Microsoft.Graph;
 using System.Collections.Generic;
 using GraphUser = Microsoft.Graph.User;
 using GraphGroup = Microsoft.Graph.Group;
+using System.Reflection;
 
 namespace Galactic.Identity.AzureActiveDirectory
 {
@@ -30,6 +31,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's city.
         /// </summary>
+        [GraphPropertyName("city")]
         public string City
         {
             get
@@ -38,13 +40,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    City = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The user's country code as defined in ISO 3166-1 alpha-2.
         /// </summary>
+        [GraphPropertyName("country")]
         public string CountryCode
         {
             get
@@ -53,13 +61,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    Country = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The user's department.
         /// </summary>
+        [GraphPropertyName("department")]
         public string Department
         {
             get
@@ -68,13 +82,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    Department = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The user's display name.
         /// </summary>
+        [GraphPropertyName("displayName")]
         public string DisplayName
         {
             get
@@ -83,13 +103,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    DisplayName = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// An organization assigned identifier for the user.
         /// </summary>
+        [GraphPropertyName("employeeId")]
         public string EmployeeNumber
         {
             get
@@ -98,28 +124,40 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    EmployeeId = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The user's first name.
         /// </summary>
+        [GraphPropertyName("givenName")]
         public string FirstName
         {
             get
             {
-                return graphUser.DisplayName;
+                return graphUser.GivenName;
             }
             set
             {
+                GraphUser user = new()
+                {
+                    GivenName = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// Whether the user is disabled or suspended in the system.
         /// </summary>
+        [GraphPropertyName("accountEnabled")]
         public bool IsDisabled
         {
             get
@@ -131,6 +169,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's last name.
         /// </summary>
+        [GraphPropertyName("surname")]
         public string LastName
         {
             get
@@ -139,13 +178,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    Surname = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The login name for the user in the system.
         /// </summary>
+        [GraphPropertyName("userPrincipalName")]
         public string Login
         {
             get
@@ -154,7 +199,12 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    UserPrincipalName = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
@@ -165,11 +215,13 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return graphUser.Manager.Id;
+                var manager = aad.GetUserManager(UniqueId);
+
+                return manager.Id;
             }
             set
             {
-
+                // Not supported.
             }
         }
 
@@ -180,7 +232,9 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return this.ManagerId;
+                var manager = aad.GetUserManager(UniqueId);
+
+                return manager.DisplayName;
             }
         }
 
@@ -196,13 +250,14 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
-
+                // Not supported.
             }
         }
 
         /// <summary>
         /// The user's mobile phone number.
         /// </summary>
+        [GraphPropertyName("mobilePhone")]
         public string MobilePhone
         {
             get
@@ -211,13 +266,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    MobilePhone = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The name of the organization the user belong's to.
         /// </summary>
+        [GraphPropertyName("companyName")]
         public string Organization
         {
             get
@@ -226,7 +287,12 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    CompanyName = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
@@ -237,7 +303,9 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return (bool)graphUser.PasswordProfile.ForceChangePasswordNextSignIn;
+                return false;
+                // Not implemented. Graph is not returning the "PasswordProfile" property.
+                //return (bool)graphUser.PasswordProfile.ForceChangePasswordNextSignIn;
             }
         }
 
@@ -248,6 +316,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
+                // Not implemented.
                 return false;
             }
         }
@@ -255,6 +324,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The date and time that the user's password was last set.
         /// </summary>
+        [GraphPropertyName("lastPasswordChangeDateTime")]
         public DateTime? PasswordLastSet
         {
             get
@@ -266,6 +336,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's physical address.
         /// </summary>
+        [GraphPropertyName("officeLocation")]
         public string PhyscialAddress
         {
             get
@@ -274,13 +345,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    OfficeLocation = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The user's postal (mailing) address.
         /// </summary>
+        [GraphPropertyName("streetAddress")]
         public string PostalAddress
         {
             get
@@ -289,13 +366,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    StreetAddress = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The postal code of the user. (ZIP code in the US.)
         /// </summary>
+        [GraphPropertyName("postalCode")]
         public string PostalCode
         {
             get
@@ -304,13 +387,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    PostalCode = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The user's primary phone number.
         /// </summary>
+        [GraphPropertyName("businessPhones")]
         public string PrimaryPhone
         {
             get
@@ -326,6 +415,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's state.
         /// </summary>
+        [GraphPropertyName("state")]
         public string State
         {
             get
@@ -334,13 +424,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    State = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The user's title.
         /// </summary>
+        [GraphPropertyName("jobTitle")]
         public string Title
         {
             get
@@ -349,13 +445,19 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    JobTitle = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
+        [GraphPropertyName("createdDateTime")]
         public DateTime? CreationTime
         {
             get
@@ -378,6 +480,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The type or category of the object. Empty if unknown.
         /// </summary>
+        [GraphPropertyName("city")]
         public string Type
         {
             get
@@ -389,6 +492,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The object's unique ID in the system.
         /// </summary>
+        [GraphPropertyName("id")]
         public string UniqueId
         {
             get
@@ -401,6 +505,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// A list of the object's e-mail addresses.
         /// The object's primary e-mail address will always be first in the list.
         /// </summary>
+        [GraphPropertyName("proxyAddresses")]
         public List<string> EmailAddresses
         {
             get
@@ -416,6 +521,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The object's primary e-mail address.
         /// </summary>
+        [GraphPropertyName("mail")]
         public string PrimaryEmailAddress
         {
             get
@@ -424,7 +530,12 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphUser user = new()
+                {
+                    Mail = value
+                };
 
+                aad.UpdateUser(UniqueId, user);
             }
         }
 
@@ -456,12 +567,33 @@ namespace Galactic.Identity.AzureActiveDirectory
         // ----- METHODS -----
 
         /// <summary>
+        /// Refresh user properties with updated data.
+        /// </summary>
+        public void Refresh()
+        {
+            graphUser = aad.GetGraphUser(UniqueId);
+        }
+
+        /// <summary>
         /// Disables the user's account if it is enabled.
         /// </summary>
         /// <returns>True if the account is disabled successfully or was not enabled. False if the account could not be disabled.</returns>
         public bool Disable()
         {
-            return false;
+            if(!IsDisabled)
+            {
+                GraphUser user = new()
+                {
+                    AccountEnabled = false
+                };
+
+                return aad.UpdateUser(UniqueId, user);
+            }
+            else
+            {
+                // Account is already disabled, nothing to do.
+                return true;
+            }
         }
 
         /// <summary>
@@ -470,7 +602,20 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>True if the account is enabled successfully or was not disabled. False if the account could not be enabled.</returns>
         public bool Enable()
         {
-            return false;
+            if(IsDisabled)
+            {
+                GraphUser user = new()
+                {
+                    AccountEnabled = true
+                };
+
+                return aad.UpdateUser(UniqueId, user);
+            }
+            else
+            {
+                // Account is already active, nothing to do.
+                return true;
+            }
         }
 
         /// <summary>
@@ -480,7 +625,16 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>True if the password was set, false otherwise.</returns>
         public bool SetPassword(string password)
         {
-            return false;
+            GraphUser user = new()
+            {
+                PasswordProfile = new()
+                {
+                    ForceChangePasswordNextSignIn = false,
+                    Password = password
+                }
+            };
+
+            return aad.UpdateUser(UniqueId, user);
         }
 
         /// <summary>
@@ -489,7 +643,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>True if the account is unlocked successfully or was not locked. False if the account could not be unlocked.</returns>
         public bool Unlock()
         {
-            return false;
+            return Enable();
         }
 
         /// <summary>
@@ -497,14 +651,21 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// </summary>
         /// <param name="guid">The GUID of the group to add the principal to.</param>
         /// <returns>True if the principal was added, false otherwise.</returns>
-        public bool AddToGroup(Guid guid)
+        public bool AddToGroup(Group group)
         {
-            if (guid != Guid.Empty)
+            if (group != null)
             {
-                //Group group = new Group(AD, guid);
-                //return group.AddMembers(new List<SecurityPrincipal>() { this });
+                if (!aad.AddObjectToGroup(UniqueId, group.UniqueId))
+                {
+                    return false;
+                }
+
+                return true;
             }
-            return false;
+            else
+            {
+                throw new ArgumentNullException();
+            }
         }
 
         /// <summary>
@@ -514,7 +675,34 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
         public List<IdentityAttribute<Object>> GetAttributes(List<string> names)
         {
-            return new();
+            // Create a list of IdentityAttributes to return.
+            List<IdentityAttribute<object>> attributes = new();
+
+            if (names != null)
+            {
+                // Create a dictionary of properties in this class keyed by name.
+                PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
+                Dictionary<string, PropertyInfo> properties = new();
+                foreach (PropertyInfo propertyInfo in propertyInfoList)
+                {
+                    foreach (GraphPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<GraphPropertyNameAttribute>())
+                    {
+                        properties.Add(attribute.Name, propertyInfo);
+                    }
+                }
+
+                // Fill the list of IdentityAttributes with the name and value of the attribute with the supplied name.
+                foreach (string name in names)
+                {
+                    if (properties.ContainsKey(name))
+                    {
+                        attributes.Add(new(name, properties[name].GetValue(this)));
+                    }
+                }
+            }
+
+            // Return the attributes found.
+            return attributes;
         }
 
         /// <summary>
@@ -527,17 +715,16 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             if (group != null)
             {
-                // Search all the groups which this object is a member.
-                foreach (IGroup memberGroup in Groups)
+                IList<string> results = aad.CheckGroupMembership(UniqueId, new List<string> { group.UniqueId });
+
+                if(results != null && results.Count == 1)
                 {
-                    if (group.UniqueId == memberGroup.UniqueId)
-                    {
-                        // A group with the same unique id was found.
-                        return true;
-                    }
+                    return true;
                 }
-                // No groups were found that matched by unique id.
-                return false;
+                else
+                {
+                    return false;
+                }
             }
             else
             {
@@ -550,12 +737,11 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// </summary>
         /// <param name="guid">The GUID of the group to add the principal to.</param>
         /// <returns>True if the principal was removed, false otherwise.</returns>
-        public bool RemoveFromGroup(Guid guid)
+        public bool RemoveFromGroup(Group group)
         {
-            if (guid != Guid.Empty)
+            if (group != null)
             {
-                //Group group = new Group(AD, guid);
-                //return group.RemoveMembers(new List<SecurityPrincipal>() { this });
+                return aad.DeleteObjectFromGroup(UniqueId, group.UniqueId);
             }
             return false;
         }
@@ -567,7 +753,14 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
         public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes)
         {
-            return new();
+            List<IdentityAttribute<bool>> results = new List<IdentityAttribute<bool>>();
+
+            foreach (var attribute in attributes)
+            {
+                results.Add(new IdentityAttribute<bool>(attribute.Name, aad.UpdateUser(UniqueId, new List<IdentityAttribute<object>> { attribute })));
+            }
+
+            return results;
         }
 
         /// <summary>

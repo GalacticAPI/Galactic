@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -36,7 +37,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return aad.GetGroupMembers(UniqueId, true);
+                return aad.GetGroupMembers(UniqueId, false);
             }
         }
 
@@ -83,6 +84,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
+        [GraphPropertyName("createdDateTime")]
         public DateTime? CreationTime
         {
             get
@@ -116,6 +118,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The object's unique ID in the system.
         /// </summary>
+        [GraphPropertyName("id")]
         public string UniqueId
         {
             get
@@ -127,6 +130,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// A description of the object.
         /// </summary>
+        [GraphPropertyName("description")]
         public string Description
         {
             get
@@ -135,18 +139,122 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
             set
             {
+                GraphGroup group = new()
+                {
+                    Description = value
+                };
 
+                aad.UpdateGroup(UniqueId, group);
             }
         }
 
         /// <summary>
         /// The name of the group.
         /// </summary>
+        [GraphPropertyName("displayName")]
         public string DisplayName
         {
             get
             {
                 return graphGroup.DisplayName;
+            }
+            set
+            {
+                GraphGroup group = new()
+                {
+                    DisplayName = value
+                };
+
+                aad.UpdateGroup(UniqueId, group);
+            }
+        }
+
+        /// <summary>
+        /// Primary email alias of group.
+        /// </summary>
+        [GraphPropertyName("mail")]
+        public string PrimaryEmailAddress
+        {
+            get
+            {
+                return graphGroup.Mail;
+            }
+            set
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// All proxy addresses on the group.
+        /// </summary>
+        [GraphPropertyName("proxyAddresses")]
+        public List<string> EmailAddresses
+        {
+            get
+            {
+                return (List<string>)graphGroup.ProxyAddresses;
+            }
+            set
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// True if group is mail enabled, otherwise false.
+        /// </summary>
+        [GraphPropertyName("mailEnabled")]
+        public bool MailEnabled
+        {
+            get
+            {
+                return (bool)graphGroup.MailEnabled;
+            }
+        }
+
+        /// <summary>
+        /// The mail nickname of the group.
+        /// </summary>
+        [GraphPropertyName("mailNickname")]
+        public string MailNickname
+        {
+            get
+            {
+                return graphGroup.MailNickname;
+            }
+            set
+            {
+                GraphGroup group = new()
+                {
+                    MailNickname = value
+                };
+
+                aad.UpdateGroup(UniqueId, group);
+            }
+        }
+
+        /// <summary>
+        /// True if group is security enabled, otherwise false.
+        /// </summary>
+        [GraphPropertyName("securityEnabled")]
+        public bool SecurityEnabled
+        {
+            get
+            {
+                return (bool)graphGroup.SecurityEnabled;
+            }
+        }
+
+        /// <summary>
+        /// Visibility of the group.
+        /// </summary>
+        [GraphPropertyName("visibility")]
+        public string Visability
+        {
+            get
+            {
+                return graphGroup.Visibility;
             }
         }
 
@@ -178,13 +286,35 @@ namespace Galactic.Identity.AzureActiveDirectory
         // ----- METHODS -----
 
         /// <summary>
+        /// Refreshes group properties with new data.
+        /// </summary>
+        public void Refresh()
+        {
+            graphGroup = aad.GetGraphGroup(UniqueId);
+        }
+
+        /// <summary>
         /// Adds members to the group.
         /// </summary>
         /// <param name="members">The members to add.</param>
         /// <returns>True if the members were added, false otherwise.</returns>
         public bool AddMembers(List<IIdentityObject> members)
         {
-            return false;
+            if(members != null)
+            {
+                foreach(IIdentityObject member in members)
+                {
+                    if(!aad.AddObjectToGroup(member.UniqueId, UniqueId))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            else
+            {
+                throw new ArgumentNullException();
+            }
         }
 
         /// <summary>
@@ -193,7 +323,15 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>True if all members were cleared, false otherwise.</returns>
         public bool ClearMembership()
         {
-            return false;
+            foreach(IIdentityObject obj in Members)
+            {
+                if(!aad.DeleteObjectFromGroup(obj.UniqueId, UniqueId))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -203,7 +341,34 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
         public List<IdentityAttribute<Object>> GetAttributes(List<string> names)
         {
-            return null;
+            // Create a list of IdentityAttributes to return.
+            List<IdentityAttribute<object>> attributes = new();
+
+            if (names != null)
+            {
+                // Create a dictionary of properties in this class keyed by name.
+                PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
+                Dictionary<string, PropertyInfo> properties = new();
+                foreach (PropertyInfo propertyInfo in propertyInfoList)
+                {
+                    foreach (GraphPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<GraphPropertyNameAttribute>())
+                    {
+                        properties.Add(attribute.Name, propertyInfo);
+                    }
+                }
+
+                // Fill the list of IdentityAttributes with the name and value of the attribute with the supplied name.
+                foreach (string name in names)
+                {
+                    if (properties.ContainsKey(name))
+                    {
+                        attributes.Add(new(name, properties[name].GetValue(this)));
+                    }
+                }
+            }
+
+            // Return the attributes found.
+            return attributes;
         }
 
         /// <summary>
@@ -213,7 +378,14 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
         public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes)
         {
-            return null;
+            List<IdentityAttribute<bool>> results = new List<IdentityAttribute<bool>>();
+
+            foreach(var attribute in attributes)
+            {
+                results.Add(new IdentityAttribute<bool>(attribute.Name, aad.UpdateGroup(UniqueId, new List<IdentityAttribute<object>> { attribute })));
+            }
+
+            return results;
         }
 
         /// <summary>
@@ -253,7 +425,21 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>True if the objects were removed, false otherwise.</returns>
         public bool RemoveMembers(List<IIdentityObject> members)
         {
-            return false;
+            if (members != null)
+            {
+                foreach (IIdentityObject member in members)
+                {
+                    if (!aad.DeleteObjectFromGroup(member.UniqueId, UniqueId))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            else
+            {
+                throw new ArgumentNullException();
+            }
         }
 
         /// <summary>
