@@ -81,13 +81,13 @@ namespace Galactic.Identity.Okta
         /// Timestamp when Group's memberships were last updated.
         /// </summary>
         [OktaPropertyName(GroupJson.LAST_MEMBERSHIP_UPDATED)]
-        public DateTime LastMembershipUpdated => json.LastMembershipUpdated;
+        public DateTime? LastMembershipUpdated => json.LastMembershipUpdated;
 
         /// <summary>
         /// Timestamp when Group's profile was last updated.
         /// </summary>
         [OktaPropertyName(GroupJson.LAST_UPDATED)]
-        public DateTime LastUpdated => json.LastUpdated;
+        public DateTime? LastUpdated => json.LastUpdated;
 
         /// <summary>
         /// The members of the group.

@@ -22,6 +22,14 @@ namespace Galactic.Rest
 
         // ----- PROPERTIES -----
 
+        /// <summary>
+        /// The base URI to use for requests to the API.
+        /// </summary>
+        public string BaseUri
+        {
+            get => httpClient.BaseAddress.ToString();
+        }
+
         // ----- CONSTRUCTORS -----
 
         /// <summary>

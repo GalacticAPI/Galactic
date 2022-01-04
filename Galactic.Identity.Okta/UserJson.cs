@@ -98,13 +98,13 @@ namespace Galactic.Identity.Okta
         /// Timestamp when User's transition to ACTIVE status completed.
         /// </summary>
         [JsonPropertyName(ACTIVATED)]
-        public DateTime Activated { get; init; } = default!;
+        public DateTime? Activated { get; init; } = default!;
 
         /// <summary>
         /// Timestamp when User was created.
         /// </summary>
         [JsonPropertyName(CREATED)]
-        public DateTime Created { get; init; } = default!;
+        public DateTime? Created { get; init; } = default!;
 
         /// <summary>
         /// The User's primary authentication and recovery credentials.
@@ -122,19 +122,19 @@ namespace Galactic.Identity.Okta
         /// Timestamp of the User's last login.
         /// </summary>
         [JsonPropertyName(LAST_LOGIN)]
-        public DateTime LastLogin { get; init; } = default!;
+        public DateTime? LastLogin { get; init; } = default!;
 
         /// <summary>
         /// Timestamp when User's profile was last updated.
         /// </summary>
         [JsonPropertyName(LAST_UPDATED)]
-        public DateTime LastUpdated { get; init; } = default!;
+        public DateTime? LastUpdated { get; init; } = default!;
 
         /// <summary>
         /// Timestamp when User's password last changed.
         /// </summary>
         [JsonPropertyName(PASSWORD_CHANGED)]
-        public DateTime PasswordChanged { get; init; } = default!;
+        public DateTime? PasswordChanged { get; init; } = default!;
 
         /// <summary>
         /// The User's profile properties.
@@ -152,7 +152,7 @@ namespace Galactic.Identity.Okta
         /// Timestamp when User's status last changed.
         /// </summary>
         [JsonPropertyName(STATUS_CHANGED)]
-        public DateTime StatusChanged { get; init; } = default!;
+        public DateTime? StatusChanged { get; init; } = default!;
 
         /// <summary>
         /// Target status of a User's in-progress asynchronous status transition.

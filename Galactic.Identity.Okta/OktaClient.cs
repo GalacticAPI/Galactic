@@ -595,11 +595,17 @@ namespace Galactic.Identity.Okta
                 // Get additional pages.
                 while (oktaResponse.NextPage != null)
                 {
-                    // Get the next page.
-                    oktaResponse = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString());
+                    // Get the next page, removing the base URI from the supplied URI.
+                    jsonResponse = rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
 
-                    // Add the additional users to the list.
-                    jsonList.AddRange(oktaResponse.Value);
+                    if (jsonResponse != null)
+                    {
+                        // Convert to OktaJsonRestResponse.
+                        oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                        // Add the additional users to the list.
+                        jsonList.AddRange(oktaResponse.Value);
+                    }
                 }
 
                 // Create the list users to return.
@@ -671,11 +677,17 @@ namespace Galactic.Identity.Okta
                     // Get additional pages.
                     while (oktaResponse.NextPage != null)
                     {
-                        // Get the next page.
-                        oktaResponse = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString());
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
 
-                        // Add the additional users to the list.
-                        jsonList.AddRange(oktaResponse.Value);
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional users to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
                     }
 
                     return jsonList;
@@ -755,11 +767,17 @@ namespace Galactic.Identity.Okta
                     // Get additional pages.
                     while (oktaResponse.NextPage != null)
                     {
-                        // Get the next page.
-                        oktaResponse = (OktaJsonRestResponse<GroupJson[]>)rest.GetFromJson<GroupJson[]>(oktaResponse.NextPage.ToString());
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<GroupJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
 
-                        // Add the additional users to the list.
-                        jsonList.AddRange(oktaResponse.Value);
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional groups to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
                     }
 
                     // Create the list groups to return.
@@ -831,11 +849,17 @@ namespace Galactic.Identity.Okta
                     // Get additional pages.
                     while (oktaResponse.NextPage != null)
                     {
-                        // Get the next page.
-                        oktaResponse = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString());
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
 
-                        // Add the additional users to the list.
-                        jsonList.AddRange(oktaResponse.Value);
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional users to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
                     }
 
                     // Create the list users to return.

@@ -73,7 +73,7 @@ namespace Galactic.Identity.Okta
         /// Timestamp when Group was created.
         /// </summary>
         [JsonPropertyName(CREATED)]
-        public DateTime Created { get; init; } = default!;
+        public DateTime? Created { get; init; } = default!;
 
         /// <summary>
         /// Unique key for Group.
@@ -85,13 +85,13 @@ namespace Galactic.Identity.Okta
         /// Timestamp when Group's memberships were last updated.
         /// </summary>
         [JsonPropertyName(LAST_MEMBERSHIP_UPDATED)]
-        public DateTime LastMembershipUpdated { get; init; } = default!;
+        public DateTime? LastMembershipUpdated { get; init; } = default!;
 
         /// <summary>
         /// Timestamp when Group's profile was last updated.
         /// </summary>
         [JsonPropertyName(LAST_UPDATED)]
-        public DateTime LastUpdated { get; init; } = default!;
+        public DateTime? LastUpdated { get; init; } = default!;
 
         /// <summary>
         /// Determines the Group's profile.
