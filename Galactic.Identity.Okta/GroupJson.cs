@@ -67,7 +67,7 @@ namespace Galactic.Identity.Okta
         /// Discoverable resources related to the Group.
         /// </summary>
         [JsonPropertyName(LINKS)]
-        public LinkJson[] Links { get; init; } = default!;
+        public GroupLinksJson Links { get; init; } = default!;
 
         /// <summary>
         /// Timestamp when Group was created.

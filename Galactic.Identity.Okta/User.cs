@@ -803,7 +803,7 @@ namespace Galactic.Identity.Okta
         /// The type or category of the object. Empty if unknown.
         /// </summary>
         [OktaPropertyName(UserJson.TYPE)]
-        public string Type => json.Type;
+        public string Type => json.Type.Id;
 
         /// <summary>
         /// The object's unique ID in the system.

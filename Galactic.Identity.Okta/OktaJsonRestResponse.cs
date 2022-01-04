@@ -78,5 +78,22 @@ namespace Galactic.Identity.Okta
         }
 
         // ----- METHODS -----
+
+        /// <summary>
+        /// Creates an OktaJsonRestResponse object from the supplied JsonRestResponse.
+        /// </summary>
+        /// <param name="response">The JsonRestResponse object to build the OktaJsonRestResponse from.</param>
+        /// <returns>The newly created object.</returns>
+        static public OktaJsonRestResponse<T> FromJsonRestResponse(JsonRestResponse<T> response)
+        {
+            if (response != null)
+            {
+                return new(response.Message);
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(response));
+            }
+        }
     }
 }

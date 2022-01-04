@@ -1,6 +1,7 @@
 ﻿using Galactic.Rest;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -87,7 +88,7 @@ namespace Galactic.Identity.Okta
         /// <param name="preview">(Optional) Whether you want to interact with the preview organization instead of production. Defaults to production.</param>
         public OktaClient(string oktaTenantName, string apiKey, bool preview = false)
         {
-            if (!string.IsNullOrWhiteSpace(oktaTenantName) && !string.IsNullOrWhiteSpace(apiKey) && rest != null)
+            if (!string.IsNullOrWhiteSpace(oktaTenantName) && !string.IsNullOrWhiteSpace(apiKey))
             {
                 // Choose the domain to use.
                 string organizationDomain = PRODUCTION_DOMAIN;
@@ -99,8 +100,8 @@ namespace Galactic.Identity.Okta
 
                 // Initialize the HTTP client.
                 string baseUri = "https://" + oktaTenantName + "." + organizationDomain + "/api/" + API_VERSION;
-                string authorizationHeader = "SSWS " + apiKey;
-                rest = new(baseUri, authorizationHeader);
+                string authorizationHeaderScheme = "SSWS";
+                rest = new(baseUri, authorizationHeaderScheme, apiKey);
             }
             else
             {
@@ -196,10 +197,13 @@ namespace Galactic.Identity.Okta
                     };
 
                     // Send the POST request.
-                    OktaJsonRestResponse<GroupJson> response = (OktaJsonRestResponse<GroupJson>)rest.PostAsJson<GroupJson>("/groups", profile);
-                    if (response != null)
+                    JsonRestResponse<GroupJson> jsonResponse = rest.PostAsJson<GroupJson>("/groups", profile);
+                    if (jsonResponse != null)
                     {
-                        return new Group(this, response.Value);
+                        // Convert to an OktaJsonRestResponse.
+                        OktaJsonRestResponse<GroupJson> oktaResponse = OktaJsonRestResponse<GroupJson>.FromJsonRestResponse(jsonResponse);
+
+                        return new Group(this, oktaResponse.Value);
                     }
                     else
                     {
@@ -431,7 +435,7 @@ namespace Galactic.Identity.Okta
                     }
 
                     // Send the POST request.
-                    OktaJsonRestResponse<UserJson> response = null;
+                    JsonRestResponse<UserJson> jsonResponse = null;
 
                     if (credentials != null)
                     {
@@ -441,18 +445,21 @@ namespace Galactic.Identity.Okta
                             Profile = profile,
                             Credentials = credentials
                         };
-                        response = (OktaJsonRestResponse<UserJson>)rest.PostAsJson<UserJson>("/users", profileAndCredentials);
+                        jsonResponse = rest.PostAsJson<UserJson>("/users", profileAndCredentials);
 
                     }
                     else
                     {
                         // Create a request with profile data only.
-                        response = (OktaJsonRestResponse<UserJson>)rest.PostAsJson<UserJson>("/users", profile);
+                        jsonResponse = rest.PostAsJson<UserJson>("/users", profile);
                     }
 
-                    if (response != null)
+                    if (jsonResponse != null)
                     {
-                        return new User(this, response.Value);
+                        // Convert to an OktaJsonRestResponse.
+                        OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
+
+                        return new User(this, oktaResponse.Value);
                     }
                     else
                     {
@@ -576,20 +583,23 @@ namespace Galactic.Identity.Okta
         public List<IUser> GetAllUsers()
         {
             // Return the result.
-            OktaJsonRestResponse<UserJson[]> response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/users/?limit=" + MAX_PAGE_SIZE);
-            if (response != null)
+            JsonRestResponse<UserJson[]> jsonResponse = rest.GetFromJson<UserJson[]>("/users/?limit=" + MAX_PAGE_SIZE);
+            if (jsonResponse != null)
             {
+                // Convert to an OktaJsonRestResponse.
+                OktaJsonRestResponse<UserJson[]> oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
                 // Create the list of user JSON objects.
-                List<UserJson> jsonList = new(response.Value);
+                List<UserJson> jsonList = new(oktaResponse.Value);
 
                 // Get additional pages.
-                while (response.NextPage != null)
+                while (oktaResponse.NextPage != null)
                 {
                     // Get the next page.
-                    response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(response.NextPage.ToString());
+                    oktaResponse = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString());
 
                     // Add the additional users to the list.
-                    jsonList.AddRange(response.Value);
+                    jsonList.AddRange(oktaResponse.Value);
                 }
 
                 // Create the list users to return.
@@ -619,10 +629,13 @@ namespace Galactic.Identity.Okta
             if (!string.IsNullOrWhiteSpace(id))
             {
                 // Return the result.
-                OktaJsonRestResponse<GroupJson> response = (OktaJsonRestResponse<GroupJson>)rest.GetFromJson<GroupJson>("/groups/" + id);
-                if (response != null)
+                JsonRestResponse<GroupJson> jsonResponse = rest.GetFromJson<GroupJson>("/groups/" + id);
+                if (jsonResponse != null)
                 {
-                    return new Group(this, response.Value);
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<GroupJson> oktaResponse = OktaJsonRestResponse<GroupJson>.FromJsonRestResponse(jsonResponse);
+
+                    return new Group(this, oktaResponse.Value);
                 }
                 else
                 {
@@ -646,20 +659,23 @@ namespace Galactic.Identity.Okta
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
                 // Return the result.
-                OktaJsonRestResponse<UserJson[]> response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/groups/" + uniqueId + "/users?limit=" + MAX_PAGE_SIZE);
-                if (response != null)
+                JsonRestResponse<UserJson[]> jsonResponse = rest.GetFromJson<UserJson[]>("/groups/" + uniqueId + "/users?limit=" + MAX_PAGE_SIZE);
+                if (jsonResponse != null)
                 {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<UserJson[]> oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
                     // Create the list of UserJson objects to return.
-                    List<UserJson> jsonList = new(response.Value);
+                    List<UserJson> jsonList = new(oktaResponse.Value);
 
                     // Get additional pages.
-                    while (response.NextPage != null)
+                    while (oktaResponse.NextPage != null)
                     {
                         // Get the next page.
-                        response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(response.NextPage.ToString());
+                        oktaResponse = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString());
 
                         // Add the additional users to the list.
-                        jsonList.AddRange(response.Value);
+                        jsonList.AddRange(oktaResponse.Value);
                     }
 
                     return jsonList;
@@ -699,23 +715,22 @@ namespace Galactic.Identity.Okta
         /// <returns>A list of users that match the attribute value supplied.</returns>
         public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
         {
-            return GetGroupsByAttribute(attribute, returnedAttributes);
+            return GetGroupsByAttributeAndType(attribute);
         }
 
         /// <summary>
-        /// Gets IGroups that start with the attribute value in the supplied attribute.
+        /// Gets IGroups that start with the attribute value in the supplied attribute and of the specified group type.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
-        /// <param name="returnedAttributes">(Ignored: N/A for Okta) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
         /// <param name="groupType">(Optional) The Okta type of the group to search for. Defaults to OKTA_GROUP.</param>
-        /// <returns>A list of groups that match the attribute value supplied.</returns>
-        public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null, GroupType groupType = GroupType.OKTA_GROUP)
+        /// <returns>A list of groups that match the attribute value supplied and of the supplied type.</returns>
+        public List<IGroup> GetGroupsByAttributeAndType(IdentityAttribute<string> attribute, GroupType groupType = GroupType.OKTA_GROUP)
         {
             // Check whether an attribute was supplied.
             if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name))
             {
                 // An attribute was supplied.
-                OktaJsonRestResponse<GroupJson[]> response = null;
+               JsonRestResponse<GroupJson[]> jsonResponse = null;
 
                 // Get the name of the property for use when searching.
                 string searchPropertyName = Group.GetSearchPropertyName(attribute.Name, groupType);
@@ -726,22 +741,25 @@ namespace Galactic.Identity.Okta
                     // The name is a valid property named.
 
                     // Use a search request to search for the group.
-                    response = (OktaJsonRestResponse<GroupJson[]>)rest.GetFromJson<GroupJson[]>("/groups/?search=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                    jsonResponse = rest.GetFromJson<GroupJson[]>("/groups?search=" + searchPropertyName + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
                 }
 
-                if (response != null)
+                if (jsonResponse != null)
                 {
+                    // Creates an OktaJsonResponse object from the JSON one.
+                    OktaJsonRestResponse<GroupJson[]> oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
+
                     // Create the list of group JSON objects.
-                    List<GroupJson> jsonList = new(response.Value);
+                    List<GroupJson> jsonList = new(oktaResponse.Value);
 
                     // Get additional pages.
-                    while (response.NextPage != null)
+                    while (oktaResponse.NextPage != null)
                     {
                         // Get the next page.
-                        response = (OktaJsonRestResponse<GroupJson[]>)rest.GetFromJson<GroupJson[]>(response.NextPage.ToString());
+                        oktaResponse = (OktaJsonRestResponse<GroupJson[]>)rest.GetFromJson<GroupJson[]>(oktaResponse.NextPage.ToString());
 
                         // Add the additional users to the list.
-                        jsonList.AddRange(response.Value);
+                        jsonList.AddRange(oktaResponse.Value);
                     }
 
                     // Create the list groups to return.
@@ -779,7 +797,7 @@ namespace Galactic.Identity.Okta
             if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name))
             {
                 // An attribute was supplied.
-                OktaJsonRestResponse<UserJson[]> response = null;
+                JsonRestResponse<UserJson[]> jsonResponse = null;
 
                 // Get the name of the property for use when searching.
                 string searchPropertyName = User.GetSearchPropertyName(attribute.Name);
@@ -793,28 +811,31 @@ namespace Galactic.Identity.Okta
                     if (filterableUserProperties.Contains(attribute.Name))
                     {
                         // Use a filter request to search for the user. (This uses the most up to date information in Okta.)
-                        response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/users/?filter=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                        jsonResponse = rest.GetFromJson<UserJson[]>("/users/?filter=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
                     }
                     else
                     {
                         // Use a search request to search for the user. (This uses a search index which may not contain the most up to date information in Okta.)
-                        response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>("/users/?search=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                        jsonResponse = rest.GetFromJson<UserJson[]>("/users/?search=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
                     }
                 }
 
-                if (response != null)
+                if (jsonResponse != null)
                 {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<UserJson[]> oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
                     // Create the list of user JSON objects.
-                    List<UserJson> jsonList = new(response.Value);
+                    List<UserJson> jsonList = new(oktaResponse.Value);
 
                     // Get additional pages.
-                    while (response.NextPage != null)
+                    while (oktaResponse.NextPage != null)
                     {
                         // Get the next page.
-                        response = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(response.NextPage.ToString());
+                        oktaResponse = (OktaJsonRestResponse<UserJson[]>)rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString());
 
                         // Add the additional users to the list.
-                        jsonList.AddRange(response.Value);
+                        jsonList.AddRange(oktaResponse.Value);
                     }
 
                     // Create the list users to return.
@@ -850,10 +871,13 @@ namespace Galactic.Identity.Okta
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
                 // Return the result.
-                OktaJsonRestResponse<GroupJson[]> response = (OktaJsonRestResponse<GroupJson[]>)rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups");
-                if (response != null)
+                JsonRestResponse<GroupJson[]> jsonResponse = rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups");
+                if (jsonResponse != null)
                 {
-                    GroupJson[] jsonArray = response.Value;
+                    // Convert to OktaJsonRestResponse.
+                    OktaJsonRestResponse<GroupJson[]> oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    GroupJson[] jsonArray = oktaResponse.Value;
                     if (jsonArray != default)
                     {
                         // Return the list of Groups.
@@ -1056,10 +1080,13 @@ namespace Galactic.Identity.Okta
                 if (profile != null)
                 {
                     // Update the properties.
-                    OktaJsonRestResponse<GroupJson> response = (OktaJsonRestResponse<GroupJson>)rest.PostAsJson<GroupJson>("/groups/" + uniqueId, profile);
-                    if (response != null)
+                    JsonRestResponse<GroupJson> jsonResponse = rest.PostAsJson<GroupJson>("/groups/" + uniqueId, profile);
+                    if (jsonResponse != null)
                     {
-                        group = response.Value;
+                        // Convert to an OktaJsonRestResponse.
+                        OktaJsonRestResponse<GroupJson> oktaResponse = OktaJsonRestResponse<GroupJson>.FromJsonRestResponse(jsonResponse);
+
+                        group = oktaResponse.Value;
                     }
                     else
                     {
@@ -1098,10 +1125,13 @@ namespace Galactic.Identity.Okta
                     if (profile != null)
                     {
                         // Update the properties.
-                        OktaJsonRestResponse<UserJson> response = (OktaJsonRestResponse<UserJson>)rest.PostAsJson<UserJson>("/users/" + uniqueId, profile);
-                        if (response != null)
+                        JsonRestResponse<UserJson> jsonResponse = rest.PostAsJson<UserJson>("/users/" + uniqueId, profile);
+                        if (jsonResponse != null)
                         {
-                            user = response.Value;
+                            // Convert to an OktaJsonRestResponse.
+                            OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
+
+                            user = oktaResponse.Value;
                         }
                         else
                         {
@@ -1113,10 +1143,13 @@ namespace Galactic.Identity.Okta
                     if (creds != null)
                     {
                         // Update the credentials.
-                        OktaJsonRestResponse<UserJson> response = (OktaJsonRestResponse<UserJson>)rest.PostAsJson<UserJson>("/users/" + uniqueId, creds);
-                        if (response != null)
+                        JsonRestResponse<UserJson> jsonResponse = rest.PostAsJson<UserJson>("/users/" + uniqueId, creds);
+                        if (jsonResponse != null)
                         {
-                            user = response.Value;
+                            // Convert to an OktaJsonRestResponse.
+                            OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
+
+                            user = oktaResponse.Value;
                         }
                         else
                         {

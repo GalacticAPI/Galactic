@@ -92,7 +92,7 @@ namespace Galactic.Identity.Okta
         /// Discoverable resources related to the User.
         /// </summary>
         [JsonPropertyName(LINKS)]
-        public LinkJson[] Links { get; init; } = default!;
+        public UserLinksJson Links { get; init; } = default!;
 
         /// <summary>
         /// Timestamp when User's transition to ACTIVE status completed.
@@ -164,6 +164,6 @@ namespace Galactic.Identity.Okta
         /// Determines the User's schema.
         /// </summary>
         [JsonPropertyName(TYPE)]
-        public string Type { get; init; } = default!;
+        public UserTypeJson Type { get; init; } = default!;
     }
 }

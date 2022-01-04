@@ -28,8 +28,9 @@ namespace Galactic.Rest
         /// Initializes a client that can make requests to RESTful API.
         /// </summary>
         /// <param name="baseUri">The base URI to use for requests to the API.</param>
-        /// <param name="authorizationHeader">(Optional)The value to use for the HTTP Authorization header of requests.</param>
-        public RestClient(string baseUri, string authorizationHeader = "")
+        /// <param name="authorizationHeaderScheme">(Optional)The scheme value to use for the HTTP Authorization header of requests. Note: Should be paired with authorizationHeaderCredentials.</param>
+        /// <param name="authorizationHeaderCredentials">(Optional)The credential value to use for the HTTP Authorization header of requests. (Usually an API key.) Note: Should be paired with authorizationHeaderScheme.</param>
+        public RestClient(string baseUri, string authorizationHeaderScheme = "", string authorizationHeaderCredentials = "")
         {
             if (!string.IsNullOrWhiteSpace(baseUri))
             {
@@ -37,9 +38,9 @@ namespace Galactic.Rest
                 httpClient.BaseAddress = new Uri(baseUri);
 
                 // Setup the authorization header.
-                if (!string.IsNullOrWhiteSpace(authorizationHeader))
+                if (!string.IsNullOrWhiteSpace(authorizationHeaderScheme) && !string.IsNullOrWhiteSpace(authorizationHeaderCredentials))
                 {
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(authorizationHeader);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(authorizationHeaderScheme, authorizationHeaderCredentials);
                 }
             }
             else
@@ -62,7 +63,7 @@ namespace Galactic.Rest
                 try
                 {
                     // Send the DELETE request.
-                    Task<HttpResponseMessage> responseTask = httpClient.DeleteAsync(path);
+                    Task<HttpResponseMessage> responseTask = httpClient.DeleteAsync(httpClient.BaseAddress + path);
 
                     // Wait for the response to complete.
                     responseTask.Wait();
@@ -95,7 +96,7 @@ namespace Galactic.Rest
                 try
                 {
                     // Send the GET request.
-                    Task<HttpResponseMessage> responseTask = httpClient.GetAsync(path);
+                    Task<HttpResponseMessage> responseTask = httpClient.GetAsync(httpClient.BaseAddress + path);
 
                     // Wait for the response to complete.
                     responseTask.Wait();
@@ -127,7 +128,7 @@ namespace Galactic.Rest
                 try
                 {
                     // Send the POST request.
-                    Task<HttpResponseMessage> responseTask = httpClient.PostAsync(path, null);
+                    Task<HttpResponseMessage> responseTask = httpClient.PostAsync(httpClient.BaseAddress + path, null);
 
                     // Wait for the response to complete.
                     responseTask.Wait();
@@ -159,7 +160,7 @@ namespace Galactic.Rest
             if (!string.IsNullOrWhiteSpace(path) && content != null)
             {
                 // Send the POST request.
-                Task<HttpResponseMessage> responseTask = httpClient.PostAsJsonAsync(path, content);
+                Task<HttpResponseMessage> responseTask = httpClient.PostAsJsonAsync(httpClient.BaseAddress + path, content);
 
                 // Wait for the response to complete.
                 responseTask.Wait();
