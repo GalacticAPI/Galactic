@@ -926,6 +926,55 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets a list of users that have access to the application.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the application.</param>
+        /// <returns>A list of UserJsons objects representing each user that has access to the application</returns>
+        public List<UserJson> GetApplicationUsers(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                // Return the result.
+                JsonRestResponse<UserJson[]> jsonResponse = rest.GetFromJson<UserJson[]>("/apps/" + uniqueId + "/users?limit=" + MAX_PAGE_SIZE);
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<UserJson[]> oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of UserJson objects to return.
+                    List<UserJson> jsonList = new(oktaResponse.Value);
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional users to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    return jsonList;
+                }
+                else
+                {
+                    // Nothing was returned. Return an empty list.
+                    return new();
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Remove a user from a group.
         /// </summary>
         /// <param name="userId">The unique id of the user to remove.</param>
