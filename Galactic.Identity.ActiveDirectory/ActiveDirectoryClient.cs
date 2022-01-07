@@ -379,7 +379,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="siteName">(Optional) The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
         public ActiveDirectoryClient(string domainName, string userName, SecureString password, string ouDn = "", string siteName = DEFAULT_FIRST_SITE_NAME)
         {
-            if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(ouDn) && !string.IsNullOrWhiteSpace(userName) && password != null)
+            if (!string.IsNullOrWhiteSpace(domainName) && !string.IsNullOrWhiteSpace(userName) && password != null)
             {
                 try
                 {
@@ -423,10 +423,6 @@ namespace Galactic.Identity.ActiveDirectory
                 if (string.IsNullOrWhiteSpace(domainName))
                 {
                     throw new ArgumentNullException("domainName");
-                }
-                if (string.IsNullOrWhiteSpace(ouDn))
-                {
-                    throw new ArgumentNullException("ouDn");
                 }
                 if (string.IsNullOrWhiteSpace(userName))
                 {
@@ -769,7 +765,27 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Get's all users in the directory system.
+        /// Gets all groups in the directory system.
+        /// </summary>
+        /// <returns>A list of all groups in the directory system.</returns>
+        public List<IGroup> GetAllGroups()
+        {
+            // Get all the group entries from AD.
+            List<SearchResultEntry> entries = GetEntries("objectCategory=group");
+
+            // Convert the results to Group objects.
+            List<IGroup> groups = new();
+            foreach (SearchResultEntry entry in entries)
+            {
+                groups.Add((IGroup)new Group(this, entry));
+            }
+
+            // Return the list of groups.
+            return groups;
+        }
+
+        /// <summary>
+        /// Gets all users in the directory system.
         /// </summary>
         /// <returns>A list of all users in the directory system.</returns>
         public List<IUser> GetAllUsers()

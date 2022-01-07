@@ -165,6 +165,15 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// Gets all groups in the directory system.
+        /// </summary>
+        /// <returns>A list of all groups in the directory system.</returns>
+        public List<IGroup> GetAllGroups()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Get's all users in the directory system.
         /// </summary>
         /// <returns>A list of all users in the directory system.</returns>

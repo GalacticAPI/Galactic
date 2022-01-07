@@ -53,7 +53,13 @@ namespace Galactic.Identity
         public bool DeleteUser(string uniqueId);
 
         /// <summary>
-        /// Get's all users in the directory system.
+        /// Gets all groups in the directory system.
+        /// </summary>
+        /// <returns>A list of all groups in the directory system.</returns>
+        public List<IGroup> GetAllGroups();
+
+        /// <summary>
+        /// Gets all users in the directory system.
         /// </summary>
         /// <returns>A list of all users in the directory system.</returns>
         public List<IUser> GetAllUsers();
