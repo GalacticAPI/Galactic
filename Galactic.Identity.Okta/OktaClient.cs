@@ -182,7 +182,7 @@ namespace Galactic.Identity.Okta
                     {
                         foreach (IdentityAttribute<Object> attribute in additionalAttributes)
                         {
-                            if (attribute.Name == "description")
+                            if (attribute.Name == GroupProfileJson.DESCRIPTION)
                             {
                                 description = (string)attribute.Value;
                             }
