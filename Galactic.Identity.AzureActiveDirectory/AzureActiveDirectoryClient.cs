@@ -722,6 +722,58 @@ namespace Galactic.Identity.AzureActiveDirectory
 		}
 
 		/// <summary>
+		/// Get's all groups in the directory system.
+		/// </summary>
+		/// <returns>A list of all groups in the directory system.</returns>
+		public List<IGroup> GetAllGroups()
+		{
+			List<GraphGroup> graphGroups = GetAllGraphGroups();
+			List<IGroup> groups = new();
+
+			if (graphGroups != null)
+			{
+				foreach (GraphGroup graphGroup in graphGroups)
+				{
+					groups.Add(new Group(this, graphGroup));
+				}
+			}
+
+			return groups;
+		}
+
+		/// <summary>
+		/// Get's all groups in the directory system.
+		/// </summary>
+		/// <returns>A list of all groups in the directory system.</returns>
+		public List<GraphGroup> GetAllGraphGroups()
+		{
+			try
+			{
+				Task<IGraphServiceGroupsCollectionPage> response = gsc.Groups.Request().GetAsync();
+
+				response.Wait();
+
+				List<GraphGroup> groups = new();
+
+				groups.AddRange(response.Result.CurrentPage);
+
+				while (response.Result.NextPageRequest != null)
+				{
+					response = response.Result.NextPageRequest.GetAsync();
+					response.Wait();
+					groups.AddRange(response.Result.CurrentPage);
+				}
+
+				return groups;
+			}
+			catch (AggregateException e)
+			{
+				// An error occurred.
+				return null;
+			}
+		}
+
+		/// <summary>
 		/// Gets IGroups that start with the attribute value in the supplied attribute.
 		/// </summary>
 		/// <param name="attribute">The attribute with name and value to search against.</param>

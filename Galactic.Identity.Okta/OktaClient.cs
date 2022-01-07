@@ -626,6 +626,55 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Get's all users in the directory system.
+        /// </summary>
+        /// <returns>A list of all users in the directory system.</returns>
+        public List<IGroup> GetAllGroups()
+        {
+            // Return the result.
+            JsonRestResponse<GroupJson[]> jsonResponse = rest.GetFromJson<GroupJson[]>("/groups/?limit=" + MAX_PAGE_SIZE);
+            if (jsonResponse != null)
+            {
+                // Convert to an OktaJsonRestResponse.
+                OktaJsonRestResponse<GroupJson[]> oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                // Create the list of user JSON objects.
+                List<GroupJson> jsonList = new(oktaResponse.Value);
+
+                // Get additional pages.
+                while (oktaResponse.NextPage != null)
+                {
+                    // Get the next page, removing the base URI from the supplied URI.
+                    jsonResponse = rest.GetFromJson<GroupJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                    if (jsonResponse != null)
+                    {
+                        // Convert to OktaJsonRestResponse.
+                        oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                        // Add the additional users to the list.
+                        jsonList.AddRange(oktaResponse.Value);
+                    }
+                }
+
+                // Create the list users to return.
+                List<IGroup> groups = new();
+                foreach (GroupJson groupJson in jsonList)
+                {
+                    groups.Add(new Group(this, groupJson));
+                }
+
+                // Return the list of users.
+                return groups;
+            }
+            else
+            {
+                // Nothing was returned.
+                return new();
+            }
+        }
+
+        /// <summary>
         /// Gets a Group from Okta given its id.
         /// </summary>
         /// <param name="id">The id of the Group to retrieve from Okta.</param>
