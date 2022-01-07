@@ -58,17 +58,78 @@ namespace Galactic.Identity.GoogleWorkspace
 
         /// <summary>
         /// Create a new group within the directory system given its proposed name, its type, and other optional attributes.
-        /// Note: In Google Workspace, an e-mail address is required. The 'email' attribute must be provided as an additional
+        /// Note: In Google Workspace, an e-mail address is required. An attribute with the name of the constant Group.EMAIL must be provided as an additional
         /// attribute in order to successfully create the group.
         /// </summary>
-        /// <param name="name">The proposed name of the group.</param>
+        /// <param name="name">The proposed name of the group. (Google: The group's display name.)</param>
         /// <param name="type">(Ignored) The type of group to create.</param>
         /// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the group. Defaults to the standard group create location for the system if not supplied or invalid.</param>
         /// <param name="additionalAttributes">(Required, see above.) Additional attributes to set when creating the group.</param>
         /// <returns>The newly created group object, or null if it could not be created.</returns>
+        /// <exception cref="ArgumentException">Thrown if an attribute with the name of the constant Group.EMAIL is not supplied.</exception>
         public IGroup CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrWhiteSpace(name) && additionalAttributes != null)
+            {
+                // Gather the additional attributes supplied.
+                string email = "";
+                string description = "";
+                foreach (IdentityAttribute<object> attribute in additionalAttributes)
+                {
+                    if (attribute.Name == Group.EMAIL)
+                    {
+                        email = (string)attribute.Value;
+                    }
+                    if (attribute.Name == Group.DESCRIPTION)
+                    {
+                        description = (string)attribute.Value;
+                    }
+                }
+                
+                // Verify that an email attribute was supplied.
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    // Create an object with the properties for the new group.
+                    GoogleGroup group = new();
+                    group.Name = name;
+                    group.Email = email;
+                    if (!string.IsNullOrWhiteSpace(description))
+                    {
+                        group.Description = description;
+                    }
+
+                    // Perform the Google Workspace API request.
+                    GroupsResource.InsertRequest request = Service.Groups.Insert(group);
+                    GoogleGroup createdGroup = request.Execute();
+
+                    // Return the created group.
+                    if (createdGroup != null)
+                    {
+                        return new Group(this, createdGroup);
+                    }
+                    else
+                    {
+                        // The group was not created, return null.
+                        return null;
+                    }
+                }
+                else
+                {
+                    // An email address attribute was not supplied.
+                    throw new ArgumentException(nameof(additionalAttributes));
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    throw new ArgumentNullException(nameof(name));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(additionalAttributes));
+                }
+            }
         }
 
         /// <summary>
