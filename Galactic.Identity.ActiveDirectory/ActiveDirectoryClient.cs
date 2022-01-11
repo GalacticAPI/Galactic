@@ -442,6 +442,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="domainName">(Optional) The DNS style domain name of the Active Directory to connect to. If left unspecified, the domain that the computer is currently connected to will be used.</param>
         /// <param name="ouDn">(Optional) The distinguished name of the OU to use as a base for operations. If left unspecified, the root of the domain will be used.</param>
         /// <param name="siteName">(Optional)The name of a site in Active Directory to use the domain controllers from. Defaults to DEFAULT_FIRST_SITE_NAME if not supplied.</param>
+        [SupportedOSPlatform("windows")]
         public ActiveDirectoryClient(string domainName = null, string ouDn = null, string siteName = DEFAULT_FIRST_SITE_NAME)
         {
             if (string.IsNullOrWhiteSpace(domainName))
