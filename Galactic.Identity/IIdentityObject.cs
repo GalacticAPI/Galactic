@@ -72,6 +72,49 @@ namespace Galactic.Identity
         }
 
         /// <summary>
+        /// Compares the identity object to another identity object using the supplied attribute names as the attributes to compare against.
+        /// </summary>
+        /// <typeparam name="T">The type of the attributes to compare. Both attributes must be of the same type.</typeparam>
+        /// <param name="other">The other identity object to compare this one to.</param>
+        /// <param name="attributeName">The name of the attribute in this object to use when comparing.</param>
+        /// <param name="otherAttributeName">The nameof the attribute in the other object to use when comparing.</param>
+        /// <returns>1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
+        public virtual int CompareTo<T>(IIdentityObject other, string attributeName, string otherAttributeName) where T : IComparable<T>
+        {
+            // Verify that all parameters were supplied.
+            if (other != null && !string.IsNullOrWhiteSpace(attributeName) && !string.IsNullOrWhiteSpace(otherAttributeName))
+            {
+                // Populate the Compare method parameters.
+                List<Object> parameters = new();
+                parameters.Add(GetAttributes(new() { attributeName }));
+                parameters.Add(other.GetAttributes(new() { otherAttributeName }));
+                // Ignore case in string compares.
+                if (typeof(string) is T)
+                {
+                    parameters.Add(StringComparison.OrdinalIgnoreCase);
+                }
+
+                // Call the type's Compare method.
+                return (int)typeof(T).GetMethod("Compare").Invoke(null, parameters.ToArray());
+            }
+            else
+            {
+                if (other == null)
+                {
+                    throw new ArgumentNullException(nameof(other));
+                }
+                else if (string.IsNullOrWhiteSpace(attributeName))
+                {
+                    throw new ArgumentNullException(nameof(attributeName));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(otherAttributeName));
+                }
+            }
+        }
+
+        /// <summary>
         /// Checks whether x and y are equal (have the same UniqueIds).
         /// </summary>
         /// <param name="x">The first identity object to check.</param>
@@ -92,6 +135,57 @@ namespace Galactic.Identity
                 else
                 {
                     throw new ArgumentNullException(nameof(y));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks whether x and y are equal using the supplied attribute names as the attributes for checking equality against.
+        /// </summary>
+        /// <typeparam name="T">The type of the attributes to compare. Both attributes must be of the same type.</typeparam>
+        /// <param name="x">The first identity object to check.</param>
+        /// <param name="xAttributeName">The name of the attribute in x object to use when comparing.</param>
+        /// <param name="y">The second identity object to check.</param>
+        /// <param name="yAttributeName">The name of the attribute in y object to use when comparing.</param>
+        /// <returns>True if the identity objects are equal, false otherwise.</returns>
+        public virtual bool Equals<T>(IIdentityObject x, string xAttributeName, IIdentityObject y, string yAttributeName)
+        {
+            if (x != null & y != null & !string.IsNullOrWhiteSpace(xAttributeName) && !string.IsNullOrWhiteSpace(yAttributeName))
+            {
+                // Get the attributes of each object.
+                List<IdentityAttribute<object>> xAttributes = x.GetAttributes(new() { xAttributeName });
+                List<IdentityAttribute<object>> yAttributes = y.GetAttributes(new() { yAttributeName });
+
+                // Verify that attributes were found with the supplied names.
+                if (xAttributes.Count == 1 && yAttributes.Count == 1)
+                {
+                    T xAttribute = (T)xAttributes[0].Value;
+                    T yAttribute = (T)yAttributes[0].Value;
+                    return xAttribute.Equals(yAttribute);
+                }
+                else
+                {
+                    // One or more of the attribute names supplied did not exist in the attribute list of the object.
+                    return false;
+                }    
+            }
+            else
+            {
+                if (x == null)
+                {
+                    throw new ArgumentNullException(nameof(x));
+                }
+                else if (y == null)
+                {
+                    throw new ArgumentNullException(nameof(y));
+                }
+                else if (string.IsNullOrWhiteSpace(xAttributeName))
+                {
+                    throw new ArgumentNullException(nameof(xAttributeName));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(yAttributeName));
                 }
             }
         }
