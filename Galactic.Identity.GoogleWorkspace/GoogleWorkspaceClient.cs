@@ -1,4 +1,5 @@
 ﻿using Galactic.Cryptography;
+using GalFile = Galactic.FileSystem.File;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Admin.Directory.directory_v1;
 using Google.Apis.Admin.Directory.directory_v1.Data;
@@ -38,7 +39,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         /// <param name="credential">The credentials the client should use when authenticating.</param>
         /// <param name="applicationName">The name of the application making directory requests.</param>
-        public GoogleWorkspaceClient(UserCredential credential, string applicationName)
+        public GoogleWorkspaceClient(GoogleCredential credential, string applicationName)
         {
             if (credential != null || !string.IsNullOrWhiteSpace(applicationName))
             {
@@ -64,6 +65,56 @@ namespace Galactic.Identity.GoogleWorkspace
         // ----- METHODS -----
 
         /// <summary>
+        /// Builds an OAuth2.0 serivce account based credential for use when authenticating the client.
+        /// </summary>
+        /// <param name="path">The path to the JSON credential file provided by Google for the service account.</param>
+        /// <param name="user">(Optional) A user to impersonate when making client calls.</param>
+        /// <param name="scopes">(Optional) A list of OAuth 2.0 scopes that should be used to request access by the client to the API.
+        /// These can be a set from the properties of the DirectoryApiScopes record in this namespace, or directly via those provided by Google's DirectoryService.Scope class
+        /// or as outlined at https://developers.google.com/identity/protocols/oauth2/scopes#admin-directory. </param>
+        /// <returns>A GoogleCredential constructed from the supplied parameters.</returns>
+        public static GoogleCredential BuildServiceAccountCredential (string path, string user = null, List<string> scopes = null)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                // Verify that the file exists.
+                if (GalFile.Exists(path))
+                {
+                    // Create an object to access the file.
+                    GalFile credsFile = new GalFile(path, false, true);
+
+                    // Create and config the credential.
+                    ServiceAccountCredential serviceAccountCredential = ServiceAccountCredential.FromServiceAccountData(credsFile.FileStream);
+                    GoogleCredential credential = GoogleCredential.FromServiceAccountCredential(serviceAccountCredential);
+                    
+                    // If an impersonation user is supplied, add it to the credential.
+                    if (!string.IsNullOrWhiteSpace(user))
+                    {
+                        credential = credential.CreateWithUser(user);
+                    }
+
+                    // If scopes are provided, add it to the credential.
+                    if (scopes != null && scopes.Count > 0)
+                    {
+                        credential = credential.CreateScoped(scopes);
+                    }
+
+                    // Return the constructed credential.
+                    return credential;
+                }
+                else
+                {
+                    // The credential file doesn't exist.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+        }
+
+        /// <summary>
         /// Create a new group within the directory system given its proposed name, its type, and other optional attributes.
         /// Note: In Google Workspace, an e-mail address is required. An attribute with the name of the constant Group.EMAIL must be provided as an additional
         /// attribute in order to successfully create the group.
@@ -74,7 +125,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <param name="additionalAttributes">(Required, see above.) Additional attributes to set when creating the group.</param>
         /// <returns>The newly created group object, or null if it could not be created.</returns>
         /// <exception cref="ArgumentException">Thrown if an attribute with the name of the constant Group.EMAIL is not supplied.</exception>
-        public IGroup CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
+        public IGroup CreateGroup (string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
             if (!string.IsNullOrWhiteSpace(name) && additionalAttributes != null)
             {
@@ -107,7 +158,15 @@ namespace Galactic.Identity.GoogleWorkspace
 
                     // Perform the Google Workspace API request.
                     GroupsResource.InsertRequest request = Service.Groups.Insert(group);
-                    GoogleGroup createdGroup = request.Execute();
+                    GoogleGroup createdGroup = null;
+                    try
+                    {
+                        createdGroup = request.Execute();
+                    }
+                    catch
+                    {
+                        // There was an error creating the group.
+                    }
 
                     // Return the created group.
                     if (createdGroup != null)
@@ -174,7 +233,15 @@ namespace Galactic.Identity.GoogleWorkspace
 
                     // Perform the Google Workspace API request.
                     UsersResource.InsertRequest request = Service.Users.Insert(user);
-                    GoogleUser createdUser = request.Execute();
+                    GoogleUser createdUser = null;
+                    try
+                    {
+                        createdUser = request.Execute();
+                    }
+                    catch
+                    {
+                        // There was an error creating the user.
+                    }
 
                     // Return the created user.
                     if (createdUser != null)
@@ -209,11 +276,32 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// Deletes a group with the specified unique id from the directory system.
         /// </summary>
-        /// <param name="uniqueId">The unique id of the group to delete.</param>
+        /// <param name="uniqueId">The unique id of the group to delete. (Google: Group's id property.)</param>
         /// <returns>True if the group was deleted, false otherwise.</returns>
         public bool DeleteGroup(string uniqueId)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                // Perform the Google Workspace API request.
+                GroupsResource.DeleteRequest request = Service.Groups.Delete(uniqueId);
+                try
+                {
+                    request.Execute();
+                }
+                catch
+                {
+                    // There was an error deleting the group.
+                    return false;
+                }
+
+                // Return that the group was deleted.
+                return true;
+                
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
         }
 
         /// <summary>

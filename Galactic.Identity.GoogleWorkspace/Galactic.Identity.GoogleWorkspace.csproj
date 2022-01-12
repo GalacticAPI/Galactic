@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Galactic.Cryptography\Galactic.Cryptography.csproj" />
+    <ProjectReference Include="..\Galactic.FileSystem\Galactic.FileSystem.csproj" />
     <ProjectReference Include="..\Galactic.Identity\Galactic.Identity.csproj" />
   </ItemGroup>
 

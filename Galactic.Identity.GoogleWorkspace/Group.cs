@@ -98,7 +98,7 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(DESCRIPTION)]
         public string Description
         {
-            get => throw new NotImplementedException();
+            get => group.Description;
             set => throw new NotImplementedException();
         }
 
@@ -116,7 +116,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Unique key for Group.
         /// </summary>
         [GoogleWorkspacePropertyName(ID)]
-        public string Id => throw new NotImplementedException();
+        public string Id => group.Id;
 
         /// <summary>
         /// Timestamp when Group's memberships were last updated.
@@ -144,7 +144,7 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(NAME)]
         public string Name
         {
-            get => throw new NotImplementedException();
+            get => group.Name;
             set => throw new NotImplementedException();
         }
 
