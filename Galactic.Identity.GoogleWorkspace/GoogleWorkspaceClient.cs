@@ -1,10 +1,12 @@
-﻿using Google.Apis.Auth.OAuth2;
+﻿using Galactic.Cryptography;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Admin.Directory.directory_v1;
 using Google.Apis.Admin.Directory.directory_v1.Data;
 using GoogleGroup = Google.Apis.Admin.Directory.directory_v1.Data.Group;
 using GoogleUser = Google.Apis.Admin.Directory.directory_v1.Data.User;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
+using System.Security.Cryptography;
 
 namespace Galactic.Identity.GoogleWorkspace
 {
@@ -14,6 +16,11 @@ namespace Galactic.Identity.GoogleWorkspace
     public class GoogleWorkspaceClient : IDirectorySystem
     {
         // ----- CONSTANTS -----
+
+        /// <summary>
+        /// The name of the SHA-1 algorithm when used in Google Workspace calls.
+        /// </summary>
+        private static string SHA1_ALGORITHM_NAME = "SHA-1";
 
         // ----- VARIABLES -----
 
@@ -133,15 +140,70 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
-        /// Creates a user within the directory system given it's login, and other options attributes.
+        /// Creates a user within the directory system given its login, and other optional attributes.
+        /// Note: In Google Workspace, an password is required. An attribute with the name of the constant User.PASSWORD must be provided as an additional
+        /// attribute in order to successfully create the user. All password values are sent in requests via SHA-1 hashes. 
         /// </summary>
-        /// <param name="login">The proposed login of the user.</param>
+        /// <param name="login">The proposed login of the user. (Google: The user's primary e-mail address.)</param>
         /// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
-        /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user.</param>
+        /// <param name="additionalAttributes">(Required, see above.) Additional attributes to set when creating the user.</param>
         /// <returns>The newly creaTed user object, or null if it could not be created.</returns>
         public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrWhiteSpace(login) && additionalAttributes != null)
+            {
+                // Gather the additional attributes supplied.
+                string password = "";
+                foreach (IdentityAttribute<object> attribute in additionalAttributes)
+                {
+                    if (attribute.Name == User.PASSWORD)
+                    {
+                        password = (string)attribute.Value;
+                    }
+                    // TODO: Add support for additional attributes here.
+                }
+
+                // Verify that a password attribute was supplied.
+                if (!string.IsNullOrWhiteSpace(password))
+                {
+                    // Create an object with the properties for the new user.
+                    GoogleUser user = new();
+                    user.PrimaryEmail = login;
+                    user.Password = Hash.GetHash(password, HashAlgorithmName.SHA1);
+                    user.HashFunction = SHA1_ALGORITHM_NAME;
+
+                    // Perform the Google Workspace API request.
+                    UsersResource.InsertRequest request = Service.Users.Insert(user);
+                    GoogleUser createdUser = request.Execute();
+
+                    // Return the created user.
+                    if (createdUser != null)
+                    {
+                        return new User(this, createdUser);
+                    }
+                    else
+                    {
+                        // The user was not created, return null.
+                        return null;
+                    }
+                }
+                else
+                {
+                    // A password attribute was not supplied.
+                    throw new ArgumentException(nameof(additionalAttributes));
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(login))
+                {
+                    throw new ArgumentNullException(nameof(login));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(additionalAttributes));
+                }
+            }
         }
 
         /// <summary>

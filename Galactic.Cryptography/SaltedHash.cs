@@ -38,14 +38,14 @@ namespace Galactic.Cryptography
         /// </summary>
         /// <param name="data">The data to generate a hash off.</param>
         /// <param name="salt">A random integer used as a salt.</param>
-        /// <returns></returns>
+        /// <returns>A hash of the data using the supplied salt.</returns>
         static public string GenerateHash(string data, out int salt)
         {
             salt = GenerateSalt();
 
             // Generate a salted hash from the data and the salt.
             string saltedData = salt + data;
-            return SHA256.GetHash(saltedData);
+            return Hash.GetHash(saltedData, HashAlgorithmName.SHA256);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Galactic.Cryptography
             if (!string.IsNullOrWhiteSpace(data) && !string.IsNullOrWhiteSpace(hash))
             {
                 // Verify the hash.
-                return SHA256.VerifyHash(salt + data, hash);
+                return Hash.VerifyHash(salt + data, hash, HashAlgorithmName.SHA256);
             }
             // The arguments were not valid.
             return false;
