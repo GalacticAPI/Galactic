@@ -152,7 +152,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Determines how a Group's Profile and memberships are managed.
         /// </summary>
         [GoogleWorkspacePropertyName(KIND)]
-        public string Type => throw new NotImplementedException();
+        public string Type => group.Kind;
 
         /// <summary>
         /// The object's unique ID in the system.

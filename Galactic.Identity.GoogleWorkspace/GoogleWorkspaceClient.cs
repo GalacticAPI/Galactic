@@ -311,7 +311,28 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>True if the user was deleted, false otherwise.</returns>
         public bool DeleteUser(string uniqueId)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                // Perform the Google Workspace API request.
+                UsersResource.DeleteRequest request = Service.Users.Delete(uniqueId);
+                try
+                {
+                    request.Execute();
+                }
+                catch
+                {
+                    // There was an error deleting the user.
+                    return false;
+                }
+
+                // Return that the user was deleted.
+                return true;
+
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
         }
 
         /// <summary>

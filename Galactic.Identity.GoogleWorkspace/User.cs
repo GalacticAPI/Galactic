@@ -1,4 +1,5 @@
-﻿using GoogleGroup = Google.Apis.Admin.Directory.directory_v1.Data.Group;
+﻿using Google.Apis.Admin.Directory.directory_v1.Data;
+using GoogleGroup = Google.Apis.Admin.Directory.directory_v1.Data.Group;
 using GoogleUser = Google.Apis.Admin.Directory.directory_v1.Data.User;
 using System;
 using System.Collections.Generic;
@@ -286,14 +287,17 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public const string WEBSITES = "websites";
 
-
-
         // ----- VARIABLES -----
 
         /// <summary>
         /// The object used to query and manipulate Google Workspace.
         /// </summary>
         protected GoogleWorkspaceClient gws = null;
+
+        /// <summary>
+        /// The backing native data representing the User in Google Workspace.
+        /// </summary>
+        protected GoogleUser user = null;
 
         // ----- PROPERTIES -----
 
@@ -303,11 +307,23 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(CHANGE_PASSWORD_AT_NEXT_LOGIN)]
         public bool ChangePasswordAtNextLogin
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.ChangePasswordAtNextLogin != null)
+                {
+                    return (bool)user.ChangePasswordAtNextLogin;
+                }
+                else
+                {
+                    // No property was set, so they won't be forced to change their password on next login.
+                    return false;
+                }
+            }
         }
 
         /// <summary>
         /// The user's city.
+        /// (Google: For the first address in the list of addresses associated with the user.)
         /// </summary>
         public string City
         {
@@ -320,11 +336,25 @@ namespace Galactic.Identity.GoogleWorkspace
 
         /// <summary>
         /// The user's country code as defined in ISO 3166-1 alpha-2.
+        /// (Google: For the first addresses in the list of address associated with the user.)
         /// </summary>
         [GoogleWorkspacePropertyName(ADDRESSES_COUNTRY_CODE)]
         public string CountryCode
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Addresses != null && user.Addresses.Count > 0)
+                {
+                    // Return the country code associated with the first address in the user's list of addresses.
+                    UserAddress address = user.Addresses[0];
+                    return address.CountryCode;
+                }
+                else
+                {
+                    // No addresses associated with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
@@ -332,15 +362,29 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The date and time that the object was created.
         /// </summary>
         [GoogleWorkspacePropertyName(CREATION_TIME)]
-        public DateTime? CreationTime => throw new NotImplementedException();
+        public DateTime? CreationTime => user.CreationTime;
 
         /// <summary>
         /// The user's department.
+        /// (Google: For the first organization in the list of organizations associated with the user.)
         /// </summary>
         [GoogleWorkspacePropertyName(ORGANIZATIONS_DEPARTMENT)]
         public string Department
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Organizations != null && user.Organizations.Count > 0)
+                {
+                    // Return the department associated with the first organization in the user's list of organizations.
+                    UserOrganization org = user.Organizations[0];
+                    return org.Department;
+                }
+                else
+                {
+                    // No organization associated with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
@@ -363,7 +407,32 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(EMAILS)]
         public List<string> Emails
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                // Get the list of user e-mail objects.
+                IList<UserEmail> userEmails = user.Emails;
+                
+                // Create a new list of e-mail addresses to return.
+                List<string> emails = new();
+
+                // Populate the return list with the e-mail addresses from the user e-mail objects.
+                foreach (UserEmail userEmail in userEmails)
+                {
+                    // If the e-mail is the user's primary e-mail. Make it first in the list.
+                    if (userEmail.Primary != null && (bool)userEmail.Primary)
+                    {
+                        emails.Insert(0, userEmail.Address);
+                    }
+                    else
+                    {
+                        // Add other e-mail addresses to the end.
+                        emails.Add(userEmail.Address);
+                    }
+                }
+
+                // Return the list of e-mail addresses.
+                return emails;
+            }
             set => throw new NotImplementedException();
         }
 
@@ -382,10 +451,34 @@ namespace Galactic.Identity.GoogleWorkspace
 
         /// <summary>
         /// An organization assigned identifier for the user.
+        /// (Google: Google Workspace doesn't explicitly define how employee ids should be noted, other than that it supports various external ids.
+        /// This method returns the first external id in the list of external ids associated with the user with a type that starts with the string "employee" (not case specific).
         /// </summary>
         public string EmployeeNumber
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                {
+                    if (user.ExternalIds != null)
+                    {
+                        // Returns any external id with a type that starts with "employee" (not case specific).
+                        foreach (UserExternalId externalId in user.ExternalIds)
+                        {
+                            if (externalId.Type.StartsWith("employee", StringComparison.OrdinalIgnoreCase))
+                            {
+                                return externalId.Value;
+                            }
+                        }
+                        // No employee id was found.
+                        return null;
+                    }
+                    else
+                    {
+                        // No addresses assocaited with the user.
+                        return null;
+                    }
+                }
+            }
             set => throw new NotImplementedException();
         }
 
@@ -395,7 +488,7 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(NAME_FAMILY_NAME)]
         public string FamilyName
         {
-            get => throw new NotImplementedException();
+            get => user.Name.FamilyName;
             set => throw new NotImplementedException();
         }
 
@@ -417,7 +510,7 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(NAME_FULL_NAME)]
         public string FullName
         {
-            get => throw new NotImplementedException();
+            get => user.Name.FullName;
             set => throw new NotImplementedException();
         }
 
@@ -427,7 +520,7 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(NAME_GIVEN_NAME)]
         public string GivenName
         {
-            get => throw new NotImplementedException();
+            get => user.Name.GivenName;
             set => throw new NotImplementedException();
         }
 
@@ -445,7 +538,7 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(ID)]
         public string Id
         {
-            get => throw new NotImplementedException();
+            get => user.Id;
         }
 
 
@@ -462,7 +555,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public string Kind
         {
-            get => throw new NotImplementedException();
+            get => user.Kind;
         }
 
         /// <summary>
@@ -471,11 +564,7 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(LAST_LOGIN_TIME)]
         public DateTime? LastLoginTime
         {
-            get
-            {
-                //  The value is in ISO 8601 date and time format. The time is the complete date plus hours, minutes, and seconds in the form YYYY-MM-DDThh:mm:ssTZD. For example, 2010-04-05T17:30:04+01:00.
-                throw new NotImplementedException();
-            }
+            get => user.LastLoginTime;
         }
 
         /// <summary>
@@ -492,11 +581,25 @@ namespace Galactic.Identity.GoogleWorkspace
 
         /// <summary>
         /// The town or city of the address.
+        /// (Google: For the first address in the list of addresses associated with the user.)
         /// </summary>
         [GoogleWorkspacePropertyName(ADDRESSES_LOCALITY)]
         public string Locality
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Addresses != null && user.Addresses.Count > 0)
+                {
+                    // Return the locality associated with the first address in the user's list of addresses.
+                    UserAddress address = user.Addresses[0];
+                    return address.Locality;
+                }
+                else
+                {
+                    // No addresses associated with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
@@ -544,16 +647,50 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public string MobilePhone
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Phones != null)
+                {
+                    // Search for a phone with the type "mobile".
+                    foreach (UserPhone phone in user.Phones)
+                    {
+                        if (phone.Type == "mobile")
+                        {
+                            return phone.Value;
+                        }
+                    }
+                    // No mobile phone number was found.
+                    return null;
+                }
+                else
+                {
+                    // No phones associated with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
         /// <summary>
         /// The name of the organization the user belong's to.
+        /// (Google: For the first organization in the list of organizations associated with the user.)
         /// </summary>
         public string Organization
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Organizations != null && user.Organizations.Count > 0)
+                {
+                    // Return the name of the first organization in the user's list of organizations.
+                    UserOrganization org = user.Organizations[0];
+                    return org.Name;
+                }
+                else
+                {
+                    // No organization associated with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
@@ -583,29 +720,45 @@ namespace Galactic.Identity.GoogleWorkspace
 
         /// <summary>
         /// The user's physical address.
+        /// (Google: For the first address in the list of addresses assocaited with the user.)
         /// </summary>
         public string PhyscialAddress
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => StreetAddress;
+            set => StreetAddress = value;
         }
 
         /// <summary>
         /// The user's postal (mailing) address.
+        /// (Google: Google Workspace doesn't have a defined concept of a mailing address. This returns the street address of the first address in the list of addresses associated with the user.)
         /// </summary>
         public string PostalAddress
         {
-            get => throw new NotImplementedException();
+            get => StreetAddress;
             set => throw new NotImplementedException();
         }
 
         /// <summary>
         /// The postal code of the user. (ZIP code in the US.)
+        /// (Google: The postal code of the first address in the list of addresses associated with the user.)
         /// </summary>
         [GoogleWorkspacePropertyName(ADDRESSES_POSTAL_CODE)]
         public string PostalCode
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Addresses != null && user.Addresses.Count > 0)
+                {
+                    // Return the postal code associated with the first address in the user's list of addresses.
+                    UserAddress address = user.Addresses[0];
+                    return address.PostalCode;
+                }
+                else
+                {
+                    // No addresses associated with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
@@ -615,7 +768,7 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(PRIMARY_EMAIL)]
         public string PrimaryEmail
         {
-            get => throw new NotImplementedException();
+            get => user.PrimaryEmail;
             set => throw new NotImplementedException();
         }
 
@@ -636,18 +789,52 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public string PrimaryPhone
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Phones != null)
+                {
+                    // Return the primary phone number from the user's list of phones.
+                    foreach (UserPhone phone in user.Phones)
+                    {
+                        if (phone.Primary != null && (bool)phone.Primary)
+                        {
+                            return phone.Value;
+                        }
+                    }
+                    // No primary phone associated with the user.
+                    return null;
+                }
+                else
+                {
+                    // No phones associated with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
 
         /// <summary>
         /// The abbreviated province or state.
+        /// (Google: The region associated the first address in the list of addresses associated with the user.
         /// </summary>
         [GoogleWorkspacePropertyName(ADDRESSES_REGION)]
         public string Region
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Addresses != null && user.Addresses.Count > 0)
+                {
+                    // Return the region associated with the first address in the user's list of addresses.
+                    UserAddress address = user.Addresses[0];
+                    return address.Region;
+                }
+                else
+                {
+                    // No addresses assocaited with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
@@ -664,12 +851,45 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// The street address portion of the user's first address in the list of addresses associated with their account.
+        /// </summary>
+        public string StreetAddress
+        {
+            get
+            {
+                if (user.Addresses != null && user.Addresses.Count > 0)
+                {
+                    // Return the street address associated with the first address in the user's list of addresses.
+                    UserAddress address = user.Addresses[0];
+                    return address.StreetAddress;
+                }
+                else
+                {
+                    // No addresses associated with the user.
+                    return null;
+                }
+            }
+            set => throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Indicates if user is suspended.
         /// </summary>
         [GoogleWorkspacePropertyName(SUSPENDED)]
         public bool Suspended
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Suspended != null)
+                {
+                    return (bool)user.Suspended;
+                }
+                else
+                {
+                    // No suspension value was provided.
+                    return false;
+                }
+            }
         }
 
         /// <summary>
@@ -678,7 +898,20 @@ namespace Galactic.Identity.GoogleWorkspace
         [GoogleWorkspacePropertyName(ORGANIZATIONS_TITLE)]
         public string Title
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                if (user.Organizations != null && user.Organizations.Count > 0)
+                {
+                    // Return the title associated with the first organization in the user's list of organizations.
+                    UserOrganization org = user.Organizations[0];
+                    return org.Title;
+                }
+                else
+                {
+                    // No organization assocaited with the user.
+                    return null;
+                }
+            }
             set => throw new NotImplementedException();
         }
 
@@ -707,6 +940,7 @@ namespace Galactic.Identity.GoogleWorkspace
                 this.gws = gws;
 
                 // Initialize the user data from the native object supplied.
+                this.user = user;
             }
             else
             {
