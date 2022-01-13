@@ -28,6 +28,11 @@ namespace Galactic.Identity.GoogleWorkspace
         // ----- PROPERTIES -----
 
         /// <summary>
+        /// The FQDN of the Google Workspace domain to make requests against.
+        /// </summary>
+        private string Domain { get; set; }
+
+        /// <summary>
         /// The service that provides API access to the directory.
         /// </summary>
         private DirectoryService Service { get; init; }
@@ -39,15 +44,17 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         /// <param name="credential">The credentials the client should use when authenticating.</param>
         /// <param name="applicationName">The name of the application making directory requests.</param>
-        public GoogleWorkspaceClient(GoogleCredential credential, string applicationName)
+        /// <param name="domain">The Google domain name to make requests against. This is usually the FQDN of the Google Workspace domain.</param>
+        public GoogleWorkspaceClient(GoogleCredential credential, string applicationName, string domain)
         {
-            if (credential != null || !string.IsNullOrWhiteSpace(applicationName))
+            if (credential != null && !string.IsNullOrWhiteSpace(applicationName) && !string.IsNullOrWhiteSpace(domain))
             {
                 Service = new DirectoryService(new BaseClientService.Initializer
                 {
                     HttpClientInitializer = credential,
                     ApplicationName = applicationName
                 });
+                Domain = domain;
             }
             else
             {
@@ -341,7 +348,34 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>A list of all groups in the directory system.</returns>
         public List<IGroup> GetAllGroups()
         {
-            throw new NotImplementedException();
+            // Create a list of groups to return.
+            List<IGroup> groups = new();
+
+            try
+            {
+                // Create a request to retrieve all the groups and execute it.
+                GroupsResource.ListRequest request = Service.Groups.List();
+                request.Domain = Domain;
+                Groups groupsRequest = request.Execute();
+                IList<GoogleGroup> requestGroups = groupsRequest.GroupsValue;
+                
+                // Verify that groups were returned by the request.
+                if (requestGroups != null)
+                {
+                    // Iterate over all the groups and populate the return list.
+                    foreach (GoogleGroup requestGroup in requestGroups)
+                    {
+                        groups.Add(new Group(this, requestGroup));
+                    }
+                }
+            }
+            catch
+            {
+                // There was an error retrieving the groups.
+            }
+
+            // Return the list of groups.
+            return groups;
         }
 
         /// <summary>
@@ -350,7 +384,34 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>A list of all users in the directory system.</returns>
         public List<IUser> GetAllUsers()
         {
-            throw new NotImplementedException();
+            // Create a list of users to return.
+            List<IUser> users = new();
+
+            try
+            {
+                // Create a request to retrieve all the users and execute it.
+                UsersResource.ListRequest request = Service.Users.List();
+                request.Domain = Domain;
+                Users usersRequest = request.Execute();
+                IList<GoogleUser> requestUsers = usersRequest.UsersValue;
+
+                // Verify that users were returned by the request.
+                if (requestUsers != null)
+                {
+                    // Iterate over all the users and populate the return list.
+                    foreach (GoogleUser requestUser in requestUsers)
+                    {
+                        users.Add(new User(this, requestUser));
+                    }
+                }
+            }
+            catch
+            {
+                // There was an error retrieving the users.
+            }
+
+            // Return the list of users.
+            return users;
         }
 
         /// <summary>
