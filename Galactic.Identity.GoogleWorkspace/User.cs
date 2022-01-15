@@ -1,4 +1,6 @@
-﻿using Google.Apis.Admin.Directory.directory_v1.Data;
+﻿
+using SearchOperatorType = Galactic.Identity.GoogleWorkspace.GoogleWorkspaceClient.SearchOperatorType;
+using Google.Apis.Admin.Directory.directory_v1.Data;
 using GoogleGroup = Google.Apis.Admin.Directory.directory_v1.Data.Group;
 using GoogleUser = Google.Apis.Admin.Directory.directory_v1.Data.User;
 using System;
@@ -287,12 +289,202 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public const string WEBSITES = "websites";
 
+        // Search fields.
+
+        /// <summary>
+        /// The concatenated value of givenName and familyName.
+        /// </summary>
+        public const string SEARCH_NAME = "name";
+
+        /// <summary>
+        /// The user's e-mail addresses, including aliases.
+        /// </summary>
+        public const string SEARCH_EMAIL = "email";
+
+        /// <summary>
+        /// A user's given or first name.
+        /// </summary>
+        public const string SEARCH_GIVEN_NAME = "givenName";
+
+        /// <summary>
+        /// A user's family or last name.
+        /// </summary>
+        public const string SEARCH_FAMILY_NAME = "familyName";
+
+        /// <summary>
+        /// Whether a user has super administrator privileges.
+        /// </summary>
+        public const string SEARCH_IS_ADMIN = "isAdmin";
+
+        /// <summary>
+        /// Whether a user has delegated administrator privileges.
+        /// </summary>
+        public const string SEARCH_IS_DELEGATED_ADMIN = "isDelegatedAdmin";
+
+        /// <summary>
+        /// Whether a user's account is suspended.
+        /// </summary>
+        public const string SEARCH_IS_SUSPENDED = "isSuspended";
+
+        /// <summary>
+        /// IM network ID.
+        /// </summary>
+        public const string SEARCH_IM = "im";
+
+        /// <summary>
+        /// External ID value.
+        /// </summary>
+        public const string SEARCH_EXTERNAL_ID = "externalId";
+
+        /// <summary>
+        /// The email address of a user's manager either directly or up the management chain.
+        /// </summary>
+        public const string SEARCH_MANAGER = "manager";
+
+        /// <summary>
+        /// The ID of a user's manager either directly or up the management chain.
+        /// </summary>
+        public const string SEARCH_MANAGER_ID = "managerId";
+
+        /// <summary>
+        /// The email address of a user's direct manager.
+        /// </summary>
+        public const string SEARCH_DIRECT_MANAGER = "directManager";
+
+        /// <summary>
+        /// The ID of a user's direct manager.
+        /// </summary>
+        public const string SEARCH_DIRECT_MANAGER_ID = "directManagerId";
+
+        /// <summary>
+        /// Matches all address fields.
+        /// </summary>
+        public const string SEARCH_ADDRESS = "address";
+
+        /// <summary>
+        /// A post office box.
+        /// </summary>
+        public const string SEARCH_ADDRESS_PO_BOX = "addressPoBox";
+
+        /// <summary>
+        /// An extended address, such as one including a sub-region.
+        /// </summary>
+        public const string SEARCH_ADDRESS_EXTENDED = "addressExtended";
+
+        /// <summary>
+        /// A street address.
+        /// </summary>
+        public const string SEARCH_ADDRESS_STREET = "addressStreet";
+
+        /// <summary>
+        /// A town or city of the address.
+        /// </summary>
+        public const string SEARCH_ADDRESS_LOCALITY = "addressLocality";
+
+        /// <summary>
+        /// An abbreviated province or state.
+        /// </summary>
+        public const string SEARCH_ADDRESS_REGION = "addressRegion";
+
+        /// <summary>
+        /// A ZIP or postal code.
+        /// </summary>
+        public const string SEARCH_ADDRESS_POSTAL_CODE = "addressPostalCode";
+
+        /// <summary>
+        /// A country.
+        /// </summary>
+        public const string SEARCH_ADDRESS_COUNTRY = "addressCountry";
+
+        /// <summary>
+        /// An organization name.
+        /// </summary>
+        public const string SEARCH_ORG_NAME = "orgName";
+
+        /// <summary>
+        /// A user's title within the organization.
+        /// </summary>
+        public const string SEARCH_ORG_TITLE = "orgTitle";
+
+        /// <summary>
+        /// A department within the organization.
+        /// </summary>
+        public const string SEARCH_ORG_DEPARTMENT = "orgDepartment";
+
+        /// <summary>
+        /// An organization's description.
+        /// </summary>
+        public const string SEARCH_ORG_DESCRIPTION = "orgDescription";
+
+        /// <summary>
+        /// A cost center of an organization.
+        /// </summary>
+        public const string SEARCH_ORG_COST_CENTER = "orgCostCenter";
+
+        /// <summary>
+        /// A user's phone number.
+        /// </summary>
+        public const string SEARCH_PHONE = "phone";
+
+        /// <summary>
+        /// The full path of an org unit. This matches all org unit chains under the target. For example, 'orgUnitPath=/'
+        /// returns all users in the organization.
+        /// </summary>
+        public const string SEARCH_ORG_UNIT_PATH = "orgUnitPath";
+
+        /// <summary>
+        /// Whether a user is enrolled in 2-step verification.
+        /// </summary>
+        public const string SEARCH_IS_ENROLLED_IN_2_SV = "isEnrolledIn2Sv";
+
+        /// <summary>
+        /// Whether 2-step verification is enforced for the user.
+        /// </summary>
+        public const string SEARCH_IS_ENFORCED_IN_2_SV = "isEnforcedIn2Sv";
+
+
         // ----- VARIABLES -----
 
         /// <summary>
         /// The object used to query and manipulate Google Workspace.
         /// </summary>
         protected GoogleWorkspaceClient gws = null;
+
+        /// <summary>
+        /// The type of search operators supported by each searh field.
+        /// </summary>
+        public static Dictionary<string, SearchOperatorType[]> SearchOperatorsSupported = new()
+        {
+            [SEARCH_NAME] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_EMAIL] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains, SearchOperatorType.Starts },
+            [SEARCH_GIVEN_NAME] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains, SearchOperatorType.Starts },
+            [SEARCH_FAMILY_NAME] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains, SearchOperatorType.Starts },
+            [SEARCH_IS_ADMIN] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_IS_DELEGATED_ADMIN] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_IS_SUSPENDED] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_IM] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_EXTERNAL_ID] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_MANAGER] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_MANAGER_ID] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_DIRECT_MANAGER] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_DIRECT_MANAGER_ID] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_ADDRESS] = new SearchOperatorType[] { SearchOperatorType.Contains },
+            [SEARCH_ADDRESS_PO_BOX] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ADDRESS_EXTENDED] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ADDRESS_STREET] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ADDRESS_LOCALITY] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ADDRESS_REGION] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ADDRESS_POSTAL_CODE] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ADDRESS_COUNTRY] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ORG_NAME] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ORG_TITLE] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ORG_DESCRIPTION] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_ORG_COST_CENTER] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Contains },
+            [SEARCH_PHONE] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_ORG_UNIT_PATH] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_IS_ENROLLED_IN_2_SV] = new SearchOperatorType[] { SearchOperatorType.Exact },
+            [SEARCH_IS_ENFORCED_IN_2_SV] = new SearchOperatorType[] { SearchOperatorType.Exact }
+        };
 
         /// <summary>
         /// The backing native data representing the User in Google Workspace.

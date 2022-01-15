@@ -23,7 +23,27 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         private static string SHA1_ALGORITHM_NAME = "SHA-1";
 
+        /// <summary>
+        /// The kind of object that groups are designated as in Google Workspace.
+        /// </summary>
+        private static string GROUP_KIND = "directory#groups";
+
         // ----- VARIABLES -----
+
+        /// <summary>
+        /// The type of search operators supported by Google Workspace.
+        /// </summary>
+        public enum SearchOperatorType
+        {
+            Exact,
+            Contains,
+            Starts,
+            Range,
+            Greater,
+            GreaterEqual,
+            Less,
+            LessEqual
+        }
 
         // ----- PROPERTIES -----
 
@@ -418,7 +438,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Gets IGroups that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
-        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
+        /// <param name="returnedAttributes">(Note: Currently ignored.) (Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of groups that match the attribute value supplied.</returns>
         public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
@@ -431,18 +451,176 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
         public List<string> GetGroupTypes()
         {
-            throw new NotImplementedException();
+            return new() { GROUP_KIND };
         }
 
         /// <summary>
         /// Gets IUsers that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
-        /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
+        /// <param name="returnedAttributes">(Note: Currently ignored.) (Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of users that match the attribute value supplied.</returns>
         public List<IUser> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
-            throw new NotImplementedException();
+            // Create a list of users to return.
+            List<IUser> users = new();
+
+            if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
+            {
+                try
+                {
+                    // Create a request to retrieve all the users and execute it.
+                    UsersResource.ListRequest request = Service.Users.List();
+                    request.Domain = Domain;
+                    // Construct the query based upon the attribute supplied and the search operators supported.
+                    string searchFieldName = "";
+                    switch (attribute.Name)
+                    {
+                        case User.ADDRESSES:
+                            searchFieldName = User.SEARCH_ADDRESS;
+                            break;
+                        case User.ADDRESSES_COUNTRY_CODE:
+                            searchFieldName = User.SEARCH_ADDRESS_COUNTRY;
+                            break;
+                        case User.ADDRESSES_LOCALITY:
+                            searchFieldName = User.SEARCH_ADDRESS_LOCALITY;
+                            break;
+                        case User.ADDRESSES_POSTAL_CODE:
+                            searchFieldName = User.SEARCH_ADDRESS_POSTAL_CODE;
+                            break;
+                        case User.ADDRESSES_REGION:
+                            searchFieldName = User.SEARCH_ADDRESS_REGION;
+                            break;
+                        case User.ALIASES:
+                            searchFieldName = User.SEARCH_EMAIL;
+                            break;
+                        case User.EMAILS:
+                            searchFieldName = User.SEARCH_EMAIL;
+                            break;
+                        case User.EXTERNAL_IDS:
+                            searchFieldName = User.SEARCH_EXTERNAL_ID;
+                            break;
+                        case User.IMS:
+                            searchFieldName = User.SEARCH_IM;
+                            break;
+                        case User.IS_ENFORCED_IN_2_SV:
+                            searchFieldName = User.SEARCH_IS_ENFORCED_IN_2_SV;
+                            break;
+                        case User.IS_ENROLLED_IN_2_SV:
+                            searchFieldName = User.SEARCH_IS_ENROLLED_IN_2_SV;
+                            break;
+                        case User.IS_ADMIN:
+                            searchFieldName = User.SEARCH_IS_ADMIN;
+                            break;
+                        case User.IS_DELEGATED_ADMIN:
+                            searchFieldName = User.SEARCH_IS_DELEGATED_ADMIN;
+                            break;
+                        case User.NAME:
+                            searchFieldName = User.SEARCH_NAME;
+                            break;
+                        case User.NAME_FAMILY_NAME:
+                            searchFieldName = User.SEARCH_FAMILY_NAME;
+                            break;
+                        case User.NAME_GIVEN_NAME:
+                            searchFieldName = User.SEARCH_GIVEN_NAME;
+                            break;
+                        case User.ORG_UNIT_PATH:
+                            searchFieldName = User.SEARCH_ORG_UNIT_PATH;
+                            break;
+                        case User.ORGANIZATIONS:
+                            searchFieldName = User.SEARCH_ORG_NAME;
+                            break;
+                        case User.ORGANIZATIONS_DEPARTMENT:
+                            searchFieldName = User.SEARCH_ORG_DEPARTMENT;
+                            break;
+                        case User.ORGANIZATIONS_TITLE:
+                            searchFieldName = User.SEARCH_ORG_TITLE;
+                            break;
+                        case User.PHONES:
+                            searchFieldName = User.SEARCH_PHONE;
+                            break;
+                        case User.PRIMARY_EMAIL:
+                            searchFieldName = User.SEARCH_EMAIL;
+                            break;
+                        case User.RECOVERY_EMAIL:
+                            searchFieldName = User.SEARCH_EMAIL;
+                            break;
+                        case User.RECOVERY_PHONE:
+                            searchFieldName = User.SEARCH_PHONE;
+                            break;
+                        case User.SUSPENDED:
+                            searchFieldName = User.SEARCH_IS_SUSPENDED;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    // Determine whether the attribute value requires quotes around it.
+                    bool quotesRequired = false;
+                    if (!attribute.Value.All(Char.IsLetterOrDigit))
+                    {
+                        // There is a non-letter or digit in the string.
+                        quotesRequired = true;
+                    }
+
+                    // Build the correct query string based on the available search options for each field.
+                    if (User.SearchOperatorsSupported[searchFieldName].Contains(SearchOperatorType.Starts))
+                    {
+                        if (quotesRequired)
+                        {
+                            request.Query = searchFieldName + ":'" + attribute.Value.Trim() + "*'";
+                        }
+                        else
+                        {
+                            request.Query = searchFieldName + ":" + attribute.Value.Trim() + "*";
+                        }
+                    }
+                    else if (User.SearchOperatorsSupported[searchFieldName].Contains(SearchOperatorType.Exact))
+                    {
+                        if (quotesRequired)
+                        {
+                            request.Query = searchFieldName + "='" + attribute.Value.Trim() + "'";
+                        }
+                        else
+                        {
+                            request.Query = searchFieldName + "=" + attribute.Value.Trim();
+                        }
+                    }
+                    else if (User.SearchOperatorsSupported[searchFieldName].Contains(SearchOperatorType.Contains))
+                    {
+                        if (quotesRequired)
+                        {
+                            request.Query = searchFieldName + ":'" + attribute.Value.Trim() + "'";
+                        }
+                        else
+                        {
+                            request.Query = searchFieldName + ":" + attribute.Value.Trim();
+                        }
+                    }
+
+                    // TODO: Allow for returning specified fields via returnedAttributes.
+                    // request.Fields = "";
+                    Users usersRequest = request.Execute();
+                    IList<GoogleUser> requestUsers = usersRequest.UsersValue;
+
+                    // Verify that users were returned by the request.
+                    if (requestUsers != null)
+                    {
+                        // Iterate over all the users and populate the return list.
+                        foreach (GoogleUser requestUser in requestUsers)
+                        {
+                            users.Add(new User(this, requestUser));
+                        }
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the users.
+                }
+            }
+
+            // Return the list of users.
+            return users;
         }
     }
 }
