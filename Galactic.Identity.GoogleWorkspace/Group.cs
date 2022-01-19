@@ -121,9 +121,9 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<IUser> AllUserMembers => UserMembers;
 
         /// <summary>
-        /// Timestamp when Group was created.
+        /// (Google: Not supported.) Timestamp when Group was created.
         /// </summary>
-        public DateTime? Created => throw new NotImplementedException();
+        public DateTime? Created => null;
 
         /// <summary>
         /// The date and time that the object was created.
@@ -181,12 +181,31 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The list of groups this object is a member of.
         /// </summary>
-        public List<IGroup> Groups => throw new NotImplementedException();
+        public List<IGroup> Groups => gws.GetMemberGroups(UniqueId);
 
         /// <summary>
         /// Groups that are a member of the group.
         /// </summary>
-        public List<IGroup> GroupMembers => throw new NotImplementedException();
+        public List<IGroup> GroupMembers
+        {
+            get
+            {
+                // Create a list of groups to return.
+                List<IGroup> groups = new();
+
+                // Add the group members to the list.
+                foreach (IIdentityObject member in Members)
+                {
+                    if (member is Group)
+                    {
+                        groups.Add((IGroup)member);
+                    }
+                }
+
+                // Return the list.
+                return groups;
+            }
+        }
 
         /// <summary>
         /// Unique key for Group.
@@ -195,24 +214,24 @@ namespace Galactic.Identity.GoogleWorkspace
         public string Id => group.Id;
 
         /// <summary>
-        /// Timestamp when Group's memberships were last updated.
+        /// (Google: Not supported.) Timestamp when Group's memberships were last updated.
         /// </summary>
-        public DateTime? LastMembershipUpdated => throw new NotImplementedException();
+        public DateTime? LastMembershipUpdated => null;
 
         /// <summary>
-        /// Timestamp when Group's profile was last updated.
+        /// (Google Not supported.) Timestamp when Group's profile was last updated.
         /// </summary>
-        public DateTime? LastUpdated => throw new NotImplementedException();
+        public DateTime? LastUpdated => null;
 
         /// <summary>
         /// The members of the group.
         /// </summary>
-        public List<IIdentityObject> Members => UserMembers.ConvertAll<IIdentityObject>(member => member);
+        public List<IIdentityObject> Members => gws.GetGroupMembership(UniqueId);
 
         /// <summary>
         /// The number of members in the group.
         /// </summary>
-        public int MemberCount => UserMembers.Count;
+        public int MemberCount => Members.Count;
 
         /// <summary>
         /// The name of the group.
@@ -240,7 +259,23 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public List<IUser> UserMembers
         {
-            get => throw new NotImplementedException();
+            get
+            {
+                // Create a list of users to return.
+                List<IUser> users = new();
+
+                // Add the user members to the list.
+                foreach (IIdentityObject member in Members)
+                {
+                    if (member is User)
+                    {
+                        users.Add((IUser)member);
+                    }
+                }
+
+                // Return the list.
+                return users;
+            }
         }
 
 

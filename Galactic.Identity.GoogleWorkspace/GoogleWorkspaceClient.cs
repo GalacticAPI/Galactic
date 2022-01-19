@@ -598,6 +598,51 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// Gets a list of groups that the member is a member of.
+        /// </summary>
+        /// <param name="memberKey">A unique ID, primary e-mail address or alias of a user or group that is a member of a group.</param>
+        /// <returns>A list of IGroups the member is a member of, or null if there was an error retrieving the list.</returns>
+        public List<IGroup> GetMemberGroups(string memberKey)
+        {
+            if (!string.IsNullOrWhiteSpace(memberKey))
+            {
+                // Create the list of groups to return.
+                List<IGroup> groups = new();
+
+                try
+                {
+
+                    // Create a request to retrieve the groups a member belongs to and execute it.
+                    GroupsResource.ListRequest request = Service.Groups.List();
+                    request.UserKey = memberKey;
+                    Groups groupsRequest = request.Execute();
+                    IList<GoogleGroup> requestGroups = groupsRequest.GroupsValue;
+
+                    // Verify that groups were returned by the request.
+                    if (requestGroups != null)
+                    {
+                        // Iterate over all the groups and populate the return list.
+                        foreach (GoogleGroup requestGroup in requestGroups)
+                        {
+                            groups.Add(new Group(this, requestGroup));
+                        }
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving members.
+                }
+
+                // Return the list of groups.
+                return groups;
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(memberKey));
+            }
+        }
+
+        /// <summary>
         /// Gets IUsers that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
