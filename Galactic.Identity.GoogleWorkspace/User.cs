@@ -292,9 +292,55 @@ namespace Galactic.Identity.GoogleWorkspace
         // Search fields.
 
         /// <summary>
-        /// The concatenated value of givenName and familyName.
+        /// Matches all address fields.
         /// </summary>
-        public const string SEARCH_NAME = "name";
+        public const string SEARCH_ADDRESS = "address";
+
+        /// <summary>
+        /// A country.
+        /// </summary>
+        public const string SEARCH_ADDRESS_COUNTRY = "addressCountry";
+
+        /// <summary>
+        /// An extended address, such as one including a sub-region.
+        /// </summary>
+        public const string SEARCH_ADDRESS_EXTENDED = "addressExtended";
+
+        /// <summary>
+        /// A town or city of the address.
+        /// </summary>
+        public const string SEARCH_ADDRESS_LOCALITY = "addressLocality";
+
+        /// <summary>
+        /// A post office box.
+        /// </summary>
+        public const string SEARCH_ADDRESS_PO_BOX = "addressPoBox";
+
+        /// <summary>
+        /// A ZIP or postal code.
+        /// </summary>
+        public const string SEARCH_ADDRESS_POSTAL_CODE = "addressPostalCode";
+
+        /// <summary>
+        /// An abbreviated province or state.
+        /// </summary>
+        public const string SEARCH_ADDRESS_REGION = "addressRegion";
+
+        /// <summary>
+        /// A street address.
+        /// </summary>
+        public const string SEARCH_ADDRESS_STREET = "addressStreet";
+
+        /// <summary>
+        /// The email address of a user's direct manager.
+        /// </summary>
+        public const string SEARCH_DIRECT_MANAGER = "directManager";
+
+        /// <summary>
+        /// The ID of a user's direct manager.
+        /// </summary>
+        public const string SEARCH_DIRECT_MANAGER_ID = "directManagerId";
+
 
         /// <summary>
         /// The user's e-mail addresses, including aliases.
@@ -302,14 +348,24 @@ namespace Galactic.Identity.GoogleWorkspace
         public const string SEARCH_EMAIL = "email";
 
         /// <summary>
-        /// A user's given or first name.
+        /// External ID value.
         /// </summary>
-        public const string SEARCH_GIVEN_NAME = "givenName";
+        public const string SEARCH_EXTERNAL_ID = "externalId";
 
         /// <summary>
         /// A user's family or last name.
         /// </summary>
         public const string SEARCH_FAMILY_NAME = "familyName";
+
+        /// <summary>
+        /// A user's given or first name.
+        /// </summary>
+        public const string SEARCH_GIVEN_NAME = "givenName";
+
+        /// <summary>
+        /// IM network ID.
+        /// </summary>
+        public const string SEARCH_IM = "im";
 
         /// <summary>
         /// Whether a user has super administrator privileges.
@@ -322,19 +378,19 @@ namespace Galactic.Identity.GoogleWorkspace
         public const string SEARCH_IS_DELEGATED_ADMIN = "isDelegatedAdmin";
 
         /// <summary>
+        /// Whether 2-step verification is enforced for the user.
+        /// </summary>
+        public const string SEARCH_IS_ENFORCED_IN_2_SV = "isEnforcedIn2Sv";
+
+        /// <summary>
+        /// Whether a user is enrolled in 2-step verification.
+        /// </summary>
+        public const string SEARCH_IS_ENROLLED_IN_2_SV = "isEnrolledIn2Sv";
+
+        /// <summary>
         /// Whether a user's account is suspended.
         /// </summary>
         public const string SEARCH_IS_SUSPENDED = "isSuspended";
-
-        /// <summary>
-        /// IM network ID.
-        /// </summary>
-        public const string SEARCH_IM = "im";
-
-        /// <summary>
-        /// External ID value.
-        /// </summary>
-        public const string SEARCH_EXTERNAL_ID = "externalId";
 
         /// <summary>
         /// The email address of a user's manager either directly or up the management chain.
@@ -347,64 +403,14 @@ namespace Galactic.Identity.GoogleWorkspace
         public const string SEARCH_MANAGER_ID = "managerId";
 
         /// <summary>
-        /// The email address of a user's direct manager.
+        /// The concatenated value of givenName and familyName.
         /// </summary>
-        public const string SEARCH_DIRECT_MANAGER = "directManager";
+        public const string SEARCH_NAME = "name";
 
         /// <summary>
-        /// The ID of a user's direct manager.
+        /// A cost center of an organization.
         /// </summary>
-        public const string SEARCH_DIRECT_MANAGER_ID = "directManagerId";
-
-        /// <summary>
-        /// Matches all address fields.
-        /// </summary>
-        public const string SEARCH_ADDRESS = "address";
-
-        /// <summary>
-        /// A post office box.
-        /// </summary>
-        public const string SEARCH_ADDRESS_PO_BOX = "addressPoBox";
-
-        /// <summary>
-        /// An extended address, such as one including a sub-region.
-        /// </summary>
-        public const string SEARCH_ADDRESS_EXTENDED = "addressExtended";
-
-        /// <summary>
-        /// A street address.
-        /// </summary>
-        public const string SEARCH_ADDRESS_STREET = "addressStreet";
-
-        /// <summary>
-        /// A town or city of the address.
-        /// </summary>
-        public const string SEARCH_ADDRESS_LOCALITY = "addressLocality";
-
-        /// <summary>
-        /// An abbreviated province or state.
-        /// </summary>
-        public const string SEARCH_ADDRESS_REGION = "addressRegion";
-
-        /// <summary>
-        /// A ZIP or postal code.
-        /// </summary>
-        public const string SEARCH_ADDRESS_POSTAL_CODE = "addressPostalCode";
-
-        /// <summary>
-        /// A country.
-        /// </summary>
-        public const string SEARCH_ADDRESS_COUNTRY = "addressCountry";
-
-        /// <summary>
-        /// An organization name.
-        /// </summary>
-        public const string SEARCH_ORG_NAME = "orgName";
-
-        /// <summary>
-        /// A user's title within the organization.
-        /// </summary>
-        public const string SEARCH_ORG_TITLE = "orgTitle";
+        public const string SEARCH_ORG_COST_CENTER = "orgCostCenter";
 
         /// <summary>
         /// A department within the organization.
@@ -417,14 +423,14 @@ namespace Galactic.Identity.GoogleWorkspace
         public const string SEARCH_ORG_DESCRIPTION = "orgDescription";
 
         /// <summary>
-        /// A cost center of an organization.
+        /// An organization name.
         /// </summary>
-        public const string SEARCH_ORG_COST_CENTER = "orgCostCenter";
+        public const string SEARCH_ORG_NAME = "orgName";
 
         /// <summary>
-        /// A user's phone number.
+        /// A user's title within the organization.
         /// </summary>
-        public const string SEARCH_PHONE = "phone";
+        public const string SEARCH_ORG_TITLE = "orgTitle";
 
         /// <summary>
         /// The full path of an org unit. This matches all org unit chains under the target. For example, 'orgUnitPath=/'
@@ -433,14 +439,9 @@ namespace Galactic.Identity.GoogleWorkspace
         public const string SEARCH_ORG_UNIT_PATH = "orgUnitPath";
 
         /// <summary>
-        /// Whether a user is enrolled in 2-step verification.
+        /// A user's phone number.
         /// </summary>
-        public const string SEARCH_IS_ENROLLED_IN_2_SV = "isEnrolledIn2Sv";
-
-        /// <summary>
-        /// Whether 2-step verification is enforced for the user.
-        /// </summary>
-        public const string SEARCH_IS_ENFORCED_IN_2_SV = "isEnforcedIn2Sv";
+        public const string SEARCH_PHONE = "phone";
 
 
         // ----- VARIABLES -----

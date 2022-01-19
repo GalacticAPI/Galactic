@@ -4,6 +4,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Admin.Directory.directory_v1;
 using Google.Apis.Admin.Directory.directory_v1.Data;
 using GoogleGroup = Google.Apis.Admin.Directory.directory_v1.Data.Group;
+using GoogleMember = Google.Apis.Admin.Directory.directory_v1.Data.Member;
 using GoogleUser = Google.Apis.Admin.Directory.directory_v1.Data.User;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
@@ -435,6 +436,56 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// Gets a list of identity objects that are a member of the supplied group.
+        /// </summary>
+        /// <param name="groupKey">The group's e-mail address or unique id.</param>
+        /// <returns>A list of IIdentityObjects representing each user and group that is a member of the group.</returns>
+        public List<IIdentityObject> GetGroupMembership(string groupKey)
+        {
+            if (!string.IsNullOrWhiteSpace(groupKey))
+            {
+                // Create a list of identity objects to return.
+                List<IIdentityObject> identityObjects = new();
+
+                try
+                {
+                    // Create a request to retrieve all the group members and execute it.
+                    MembersResource.ListRequest request = Service.Members.List(groupKey);
+                    Members membersRequest = request.Execute();
+                    IList<GoogleMember> requestMembers = membersRequest.MembersValue;
+
+                    // Verify that members were returned by the request.
+                    if (requestMembers != null)
+                    {
+                        // Convert the members.
+                        List<Member> members = Member.FromGoogleMembers(this, requestMembers);
+
+                        // Create the list of IIdentityObjects.
+                        foreach (Member member in members)
+                        {
+                            IIdentityObject obj = member.ToIIdentityObject();
+                            if (obj != null)
+                            {
+                                identityObjects.Add(obj);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the members.
+                }
+
+                // Return the list of identity objects.
+                return identityObjects;
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(groupKey));
+            }
+        }
+
+        /// <summary>
         /// Gets IGroups that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
@@ -442,7 +493,99 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>A list of groups that match the attribute value supplied.</returns>
         public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
-            throw new NotImplementedException();
+            // Create a list of groups to return.
+            List<IGroup> groups = new();
+
+            if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
+            {
+                try
+                {
+                    // Create a request to retrieve all the groups and execute it.
+                    GroupsResource.ListRequest request = Service.Groups.List();
+                    request.Domain = Domain;
+                    // Construct the query based upon the attribute supplied and the search operators supported.
+                    string searchFieldName = "";
+                    switch (attribute.Name)
+                    {
+                        case Group.ALIASES:
+                            searchFieldName = Group.SEARCH_EMAIL;
+                            break;
+                        case Group.EMAIL:
+                            searchFieldName = Group.SEARCH_EMAIL;
+                            break;
+                        case Group.NAME:
+                            searchFieldName = Group.SEARCH_NAME;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    // Determine whether the attribute value requires quotes around it.
+                    bool quotesRequired = false;
+                    if (attribute.Value.Where(Char.IsWhiteSpace).Count() > 0)
+                    {
+                        // There is whitespace in the string.
+                        quotesRequired = true;
+                    }
+
+                    // Build the correct query string based on the available search options for each field.
+                    if (Group.SearchOperatorsSupported[searchFieldName].Contains(SearchOperatorType.Starts))
+                    {
+                        if (quotesRequired)
+                        {
+                            request.Query = searchFieldName + ":'" + attribute.Value.Trim() + "*'";
+                        }
+                        else
+                        {
+                            request.Query = searchFieldName + ":" + attribute.Value.Trim() + "*";
+                        }
+                    }
+                    else if (Group.SearchOperatorsSupported[searchFieldName].Contains(SearchOperatorType.Exact))
+                    {
+                        if (quotesRequired)
+                        {
+                            request.Query = searchFieldName + "='" + attribute.Value.Trim() + "'";
+                        }
+                        else
+                        {
+                            request.Query = searchFieldName + "=" + attribute.Value.Trim();
+                        }
+                    }
+                    else if (Group.SearchOperatorsSupported[searchFieldName].Contains(SearchOperatorType.Contains))
+                    {
+                        if (quotesRequired)
+                        {
+                            request.Query = searchFieldName + ":'" + attribute.Value.Trim() + "'";
+                        }
+                        else
+                        {
+                            request.Query = searchFieldName + ":" + attribute.Value.Trim();
+                        }
+                    }
+
+                    // TODO: Allow for returning specified fields via returnedAttributes.
+                    // request.Fields = "";
+                    Groups groupsRequest = request.Execute();
+                    IList<GoogleGroup> requestGroups = groupsRequest.GroupsValue;
+
+                    // Verify that groups were returned by the request.
+                    if (requestGroups != null)
+                    {
+                        // Iterate over all the groups and populate the return list.
+                        foreach (GoogleGroup requestGroup in requestGroups)
+                        {
+                            groups.Add(new Group(this, requestGroup));
+                        }
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the groups.
+                }
+            }
+
+            // Return the list of groups.
+            return groups;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using GoogleGroup = Google.Apis.Admin.Directory.directory_v1.Data.Group;
+﻿using SearchOperatorType = Galactic.Identity.GoogleWorkspace.GoogleWorkspaceClient.SearchOperatorType;
+using GoogleGroup = Google.Apis.Admin.Directory.directory_v1.Data.Group;
 using GoogleUser = Google.Apis.Admin.Directory.directory_v1.Data.User;
 using System;
 using System.Collections;
@@ -62,6 +63,24 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public const string NON_EDITABLE_ALIASES = "nonEditableAliases";
 
+        // Search fields.
+
+        /// <summary>
+        /// The group's email address. (Note: Does not include aliases.)
+        /// </summary>
+        public const string SEARCH_EMAIL = "email";
+
+        /// <summary>
+        /// The group's display name.
+        /// </summary>
+        public const string SEARCH_NAME = "name";
+
+        /// <summary>
+        /// Returns all groups for which a user or group has a membership.
+        /// This value can be any of the user's primary or alias email address,
+        /// a group's primary or alias email address, or a user's unique ID.
+        /// </summary>
+        public const string SEARCH_MEMBER_KEY = "memberKey";
 
         // ----- VARIABLES -----
 
@@ -75,7 +94,26 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         protected GoogleGroup group = null;
 
+        /// <summary>
+        /// The type of search operators supported by each searh field.
+        /// </summary>
+        public static Dictionary<string, SearchOperatorType[]> SearchOperatorsSupported = new()
+        {
+            [SEARCH_NAME] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Starts },
+            [SEARCH_EMAIL] = new SearchOperatorType[] { SearchOperatorType.Exact, SearchOperatorType.Starts },
+            [SEARCH_MEMBER_KEY] = new SearchOperatorType[] { SearchOperatorType.Exact }
+        };
+
         // ----- PROPERTIES -----
+
+        /// <summary>
+        /// A list of the group's aliases.
+        /// </summary>
+        [GoogleWorkspacePropertyName(ALIASES)]
+        public List<string> Aliases
+        {
+            get => new(group.Aliases);
+        }
 
         /// <summary>
         /// All users that are a member of this group or a subgroup.
@@ -100,6 +138,44 @@ namespace Galactic.Identity.GoogleWorkspace
         {
             get => group.Description;
             set => throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// The group's email address.
+        /// </summary>
+        [GoogleWorkspacePropertyName(EMAIL)]
+        public string Email
+        {
+            get => group.Email;
+            set => throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// A list of the group's email addresses.
+        /// The group's e-mail address will always be first in the list followed by aliases.
+        /// </summary>
+        public List<string> Emails
+        {
+            get
+            {
+                // Create a new list of e-mail addresses to return.
+                List<string> emails = new();
+
+                // Add the group's e-mail address.
+                emails.Add(group.Email);
+
+                // Add any other aliases the group is known by.
+                if (group.Aliases != null)
+                {
+                    foreach (string alias in group.Aliases)
+                    {
+                        emails.Add(alias);
+                    }
+                }
+
+                // Return the list of e-mail addresses.
+                return emails;
+            }
         }
 
         /// <summary>
