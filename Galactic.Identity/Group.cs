@@ -1,44 +1,50 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Galactic.Identity
 {
     /// <summary>
-    /// Group is an interface that defines functionality that all group classes
+    /// Group is an abstract class that defines base functionality that all group classes
     /// implemented by the Galactic API should support.
     /// </summary>
-    public interface IGroup : IIdentityObject, IDescriptionSupportedObject, IEnumerable<IIdentityObject>
+    public abstract class Group : IdentityObject, IDescriptionSupportedObject, IEnumerable<IdentityObject>
     {
-        // ----- STATIC CONSTANTS -----
+        // ----- CONSTANTS -----
 
-        // ----- STATIC VARIABLES -----
+        // ----- VARIABLES -----
 
         // ----- PROPERTIES -----
 
         /// <summary>
         /// All users that are a member of this group or a subgroup.
         /// </summary>
-        public List<IUser> AllUserMembers { get; }
+        public abstract List<User> AllUserMembers { get; }
+
+        /// <summary>
+        /// A description of the object.
+        /// </summary>
+        public abstract string Description { get; set; }
 
         /// <summary>
         /// Groups that are a member of the group.
         /// </summary>
-        public List<IGroup> GroupMembers { get; }
+        public abstract List<Group> GroupMembers { get; }
 
         /// <summary>
         /// The members of the group.
         /// </summary>
-        public List<IIdentityObject> Members { get; }
+        public abstract List<IdentityObject> Members { get; }
 
         /// <summary>
         /// The number of members in the group.
         /// </summary>
-        public int MemberCount { get; }
+        public virtual int MemberCount => Members.Count;
 
         /// <summary>
         /// Users that are a member of the group. (Not including subgroups.)
         /// </summary>
-        public List<IUser> UserMembers { get; }
+        public abstract List<User> UserMembers { get; }
 
         // ----- STATIC CONSTRUCTORS -----
 
@@ -49,31 +55,37 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="members">The members to add.</param>
         /// <returns>True if the members were added, false otherwise.</returns>
-        public bool AddMembers(List<IIdentityObject> members);
+        public abstract bool AddMembers(List<IdentityObject> members);
 
         /// <summary>
         /// Clears all members from this group.
         /// </summary>
         /// <returns>True if all members were cleared, false otherwise.</returns>
-        public bool ClearMembership();
+        public virtual bool ClearMembership() => RemoveMembers(Members);
 
         /// <summary>
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
-        new public IEnumerator<IIdentityObject> GetEnumerator()
+        public virtual IEnumerator<IdentityObject> GetEnumerator()
         {
-            foreach (IIdentityObject member in Members)
+            foreach (IdentityObject member in Members)
             {
                 yield return member;
             }
         }
 
         /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <summary>
         /// Removes identity objects from the group.
         /// </summary>
         /// <param name="members">The objects to remove.</param>
         /// <returns>True if the objects were removed, false otherwise.</returns>
-        public bool RemoveMembers(List<IIdentityObject> members);
+        public abstract bool RemoveMembers(List<IdentityObject> members);
     }
 }

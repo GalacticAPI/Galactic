@@ -1,14 +1,9 @@
-﻿using System;
-using System.Linq;
-using Microsoft.Graph;
-using System.Collections.Generic;
+﻿
 using GraphUser = Microsoft.Graph.User;
-using GraphGroup = Microsoft.Graph.Group;
-using System.Reflection;
 
 namespace Galactic.Identity.AzureActiveDirectory
 {
-	public class User : IComparable<User>, IEqualityComparer<User>, IUser
+	public class User : Identity.User
 	{
         // ----- CONSTANTS -----
 
@@ -31,8 +26,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's city.
         /// </summary>
-        [GraphPropertyName("city")]
-        public string City
+        [DirectorySystemPropertyName("city")]
+        public override string City
         {
             get
             {
@@ -52,8 +47,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's country code as defined in ISO 3166-1 alpha-2.
         /// </summary>
-        [GraphPropertyName("country")]
-        public string CountryCode
+        [DirectorySystemPropertyName("country")]
+        public override string CountryCode
         {
             get
             {
@@ -73,8 +68,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's department.
         /// </summary>
-        [GraphPropertyName("department")]
-        public string Department
+        [DirectorySystemPropertyName("department")]
+        public override string Department
         {
             get
             {
@@ -94,8 +89,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's display name.
         /// </summary>
-        [GraphPropertyName("displayName")]
-        public string DisplayName
+        [DirectorySystemPropertyName("displayName")]
+        public override string DisplayName
         {
             get
             {
@@ -115,8 +110,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// An organization assigned identifier for the user.
         /// </summary>
-        [GraphPropertyName("employeeId")]
-        public string EmployeeNumber
+        [DirectorySystemPropertyName("employeeId")]
+        public override string EmployeeNumber
         {
             get
             {
@@ -136,8 +131,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's first name.
         /// </summary>
-        [GraphPropertyName("givenName")]
-        public string FirstName
+        [DirectorySystemPropertyName("givenName")]
+        public override string FirstName
         {
             get
             {
@@ -157,8 +152,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// Whether the user is disabled or suspended in the system.
         /// </summary>
-        [GraphPropertyName("accountEnabled")]
-        public bool IsDisabled
+        [DirectorySystemPropertyName("accountEnabled")]
+        public override bool IsDisabled
         {
             get
             {
@@ -169,8 +164,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's last name.
         /// </summary>
-        [GraphPropertyName("surname")]
-        public string LastName
+        [DirectorySystemPropertyName("surname")]
+        public override string LastName
         {
             get
             {
@@ -190,8 +185,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The login name for the user in the system.
         /// </summary>
-        [GraphPropertyName("userPrincipalName")]
-        public string Login
+        [DirectorySystemPropertyName("userPrincipalName")]
+        public override string Login
         {
             get
             {
@@ -211,7 +206,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The unique ID of the user's manager in the system.
         /// </summary>
-        public string ManagerId
+        public override string ManagerId
         {
             get
             {
@@ -228,7 +223,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The full name of the user's manager.
         /// </summary>
-        public string ManagerName
+        public override string ManagerName
         {
             get
             {
@@ -241,7 +236,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's middle name.
         /// </summary>
-        public string MiddleName
+        public override string MiddleName
         {
             get
             {
@@ -257,8 +252,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's mobile phone number.
         /// </summary>
-        [GraphPropertyName("mobilePhone")]
-        public string MobilePhone
+        [DirectorySystemPropertyName("mobilePhone")]
+        public override string MobilePhone
         {
             get
             {
@@ -278,8 +273,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The name of the organization the user belong's to.
         /// </summary>
-        [GraphPropertyName("companyName")]
-        public string Organization
+        [DirectorySystemPropertyName("companyName")]
+        public override string Organization
         {
             get
             {
@@ -299,7 +294,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// Whether the user has to change their password at their next login.
         /// </summary>
-        public bool PasswordChangeRequiredAtNextLogin
+        public override bool PasswordChangeRequiredAtNextLogin
         {
             get
             {
@@ -312,7 +307,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// Whether the user's password has expired.
         /// </summary>
-        public bool PasswordExpired
+        public override bool PasswordExpired
         {
             get
             {
@@ -324,8 +319,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The date and time that the user's password was last set.
         /// </summary>
-        [GraphPropertyName("lastPasswordChangeDateTime")]
-        public DateTime? PasswordLastSet
+        [DirectorySystemPropertyName("lastPasswordChangeDateTime")]
+        public override DateTime? PasswordLastSet
         {
             get
             {
@@ -336,8 +331,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's physical address.
         /// </summary>
-        [GraphPropertyName("officeLocation")]
-        public string PhyscialAddress
+        [DirectorySystemPropertyName("officeLocation")]
+        public override string PhyscialAddress
         {
             get
             {
@@ -357,8 +352,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's postal (mailing) address.
         /// </summary>
-        [GraphPropertyName("streetAddress")]
-        public string PostalAddress
+        [DirectorySystemPropertyName("streetAddress")]
+        public override string PostalAddress
         {
             get
             {
@@ -378,8 +373,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The postal code of the user. (ZIP code in the US.)
         /// </summary>
-        [GraphPropertyName("postalCode")]
-        public string PostalCode
+        [DirectorySystemPropertyName("postalCode")]
+        public override string PostalCode
         {
             get
             {
@@ -399,8 +394,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's primary phone number.
         /// </summary>
-        [GraphPropertyName("businessPhones")]
-        public string PrimaryPhone
+        [DirectorySystemPropertyName("businessPhones")]
+        public override string PrimaryPhone
         {
             get
             {
@@ -415,8 +410,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's state.
         /// </summary>
-        [GraphPropertyName("state")]
-        public string State
+        [DirectorySystemPropertyName("state")]
+        public override string State
         {
             get
             {
@@ -436,8 +431,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The user's title.
         /// </summary>
-        [GraphPropertyName("jobTitle")]
-        public string Title
+        [DirectorySystemPropertyName("jobTitle")]
+        public override string Title
         {
             get
             {
@@ -457,8 +452,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
-        [GraphPropertyName("createdDateTime")]
-        public DateTime? CreationTime
+        [DirectorySystemPropertyName("createdDateTime")]
+        public override DateTime? CreationTime
         {
             get
             {
@@ -469,7 +464,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The list of groups this object is a member of.
         /// </summary>
-        public List<IGroup> Groups
+        public override List<Identity.Group> Groups
         {
             get
             {
@@ -480,8 +475,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The type or category of the object. Empty if unknown.
         /// </summary>
-        [GraphPropertyName("city")]
-        public string Type
+        [DirectorySystemPropertyName("city")]
+        public override string Type
         {
             get
             {
@@ -492,8 +487,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The object's unique ID in the system.
         /// </summary>
-        [GraphPropertyName("id")]
-        public string UniqueId
+        [DirectorySystemPropertyName("id")]
+        public override string UniqueId
         {
             get
             {
@@ -505,8 +500,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// A list of the object's e-mail addresses.
         /// The object's primary e-mail address will always be first in the list.
         /// </summary>
-        [GraphPropertyName("proxyAddresses")]
-        public List<string> EmailAddresses
+        [DirectorySystemPropertyName("proxyAddresses")]
+        public override List<string> EmailAddresses
         {
             get
             {
@@ -521,8 +516,8 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <summary>
         /// The object's primary e-mail address.
         /// </summary>
-        [GraphPropertyName("mail")]
-        public string PrimaryEmailAddress
+        [DirectorySystemPropertyName("mail")]
+        public override string PrimaryEmailAddress
         {
             get
             {
@@ -578,7 +573,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// Disables the user's account if it is enabled.
         /// </summary>
         /// <returns>True if the account is disabled successfully or was not enabled. False if the account could not be disabled.</returns>
-        public bool Disable()
+        public override bool Disable()
         {
             if(!IsDisabled)
             {
@@ -600,7 +595,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// Enables the user's account if it is disabled.
         /// </summary>
         /// <returns>True if the account is enabled successfully or was not disabled. False if the account could not be enabled.</returns>
-        public bool Enable()
+        public override bool Enable()
         {
             if(IsDisabled)
             {
@@ -623,7 +618,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// </summary>
         /// <param name="password">The new password to use for the user.</param>
         /// <returns>True if the password was set, false otherwise.</returns>
-        public bool SetPassword(string password)
+        public override bool SetPassword(string password)
         {
             GraphUser user = new()
             {
@@ -641,7 +636,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// Unlocks the user's account if it is locked.
         /// </summary>
         /// <returns>True if the account is unlocked successfully or was not locked. False if the account could not be unlocked.</returns>
-        public bool Unlock()
+        public override bool Unlock()
         {
             return Enable();
         }
@@ -669,51 +664,14 @@ namespace Galactic.Identity.AzureActiveDirectory
         }
 
         /// <summary>
-        /// Gets the values of the attributes associated with the supplied names.
-        /// </summary>
-        /// <param name="names">The names of the attributes to get the values of.</param>
-        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
-        public List<IdentityAttribute<Object>> GetAttributes(List<string> names)
-        {
-            // Create a list of IdentityAttributes to return.
-            List<IdentityAttribute<object>> attributes = new();
-
-            if (names != null)
-            {
-                // Create a dictionary of properties in this class keyed by name.
-                PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
-                Dictionary<string, PropertyInfo> properties = new();
-                foreach (PropertyInfo propertyInfo in propertyInfoList)
-                {
-                    foreach (GraphPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<GraphPropertyNameAttribute>())
-                    {
-                        properties.Add(attribute.Name, propertyInfo);
-                    }
-                }
-
-                // Fill the list of IdentityAttributes with the name and value of the attribute with the supplied name.
-                foreach (string name in names)
-                {
-                    if (properties.ContainsKey(name))
-                    {
-                        attributes.Add(new(name, properties[name].GetValue(this)));
-                    }
-                }
-            }
-
-            // Return the attributes found.
-            return attributes;
-        }
-
-        /// <summary>
         /// Checks if the identity object is a member of the supplied group.
         /// </summary>
         /// <param name="group">The group to check.</param>
         /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
         /// <returns>True if the object is a member, false otherwise.</returns>
-        public bool MemberOfGroup(IGroup group, bool recursive)
+        public override bool MemberOfGroup(Identity.Group group, bool recursive)
         {
-            if (group != null)
+            if (group != null && group is Group)
             {
                 IList<string> results = aad.CheckGroupMembership(UniqueId, new List<string> { group.UniqueId });
 
@@ -737,9 +695,9 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// </summary>
         /// <param name="guid">The GUID of the group to add the principal to.</param>
         /// <returns>True if the principal was removed, false otherwise.</returns>
-        public bool RemoveFromGroup(Group group)
+        public override bool RemoveFromGroup(Identity.Group group)
         {
-            if (group != null)
+            if (group != null && group is Group)
             {
                 return aad.DeleteObjectFromGroup(UniqueId, group.UniqueId);
             }
@@ -751,7 +709,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// </summary>
         /// <param name="attributes">The attribute to set.</param>
         /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
-        public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes)
+        public override List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes)
         {
             List<IdentityAttribute<bool>> results = new List<IdentityAttribute<bool>>();
 
@@ -761,93 +719,6 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
 
             return results;
-        }
-
-        /// <summary>
-        /// Compares this identity object to another identity object.
-        /// </summary>
-        /// <param name="other">The other identity object to compare this one to.</param>
-        /// <returns>1 iif the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
-        public int CompareTo(IIdentityObject other)
-        {
-            return ((IIdentityObject)this).CompareTo(other);
-        }
-
-        /// <summary>
-        /// Compares this User to another User.
-        /// </summary>
-        /// <param name="other">The other User to compare this one to.</param>
-        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
-        public int CompareTo(User other)
-        {
-            if (other != null)
-            {
-                return string.Compare(UniqueId.ToString(), other.UniqueId.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                throw new ArgumentNullException("other");
-            }
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (have the same UniqueIds).
-        /// </summary>
-        /// <param name="x">The first identity object to check.</param>
-        /// <param name="y">The second identity object to check.</param>
-        /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public bool Equals(IIdentityObject x, IIdentityObject y)
-        {
-            return ((IIdentityObject)this).Equals(x, y);
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (using GUIDs).
-        /// </summary>
-        /// <param name="x">The first User to check.</param>
-        /// <param name="y">The second User to check against.</param>
-        /// <returns>True if the objects are equal, false otherwise.</returns>
-        public bool Equals(User x, User y)
-        {
-            if (x != null && y != null)
-            {
-                return x.UniqueId.Equals(y.UniqueId);
-            }
-            else
-            {
-                if (x == null)
-                {
-                    throw new ArgumentNullException("x");
-                }
-                else
-                {
-                    throw new ArgumentNullException("y");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Generates a hash code for the identity object supplied.
-        /// </summary>
-        /// <param name="obj">The identity object to generate a hash code for.</param>
-        /// <returns>An integer hash code for the identity object.</returns>
-        public int GetHashCode(IIdentityObject obj) => IIdentityObject.GetHashCode(obj);
-
-        /// <summary>
-        /// Generates a hash code for the User supplied.
-        /// </summary>
-        /// <param name="obj">The User to generate a hash code for.</param>
-        /// <returns>An integer hash code for the object.</returns>
-        public int GetHashCode(User obj)
-        {
-            if (obj != null)
-            {
-                return obj.UniqueId.GetHashCode();
-            }
-            else
-            {
-                throw new ArgumentNullException("obj");
-            }
         }
     }
 

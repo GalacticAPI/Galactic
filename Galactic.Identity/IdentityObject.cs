@@ -1,42 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Galactic.Identity
 {
     /// <summary>
-    /// IIdentityObject is an interface that defines functionality that all identity
+    /// IdentityObject is an abstract class that defines base functionality that all identity
     /// object classes (Users, Groups, etc.) implemented by the Galactic API should
     /// support.
     /// </summary>
-    public interface IIdentityObject : IComparable<IIdentityObject>, IEqualityComparer<IIdentityObject>
+    public abstract class IdentityObject : IComparable<IdentityObject>, IEqualityComparer<IdentityObject>
     {
-        // ----- STATIC CONSTANTS -----
+        // ----- CONSTANTS -----
 
-        // ----- STATIC FIELDS -----
+        // ----- FIELDS -----
 
         // ----- PROPERTIES -----
 
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
-        public DateTime? CreationTime { get; }
+        public abstract DateTime? CreationTime { get; }
 
         /// <summary>
         /// The list of groups this object is a member of.
         /// </summary>
-        public List<IGroup> Groups { get; }
+        public abstract List<Group> Groups { get; }
 
         /// <summary>
         /// The type or category of the object. Empty if unknown.
         /// </summary>
-        public string Type { get; }
+        public abstract string Type { get; }
 
         /// <summary>
         /// The object's unique ID in the system.
         /// </summary>
-        public string UniqueId { get; }
+        public abstract string UniqueId { get; }
 
-        // ----- STATIC CONSTRUCTORS -----
+        // ----- CONSTRUCTORS -----
 
         // ----- METHODS -----
 
@@ -45,7 +46,7 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="group">The group to add the object to.</param>
         /// <returns>Thrus if the object was added, false otherwise.</returns>
-        public bool AddToGroup(IGroup group)
+        public virtual bool AddToGroup(Group group)
         {
             if (group != null)
             {
@@ -59,7 +60,7 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="other">The other identity object to compare this one to.</param>
         /// <returns>1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
-        public new virtual int CompareTo(IIdentityObject other)
+        public virtual int CompareTo(IdentityObject other)
         {
             if (other != null)
             {
@@ -79,7 +80,7 @@ namespace Galactic.Identity
         /// <param name="attributeName">The name of the attribute in this object to use when comparing.</param>
         /// <param name="otherAttributeName">The nameof the attribute in the other object to use when comparing.</param>
         /// <returns>1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
-        public virtual int CompareTo<T>(IIdentityObject other, string attributeName, string otherAttributeName) where T : IComparable<T>
+        public virtual int CompareTo<T>(IdentityObject other, string attributeName, string otherAttributeName) where T : IComparable<T>
         {
             // Verify that all parameters were supplied.
             if (other != null && !string.IsNullOrWhiteSpace(attributeName) && !string.IsNullOrWhiteSpace(otherAttributeName))
@@ -120,7 +121,7 @@ namespace Galactic.Identity
         /// <param name="x">The first identity object to check.</param>
         /// <param name="y">The second identity object to check.</param>
         /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public new virtual bool Equals(IIdentityObject x, IIdentityObject y)
+        public virtual bool Equals(IdentityObject x, IdentityObject y)
         {
             if (x != null && y != null)
             {
@@ -148,7 +149,7 @@ namespace Galactic.Identity
         /// <param name="y">The second identity object to check.</param>
         /// <param name="yAttributeName">The name of the attribute in y object to use when comparing.</param>
         /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public virtual bool Equals<T>(IIdentityObject x, string xAttributeName, IIdentityObject y, string yAttributeName)
+        public virtual bool Equals<T>(IdentityObject x, string xAttributeName, IdentityObject y, string yAttributeName)
         {
             if (x != null & y != null & !string.IsNullOrWhiteSpace(xAttributeName) && !string.IsNullOrWhiteSpace(yAttributeName))
             {
@@ -167,7 +168,7 @@ namespace Galactic.Identity
                 {
                     // One or more of the attribute names supplied did not exist in the attribute list of the object.
                     return false;
-                }    
+                }
             }
             else
             {
@@ -195,14 +196,44 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="names">The names of the attributes to get the values of.</param>
         /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
-        public List<IdentityAttribute<Object>> GetAttributes(List<string> names);
+        public virtual List<IdentityAttribute<Object>> GetAttributes(List<string> names)
+        {
+            // Create a list of IdentityAttributes to return.
+            List<IdentityAttribute<object>> attributes = new();
+
+            if (names != null)
+            {
+                // Create a dictionary of properties in this class keyed by name.
+                PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
+                Dictionary<string, PropertyInfo> properties = new();
+                foreach (PropertyInfo propertyInfo in propertyInfoList)
+                {
+                    foreach (DirectorySystemPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<DirectorySystemPropertyNameAttribute>())
+                    {
+                        properties.Add(attribute.Name, propertyInfo);
+                    }
+                }
+
+                // Fill the list of IdentityAttributes with the name and value of the attribute with the supplied name.
+                foreach (string name in names)
+                {
+                    if (properties.ContainsKey(name))
+                    {
+                        attributes.Add(new(name, properties[name].GetValue(this)));
+                    }
+                }
+            }
+
+            // Return the attributes found.
+            return attributes;
+        }
 
         /// <summary>
         /// Generates a hash code for the identity object supplied.
         /// </summary>
         /// <param name="obj">The identity object to generate a hash code for.</param>
         /// <returns>An integer hash code for the identity object.</returns>
-        static new public int GetHashCode(IIdentityObject obj)
+        public virtual int GetHashCode(IdentityObject obj)
         {
             if (obj != null)
             {
@@ -220,12 +251,12 @@ namespace Galactic.Identity
         /// <param name="group">The group to check.</param>
         /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
         /// <returns>True if the object is a member, false otherwise.</returns>
-        public bool MemberOfGroup(IGroup group, bool recursive)
+        public virtual bool MemberOfGroup(Group group, bool recursive)
         {
             if (group != null)
             {
                 // Search all the groups which this object is a member.
-                foreach (IGroup memberGroup in Groups)
+                foreach (Group memberGroup in Groups)
                 {
                     if (group.UniqueId == memberGroup.UniqueId)
                     {
@@ -247,7 +278,7 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="group">The group to remove the object from.</param>
         /// <returns>True if the object was removed, false otherwise.</returns>
-        public bool RemoveFromGroup(IGroup group)
+        public virtual bool RemoveFromGroup(Group group)
         {
             if (group != null)
             {
@@ -261,6 +292,48 @@ namespace Galactic.Identity
         /// </summary>
         /// <param name="attributes">The attribute to set.</param>
         /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
-        public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes);
+        public virtual List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<Object>> attributes)
+        {
+            // Create a list of IdentityAttributes to return with success or failure.
+            List<IdentityAttribute<bool>> attributeResults = new();
+
+            if (attributes != null)
+            {
+                // Create a dictionary of properties in this class keyed by name.
+                PropertyInfo[] propertyInfoList = GetType().GetProperties();
+                Dictionary<string, PropertyInfo> properties = new();
+                foreach (PropertyInfo propertyInfo in propertyInfoList)
+                {
+                    foreach (DirectorySystemPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<DirectorySystemPropertyNameAttribute>())
+                    {
+                        properties.Add(attribute.Name, propertyInfo);
+                    }
+                }
+
+                // Iterate over all the attributes supplied, setting their values and marking success or failure in the attribute list to return.
+                foreach (IdentityAttribute<object> attribute in attributes)
+                {
+                    // Check if the attribute supplied matches a property of the object.
+                    if (properties.ContainsKey(attribute.Name))
+                    {
+                        // Set the property with the attribute value supplied.
+                        try
+                        {
+                            properties[attribute.Name].SetValue(this, attribute.Value);
+                            attributeResults.Add(new(attribute.Name, true));
+                        }
+                        catch
+                        {
+                            // There was an error setting the attribute's value.
+                            attributeResults.Add(new(attribute.Name, false));
+
+                        }
+                    }
+                }
+            }
+
+            // Return the success / failure results of settings the attributes.
+            return attributeResults;
+        }
     }
 }

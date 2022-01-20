@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.Graph;
 using Azure.Identity;
 using System.Security.Cryptography.X509Certificates;
@@ -9,7 +8,7 @@ using GraphDirectoryObject = Microsoft.Graph.DirectoryObject;
 
 namespace Galactic.Identity.AzureActiveDirectory
 {
-	public class AzureActiveDirectoryClient : IDirectorySystem
+	public class AzureActiveDirectoryClient : DirectorySystemClient
 	{
 		// ----- CONSTANTS -----
 
@@ -135,7 +134,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
 		/// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user.</param>
 		/// <returns>The newly created user object, or null if it could not be created.</returns>
-		public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
+		public override User CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
         {
 			try
 			{
@@ -197,7 +196,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// </summary>
 		/// <param name="uniqueId">The unique id of the user to delete.</param>
 		/// <returns>True if the user was deleted, false otherwise.</returns>
-		public bool DeleteUser(string uniqueId)
+		public override bool DeleteUser(string uniqueId)
 		{
             try
             {
@@ -278,10 +277,10 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// Get's all users in the directory system.
 		/// </summary>
 		/// <returns>A list of all users in the directory system.</returns>
-		public List<IUser> GetAllUsers()
+		public override List<Identity.User> GetAllUsers()
 		{
 			List<GraphUser> graphUsers = GetAllGraphUsers();
-			List<IUser> users = new();
+			List<Identity.User> users = new();
 
 			if(graphUsers != null)
             {
@@ -332,7 +331,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <param name="attribute">The attribute with name and value to search against.</param>
 		/// <param name="returnedAttributes">(Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
 		/// <returns>A list of users that match the attribute value supplied.</returns>
-		public List<IUser> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
+		public override List<Identity.User> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
 		{
 			if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
 			{
@@ -350,13 +349,13 @@ namespace Galactic.Identity.AzureActiveDirectory
 				List<GraphUser> searchResults = GetGraphUsersByAttribute(attribute.Name, attribute.Value, attributeNames);
 
 				// Filter the list of entries returned so that only Users are returned.
-				List<IUser> users = new();
+				List<Identity.User> users = new();
 				if (searchResults != null)
 				{
 					foreach (GraphUser graphUser in searchResults)
 					{
 						User user = new(this, graphUser);
-						users.Add((User)user);
+						users.Add(user);
 					}
 				}
 
@@ -440,7 +439,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <param name="id">ID of the user to get.</param>
 		/// <param name="returnedAttributes"><Optional: List of attributes to get. If not specified, a default set will be used./param>
 		/// <returns>User object associated with supplied ID.</returns>
-		public IUser GetUser(string id, List<IdentityAttribute<Object>> returnedAttributes = null)
+		public Identity.User GetUser(string id, List<IdentityAttribute<Object>> returnedAttributes = null)
 		{
 			if (!string.IsNullOrWhiteSpace(id))
 			{
@@ -566,7 +565,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the group. Defaults to the standard group create location for the system if not supplied or invalid.</param>
 		/// <param name="additionalAttributes">(Optional) Additional attributes to set when creating the group.</param>
 		/// <returns>The newly created group object, or null if it could not be created.</returns>
-		public IGroup CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
+		public override Group CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
 		{
             try
             {
@@ -635,7 +634,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// </summary>
 		/// <param name="uniqueId">The unique id of the group to delete.</param>
 		/// <returns>True if the group was deleted, false otherwise.</returns>
-		public bool DeleteGroup(string uniqueId)
+		public override bool DeleteGroup(string uniqueId)
         {
             try
             {
@@ -663,7 +662,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// Gets a list of the types of groups supported by the directory system.
 		/// </summary>
 		/// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
-		public List<string> GetGroupTypes()
+		public override List<string> GetGroupTypes()
         {
 			return new List<string>();
         }
@@ -725,10 +724,10 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// Get's all groups in the directory system.
 		/// </summary>
 		/// <returns>A list of all groups in the directory system.</returns>
-		public List<IGroup> GetAllGroups()
+		public override List<Identity.Group> GetAllGroups()
 		{
 			List<GraphGroup> graphGroups = GetAllGraphGroups();
-			List<IGroup> groups = new();
+			List<Identity.Group> groups = new();
 
 			if (graphGroups != null)
 			{
@@ -766,7 +765,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 
 				return groups;
 			}
-			catch (AggregateException e)
+			catch (AggregateException)
 			{
 				// An error occurred.
 				return null;
@@ -779,7 +778,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <param name="attribute">The attribute with name and value to search against.</param>
 		/// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
 		/// <returns>A list of groups that match the attribute value supplied.</returns>
-		public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
+		public override List<Identity.Group> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
         {
 			if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
 			{
@@ -797,13 +796,13 @@ namespace Galactic.Identity.AzureActiveDirectory
 				List<GraphGroup> searchResults = GetGraphGroupsByAttribute(attribute.Name, attribute.Value, attributeNames);
 
 				// Filter the list of entries returned so that only Users are returned.
-				List<IGroup> groups = new();
+				List<Identity.Group> groups = new();
 				if (searchResults != null)
 				{
 					foreach (GraphGroup graphGroup in searchResults)
 					{
 						Group group = new(this, graphGroup);
-						groups.Add((Group)group);
+						groups.Add(group);
 					}
 				}
 
@@ -888,7 +887,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <param name="id">Id of the object.</param>
 		/// <param name="recursive">If true, performs a transitive search of membership.</param>
 		/// <returns>List of Group objects that this object is a member of.</returns>
-		public List<IGroup> GetGroupMembership(string id, bool recursive)
+		public List<Identity.Group> GetGroupMembership(string id, bool recursive)
 		{
             try
             {
@@ -945,12 +944,12 @@ namespace Galactic.Identity.AzureActiveDirectory
 						}
 					}
 
-					return gg.ConvertAll(graphGroup => new Group(this, graphGroup)).ConvertAll<IGroup>(x => x);
+					return gg.ConvertAll(graphGroup => (Identity.Group)new Group(this, graphGroup));
 				}
 
 				return null;
 			}
-            catch(AggregateException e)
+            catch(AggregateException)
             {
 				// An error occurred.
 				return null;
@@ -964,9 +963,9 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <param name="id">The unique identifier of the group.</param>
         /// <param name="recursive">If true, performs a transitive search of membership.</param>
         /// <returns>List of User objects that are members of this group.</returns>
-		public List<IUser> GetUserMembers(string id, bool recursive)
+		public List<Identity.User> GetUserMembers(string id, bool recursive)
         {
-			List<IUser> users = new ();
+			List<Identity.User> users = new ();
 
 			var objects = GetMembers(id, recursive);
 
@@ -990,9 +989,9 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <param name="id">The unique identifier of the group.</param>
 		/// <param name="recursive">If true, performs a transitive search of membership.</param>
 		/// <returns>List of Group objects that are members of this group.</returns>
-		public List<IGroup> GetGroupMembers(string id, bool recursive)
+		public List<Identity.Group> GetGroupMembers(string id, bool recursive)
         {
-			List<IGroup> groups = new();
+			List<Identity.Group> groups = new();
 
 			var objects = GetMembers(id, recursive);
 
@@ -1181,7 +1180,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <param name="returnedAttributes">Optional: Additonal attributes to be returned. If null, a default set will be used.</param>
         /// <returns>Group matching the supplied ID.</returns>
         /// <exception cref="ArgumentException"></exception>
-		public IGroup GetGroup(string id, List<IdentityAttribute<Object>> returnedAttributes = null)
+		public Identity.Group GetGroup(string id, List<IdentityAttribute<Object>> returnedAttributes = null)
 		{
 			if (!string.IsNullOrWhiteSpace(id))
 			{

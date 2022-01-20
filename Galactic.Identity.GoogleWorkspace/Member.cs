@@ -82,31 +82,31 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The group member's e-mail address.
         /// </summary>
-        [GoogleWorkspacePropertyName(EMAIL)]
+        [DirectorySystemPropertyName(EMAIL)]
         public string Email => member.Email;
 
         /// <summary>
         /// The group member's unique ID.
         /// </summary>
-        [GoogleWorkspacePropertyName(ID)]
+        [DirectorySystemPropertyName(ID)]
         public string Id => member.Id;
 
         /// <summary>
         /// The kind of object the member is in Google Workspace.
         /// </summary>
-        [GoogleWorkspacePropertyName(KIND)]
+        [DirectorySystemPropertyName(KIND)]
         public string Kind => member.Kind;
 
         /// <summary>
         /// The role of the member within the group.
         /// </summary>
-        [GoogleWorkspacePropertyName(ROLE)]
+        [DirectorySystemPropertyName(ROLE)]
         public string Role => member.Role;
 
         /// <summary>
         /// The type of object the member is. (Group or User)
         /// </summary>
-        [GoogleWorkspacePropertyName(TYPE)]
+        [DirectorySystemPropertyName(TYPE)]
         public string MemberType => member.Type;
 
 
@@ -171,11 +171,11 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Create an IIdentityObject for this Member.
         /// </summary>
         /// <returns></returns>
-        public IIdentityObject ToIIdentityObject()
+        public IdentityObject ToIdentityObject()
         {
             if (MemberType == TYPE_USER)
             {
-                List<IUser> users = gws.GetUsersByAttribute(new(User.PRIMARY_EMAIL, Email));
+                List<Identity.User> users = gws.GetUsersByAttribute(new(User.PRIMARY_EMAIL, Email));
                 if (users != null && users.Count == 1)
                 {
                     return users[0];
@@ -188,7 +188,7 @@ namespace Galactic.Identity.GoogleWorkspace
             }
             else if (MemberType == TYPE_GROUP)
             {
-                List<IGroup> groups = gws.GetGroupsByAttribute(new(Group.EMAIL, Email));
+                List<Identity.Group> groups = gws.GetGroupsByAttribute(new(Group.EMAIL, Email));
                 if (groups != null && groups.Count == 1)
                 {
                     return groups[0];

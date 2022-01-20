@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Galactic.Identity.Okta
 {
-    public class Group : IGroup
+    public class Group : Identity.Group
     {
         // ----- CONSTANTS -----
 
@@ -27,24 +27,24 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// All users that are a member of this group or a subgroup.
         /// </summary>
-        public List<IUser> AllUserMembers => UserMembers;
+        public override List<Identity.User> AllUserMembers => UserMembers;
 
         /// <summary>
         /// Timestamp when Group was created.
         /// </summary>
-        [OktaPropertyName(GroupJson.CREATED)]
+        [DirectorySystemPropertyName(GroupJson.CREATED)]
         public DateTime? Created => json.Created;
 
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
-        public DateTime? CreationTime => Created;
+        public override DateTime? CreationTime => Created;
 
         /// <summary>
         /// The description of the group.
         /// </summary>
-        [OktaPropertyName(GroupProfileJson.DESCRIPTION)]
-        public string Description
+        [DirectorySystemPropertyName(GroupProfileJson.DESCRIPTION)]
+        public override string Description
         {
             get => json.Profile.Description;
             set
@@ -64,45 +64,45 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The list of groups this object is a member of.
         /// </summary>
-        public List<IGroup> Groups => new();    // Okta doesn't support nested groups.
+        public override List<Identity.Group> Groups => new();    // Okta doesn't support nested groups.
 
         /// <summary>
         /// Groups that are a member of the group.
         /// </summary>
-        public List<IGroup> GroupMembers => new();    // Okta doesn't support nested groups.
+        public override List<Identity.Group> GroupMembers => new();    // Okta doesn't support nested groups.
 
         /// <summary>
         /// Unique key for Group.
         /// </summary>
-        [OktaPropertyName(GroupJson.ID)]
+        [DirectorySystemPropertyName(GroupJson.ID)]
         public string Id => json.Id;
 
         /// <summary>
         /// Timestamp when Group's memberships were last updated.
         /// </summary>
-        [OktaPropertyName(GroupJson.LAST_MEMBERSHIP_UPDATED)]
+        [DirectorySystemPropertyName(GroupJson.LAST_MEMBERSHIP_UPDATED)]
         public DateTime? LastMembershipUpdated => json.LastMembershipUpdated;
 
         /// <summary>
         /// Timestamp when Group's profile was last updated.
         /// </summary>
-        [OktaPropertyName(GroupJson.LAST_UPDATED)]
+        [DirectorySystemPropertyName(GroupJson.LAST_UPDATED)]
         public DateTime? LastUpdated => json.LastUpdated;
 
         /// <summary>
         /// The members of the group.
         /// </summary>
-        public List<IIdentityObject> Members => UserMembers.ConvertAll<IIdentityObject>(member => member);
+        public override List<IdentityObject> Members => UserMembers.ConvertAll(member => (IdentityObject)member);
 
         /// <summary>
         /// The number of members in the group.
         /// </summary>
-        public int MemberCount => UserMembers.Count;
+        public override int MemberCount => UserMembers.Count;
 
         /// <summary>
         /// The name of the group.
         /// </summary>
-        [OktaPropertyName(GroupProfileJson.NAME)]
+        [DirectorySystemPropertyName(GroupProfileJson.NAME)]
         public string Name
         {
             get => json.Profile.Name;
@@ -123,22 +123,22 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Determines how a Group's Profile and memberships are managed.
         /// </summary>
-        [OktaPropertyName(GroupJson.TYPE)]
-        public string Type => json.Type;
+        [DirectorySystemPropertyName(GroupJson.TYPE)]
+        public override string Type => json.Type;
 
         /// <summary>
         /// The object's unique ID in the system.
         /// </summary>
-        public string UniqueId => Id;
+        public override string UniqueId => Id;
 
         /// <summary>
         /// Users that are a member of the group. (Not including subgroups.)
         /// </summary>
-        public List<IUser> UserMembers
+        public override List<Identity.User> UserMembers
         {
             get
             {
-                List<IUser> users = new();
+                List<Identity.User> users = new();
                 foreach (UserJson userJson in okta.GetGroupMembership(UniqueId))
                 {
                     users.Add(new User(okta, userJson));
@@ -185,12 +185,13 @@ namespace Galactic.Identity.Okta
         /// </summary>
         /// <param name="members">The members to add.</param>
         /// <returns>True if the members were added, false otherwise.</returns>
-        public bool AddMembers(List<IIdentityObject> members)
+        public override bool AddMembers(List<IdentityObject> members)
         {
             if (members != null)
             {
-                foreach (IIdentityObject member in members)
+                foreach (IdentityObject member in members)
                 {
+                    // Skip non-Okta identity objects.
                     if (member is User)
                     {
                         // The user was an Okta User.
@@ -204,93 +205,6 @@ namespace Galactic.Identity.Okta
             }
             // All Okta Users were added, or none were supplied.
             return true;
-        }
-
-        /// <summary>
-        /// Clears all members from this group.
-        /// </summary>
-        /// <returns>True if all members were cleared, false otherwise.</returns>
-        public bool ClearMembership()
-        {
-            return RemoveMembers(Members);
-        }
-
-        /// <summary>
-        /// Compares this identity object to another identity object.
-        /// </summary>
-        /// <param name="other">The other identity object to compare this one to.</param>
-        /// <returns>1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
-        public int CompareTo(IIdentityObject other)
-        {
-            return ((IIdentityObject)this).CompareTo(other);
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (have the same UniqueIds).
-        /// </summary>
-        /// <param name="x">The first identity object to check.</param>
-        /// <param name="y">The second identity object to check.</param>
-        /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public bool Equals(IIdentityObject x, IIdentityObject y)
-        {
-            return ((IIdentityObject)this).Equals(x, y);
-        }
-
-        /// <summary>
-        /// Gets the values of the attributes associated with the supplied names.
-        /// </summary>
-        /// <param name="names">The names of the attributes to get the values of.</param>
-        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
-
-        public List<IdentityAttribute<object>> GetAttributes(List<string> names)
-        {
-            // Create a list of IdentityAttributes to return.
-            List<IdentityAttribute<object>> attributes = new();
-
-            if (names != null)
-            {
-                // Create a dictionary of properties in this class keyed by name.
-                PropertyInfo[] propertyInfoList = typeof(Group).GetProperties();
-                Dictionary<string, PropertyInfo> properties = new();
-                foreach (PropertyInfo propertyInfo in propertyInfoList)
-                {
-                    foreach (OktaPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<OktaPropertyNameAttribute>())
-                    {
-                        properties.Add(attribute.Name, propertyInfo);
-                    }
-                }
-
-                // Fill the list of IdentityAttributes with the name and value of the attribute with the supplied name.
-                foreach (string name in names)
-                {
-                    if (properties.ContainsKey(name))
-                    {
-                        attributes.Add(new(name, properties[name].GetValue(this)));
-                    }
-                }
-            }
-
-            // Return the attributes found.
-            return attributes;
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
-        public IEnumerator<IIdentityObject> GetEnumerator()
-        {
-            return ((IGroup)this).GetEnumerator();
-        }
-
-        /// <summary>
-        /// Generates a hash code for the identity object supplied.
-        /// </summary>
-        /// <param name="obj">The identity object to generate a hash code for.</param>
-        /// <returns>An integer hash code for the identity object.</returns>
-        public int GetHashCode([DisallowNull] IIdentityObject obj)
-        {
-            return IIdentityObject.GetHashCode(obj);
         }
 
         /// <summary>
@@ -355,7 +269,7 @@ namespace Galactic.Identity.Okta
         /// <param name="group">The group to check.</param>
         /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
         /// <returns>True if the object is a member, false otherwise.</returns>
-        public bool MemberOfGroup(IGroup group, bool recursive)
+        public override bool MemberOfGroup(Identity.Group group, bool recursive)
         {
             // Okta doesn't support nested groups.
             return false;
@@ -366,12 +280,13 @@ namespace Galactic.Identity.Okta
         /// </summary>
         /// <param name="members">The objects to remove.</param>
         /// <returns>True if the objects were removed, false otherwise.</returns>
-        public bool RemoveMembers(List<IIdentityObject> members)
+        public override bool RemoveMembers(List<IdentityObject> members)
         {
             if (members != null)
             {
-                foreach (IIdentityObject member in members)
+                foreach (IdentityObject member in members)
                 {
+                    // Skip non-Okta identity objects.
                     if (member is User)
                     {
                         if (!okta.RemoveUserFromGroup(member.UniqueId, UniqueId))
@@ -388,60 +303,5 @@ namespace Galactic.Identity.Okta
             return false;
 
         }
-
-        /// <summary>
-        /// Sets attribute values of an identity object. If null or empty values are supplied the attribute's value will be deleted.
-        /// </summary>
-        /// <param name="attributes">The attribute to set.</param>
-        /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
-        public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<object>> attributes)
-        {
-            // Create a list of IdentityAttributes to return with success or failure.
-            List<IdentityAttribute<bool>> attributeResults = new();
-
-            if (attributes != null)
-            {
-                // Create a dictionary of properties in this class keyed by name.
-                PropertyInfo[] propertyInfoList = typeof(Group).GetProperties();
-                Dictionary<string, PropertyInfo> properties = new();
-                foreach (PropertyInfo propertyInfo in propertyInfoList)
-                {
-                    foreach (OktaPropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<OktaPropertyNameAttribute>())
-                    {
-                        properties.Add(attribute.Name, propertyInfo);
-                    }
-                }
-
-                // Iterate over all the attributes supplied, setting their values and marking success or failure in the attribute list to return.
-                foreach (IdentityAttribute<object> attribute in attributes)
-                {
-                    // Check if the attribute supplied matches a property of the User.
-                    if (properties.ContainsKey(attribute.Name))
-                    {
-                        // Set the property with the attribute value supplied.
-                        try
-                        {
-                            properties[attribute.Name].SetValue(this, attribute.Value);
-                            attributeResults.Add(new(attribute.Name, true));
-                        }
-                        catch
-                        {
-                            // There was an error setting the attribute's value.
-                            attributeResults.Add(new(attribute.Name, false));
-
-                        }
-                    }
-                }
-            }
-
-            // Return the success / failure results of settings the attributes.
-            return attributeResults;
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

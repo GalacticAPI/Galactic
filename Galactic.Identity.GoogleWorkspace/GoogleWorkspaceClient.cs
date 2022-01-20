@@ -15,7 +15,7 @@ namespace Galactic.Identity.GoogleWorkspace
     /// <summary>
     /// GoogleWorkspaceClient is a class that allows for the query and manipulation of Google Workspace objects.
     /// </summary>
-    public class GoogleWorkspaceClient : IDirectorySystem
+    public class GoogleWorkspaceClient : DirectorySystemClient
     {
         // ----- CONSTANTS -----
 
@@ -45,6 +45,11 @@ namespace Galactic.Identity.GoogleWorkspace
             Less,
             LessEqual
         }
+
+        /// <summary>
+        /// A static list of groups to keep track of which have been seen when doing a recursirve search in GetMemberOfGroup().
+        /// </summary>
+        private static List<Group> recursiveGroupsListed = new();
 
         // ----- PROPERTIES -----
 
@@ -153,7 +158,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <param name="additionalAttributes">(Required, see above.) Additional attributes to set when creating the group.</param>
         /// <returns>The newly created group object, or null if it could not be created.</returns>
         /// <exception cref="ArgumentException">Thrown if an attribute with the name of the constant Group.EMAIL is not supplied.</exception>
-        public IGroup CreateGroup (string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
+        public override Identity.Group CreateGroup (string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
             if (!string.IsNullOrWhiteSpace(name) && additionalAttributes != null)
             {
@@ -235,7 +240,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <param name="parentUniqueId">(Optional) The unique id of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
         /// <param name="additionalAttributes">(Required, see above.) Additional attributes to set when creating the user.</param>
         /// <returns>The newly creaTed user object, or null if it could not be created.</returns>
-        public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
+        public override Identity.User CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
             if (!string.IsNullOrWhiteSpace(login) && additionalAttributes != null)
             {
@@ -306,7 +311,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         /// <param name="uniqueId">The unique id of the group to delete. (Google: Group's id property.)</param>
         /// <returns>True if the group was deleted, false otherwise.</returns>
-        public bool DeleteGroup(string uniqueId)
+        public override bool DeleteGroup(string uniqueId)
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
@@ -337,7 +342,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         /// <param name="uniqueId">The unique id of the user to delete.</param>
         /// <returns>True if the user was deleted, false otherwise.</returns>
-        public bool DeleteUser(string uniqueId)
+        public override bool DeleteUser(string uniqueId)
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
@@ -367,10 +372,10 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Gets all groups in the directory system.
         /// </summary>
         /// <returns>A list of all groups in the directory system.</returns>
-        public List<IGroup> GetAllGroups()
+        public override List<Identity.Group> GetAllGroups()
         {
             // Create a list of groups to return.
-            List<IGroup> groups = new();
+            List<Identity.Group> groups = new();
 
             try
             {
@@ -403,10 +408,10 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Get's all users in the directory system.
         /// </summary>
         /// <returns>A list of all users in the directory system.</returns>
-        public List<IUser> GetAllUsers()
+        public override List<Identity.User> GetAllUsers()
         {
             // Create a list of users to return.
-            List<IUser> users = new();
+            List<Identity.User> users = new();
 
             try
             {
@@ -440,12 +445,12 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         /// <param name="groupKey">The group's e-mail address or unique id.</param>
         /// <returns>A list of IIdentityObjects representing each user and group that is a member of the group.</returns>
-        public List<IIdentityObject> GetGroupMembership(string groupKey)
+        public List<IdentityObject> GetGroupMembership(string groupKey)
         {
             if (!string.IsNullOrWhiteSpace(groupKey))
             {
                 // Create a list of identity objects to return.
-                List<IIdentityObject> identityObjects = new();
+                List<IdentityObject> identityObjects = new();
 
                 try
                 {
@@ -463,7 +468,7 @@ namespace Galactic.Identity.GoogleWorkspace
                         // Create the list of IIdentityObjects.
                         foreach (Member member in members)
                         {
-                            IIdentityObject obj = member.ToIIdentityObject();
+                            IdentityObject obj = member.ToIdentityObject();
                             if (obj != null)
                             {
                                 identityObjects.Add(obj);
@@ -491,10 +496,10 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Note: Currently ignored.) (Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of groups that match the attribute value supplied.</returns>
-        public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
+        public override List<Identity.Group> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
             // Create a list of groups to return.
-            List<IGroup> groups = new();
+            List<Identity.Group> groups = new();
 
             if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
             {
@@ -592,7 +597,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Gets a list of the types of groups supported by the directory system.
         /// </summary>
         /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
-        public List<string> GetGroupTypes()
+        public override List<string> GetGroupTypes()
         {
             return new() { GROUP_KIND };
         }
@@ -602,12 +607,12 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         /// <param name="memberKey">A unique ID, primary e-mail address or alias of a user or group that is a member of a group.</param>
         /// <returns>A list of IGroups the member is a member of, or null if there was an error retrieving the list.</returns>
-        public List<IGroup> GetMemberGroups(string memberKey)
+        public List<Identity.Group> GetMemberGroups(string memberKey)
         {
             if (!string.IsNullOrWhiteSpace(memberKey))
             {
                 // Create the list of groups to return.
-                List<IGroup> groups = new();
+                List<Identity.Group> groups = new();
 
                 try
                 {
@@ -643,15 +648,129 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// Checks if the supplied identity object is a member of the supplied group.
+        /// </summary>
+        /// <param name="obj">The identity object to check for membership.</param>
+        /// <param name="group">The group to check.</param>
+        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
+        /// <param name="initial">(Optional) Whether, when doing a recursive lookup, this call is the initial call for the search.</param>
+        /// <returns>True if the object is a member, false otherwise.</returns>
+        public bool GetMemberOfGroup(IdentityObject obj, Group group, bool recursive, bool initial = true)
+        {
+            // Check that all parameters are supplied and are of the correct type.
+            if (obj != null && (obj is Group || obj is User) && group != null)
+            {
+                try
+                {
+                    if (recursive)
+                    {
+                        // Create a request to retrieve whether the object is a direct or indirect member of the group and execute it.
+                        if (obj is User)
+                        {
+                            MembersResource.HasMemberRequest request = Service.Members.HasMember(group.UniqueId, ((User)obj).PrimaryEmail);
+                            MembersHasMember membersHasMemberRequest = request.Execute();
+                            bool? value = membersHasMemberRequest.IsMember;
+                            if (value != null && value == true)
+                            {
+                                // The object is a direct or indirect member.
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            // Search until all groups are searched down the tree.
+                            // Skip any groups that have already been searched. (Prevents infinite loops.)
+                            if (!recursiveGroupsListed.Contains(group))
+                            {
+                                // Does this group contain the object?
+                                if (group.Members.Contains(obj))
+                                {
+                                    // The object was found.
+                                    // Reset the list of recursive groups.
+                                    recursiveGroupsListed = new();
+                                    return true;
+                                }
+                                // Does this group have subgroups?
+                                if (group.GroupMembers.Count > 0)
+                                {
+                                    // Search the sub groups.
+                                    foreach (Group subGroup in group.GroupMembers)
+                                    {
+                                        if(GetMemberOfGroup(obj, subGroup, true, false))
+                                        {
+                                            // The object was found in a subgroup.
+                                            // Reset the list of recursive groups.
+                                            recursiveGroupsListed = new();
+                                            return true;
+                                        }
+                                    }
+                                }
+                                // We have fully searched this group and not found the object, add it to the list.
+                                recursiveGroupsListed.Add(group);
+                            }
+
+                            // The object is not a member of the group of any of its subgroups.
+                            // If this was the initial call, reset the list of recursive groups.
+                            if (initial)
+                            {
+                                // Reset the list of recursive groups.
+                                recursiveGroupsListed = new();
+                            }
+                            return false;
+                        } 
+                    }
+                    else
+                    {
+                        // Check for direct membership in the group.
+                        List<IdentityObject> members = GetGroupMembership(group.UniqueId);
+                        foreach (IdentityObject member in members)
+                        {
+                            if (member.UniqueId == obj.UniqueId)
+                            {
+                                // The object is a direct member.
+                                return true;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the membership information.
+                    // Reset the list of recursive groups.
+                    recursiveGroupsListed = new();
+                }
+
+                // The object supplied is not a member of the group.
+                return false;
+            }
+            else
+            {
+                if (obj == null)
+                {
+                    throw new ArgumentNullException(nameof(obj));
+                }
+                else if (group == null)
+                {
+                    throw new ArgumentNullException(nameof(obj));
+                }
+                else
+                {
+                    // The object supplied is not of the correct type.
+                    throw new ArgumentException(nameof(obj) + " must be of type " + typeof(Group).FullName + " or " + typeof(User).FullName);
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets IUsers that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Note: Currently ignored.) (Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of users that match the attribute value supplied.</returns>
-        public List<IUser> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
+        public override List<Identity.User> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
             // Create a list of users to return.
-            List<IUser> users = new();
+            List<Identity.User> users = new();
 
             if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
             {

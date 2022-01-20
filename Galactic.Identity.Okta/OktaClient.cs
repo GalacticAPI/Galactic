@@ -1,7 +1,6 @@
 ﻿using Galactic.Rest;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -11,7 +10,7 @@ namespace Galactic.Identity.Okta
     /// <summary>
     /// OktaClient is a class that allows for the query and manipulation of Okta objects.
     /// </summary>
-    public class OktaClient : IDirectorySystem
+    public class OktaClient : DirectorySystemClient
     {
         // ----- CONSTANTS -----
 
@@ -170,7 +169,7 @@ namespace Galactic.Identity.Okta
         /// <param name="parentUniqueId">(Ignored) The unique id of the object that will be the parent of the group. Defaults to the standard group create location for the system if not supplied or invalid.</param>
         /// <param name="additionalAttributes">(Optional) Additional attributes to set when creating the group.</param>
         /// <returns>The newly created group object, or null if it could not be created.</returns>
-        public IGroup CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
+        public override Identity.Group CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
             if (!string.IsNullOrEmpty(name))
             {
@@ -231,7 +230,7 @@ namespace Galactic.Identity.Okta
         /// <param name="parentUniqueId">(Ignored) The unique id of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
         /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user. (Malformed or incorrect attributes are skipped.)</param>
         /// <returns>The newly created user object, or null if it could not be created.</returns>
-        public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
+        public override Identity.User CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
             if (!string.IsNullOrWhiteSpace(login))
             {
@@ -485,7 +484,7 @@ namespace Galactic.Identity.Okta
         /// </summary>
         /// <param name="uniqueId">The unique id of the group to delete.</param>
         /// <returns>True if the group was deleted, false otherwise.</returns>
-        public bool DeleteGroup(string uniqueId)
+        public override bool DeleteGroup(string uniqueId)
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
@@ -524,7 +523,7 @@ namespace Galactic.Identity.Okta
         /// </summary>
         /// <param name="uniqueId">The unique id of the user to delete.</param>
         /// <returns>True if the user was deleted, false otherwise.</returns>
-        public bool DeleteUser(string uniqueId)
+        public override bool DeleteUser(string uniqueId)
         {
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
@@ -562,7 +561,7 @@ namespace Galactic.Identity.Okta
         /// Get's all groups in the directory system.
         /// </summary>
         /// <returns>A list of all groups in the directory system.</returns>
-        public List<IGroup> GetAllGroups()
+        public override List<Identity.Group> GetAllGroups()
         {
             // Return the result.
             JsonRestResponse<GroupJson[]> jsonResponse = rest.GetFromJson<GroupJson[]>("/groups/?limit=" + MAX_PAGE_SIZE);
@@ -591,7 +590,7 @@ namespace Galactic.Identity.Okta
                 }
 
                 // Create the list groups to return.
-                List<IGroup> groups = new();
+                List<Identity.Group> groups = new();
                 foreach (GroupJson groupJson in jsonList)
                 {
                     groups.Add(new Group(this, groupJson));
@@ -629,7 +628,7 @@ namespace Galactic.Identity.Okta
         /// Gets all users in the directory system.
         /// </summary>
         /// <returns>A list of all users in the directory system.</returns>
-        public List<IUser> GetAllUsers()
+        public override List<Identity.User> GetAllUsers()
         {
             // Return the result.
             JsonRestResponse<UserJson[]> jsonResponse = rest.GetFromJson<UserJson[]>("/users/?limit=" + MAX_PAGE_SIZE);
@@ -658,7 +657,7 @@ namespace Galactic.Identity.Okta
                 }
 
                 // Create the list users to return.
-                List<IUser> users = new();
+                List<Identity.User> users = new();
                 foreach (UserJson userJson in jsonList)
                 {
                     users.Add(new User(this, userJson));
@@ -757,7 +756,7 @@ namespace Galactic.Identity.Okta
         /// Gets a list of the types of groups supported by the directory system.
         /// </summary>
         /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
-        public List<string> GetGroupTypes()
+        public override List<string> GetGroupTypes()
         {
             List<string> types = new();
             foreach(GroupType type in (GroupType[]) Enum.GetValues(typeof(GroupType)))
@@ -774,7 +773,7 @@ namespace Galactic.Identity.Okta
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Ignored: N/A for Okta) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of users that match the attribute value supplied.</returns>
-        public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
+        public override List<Identity.Group> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
         {
             return GetGroupsByAttributeAndType(attribute);
         }
@@ -785,7 +784,7 @@ namespace Galactic.Identity.Okta
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="groupType">(Optional) The Okta type of the group to search for. Defaults to OKTA_GROUP.</param>
         /// <returns>A list of groups that match the attribute value supplied and of the supplied type.</returns>
-        public List<IGroup> GetGroupsByAttributeAndType(IdentityAttribute<string> attribute, GroupType groupType = GroupType.OKTA_GROUP)
+        public List<Identity.Group> GetGroupsByAttributeAndType(IdentityAttribute<string> attribute, GroupType groupType = GroupType.OKTA_GROUP)
         {
             // Check whether an attribute was supplied.
             if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name))
@@ -830,7 +829,7 @@ namespace Galactic.Identity.Okta
                     }
 
                     // Create the list groups to return.
-                    List<IGroup> groups = new();
+                    List<Identity.Group> groups = new();
                     foreach (GroupJson groupJson in jsonList)
                     {
                         groups.Add(new Group(this, groupJson));
@@ -858,7 +857,7 @@ namespace Galactic.Identity.Okta
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Ignored: N/A for Okta) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of users that match the attribute value supplied.</returns>
-        public List<IUser> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
+        public override List<Identity.User> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<Object>> returnedAttributes = null)
         {
             // Check whether an attribute was supplied.
             if (attribute != null && !string.IsNullOrWhiteSpace(attribute.Name))
@@ -912,7 +911,7 @@ namespace Galactic.Identity.Okta
                     }
 
                     // Create the list users to return.
-                    List<IUser> users = new();
+                    List<Identity.User> users = new();
                     foreach (UserJson userJson in jsonList)
                     {
                         users.Add(new User(this, userJson));

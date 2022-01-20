@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace Galactic.Identity.GoogleWorkspace
 {
-    public class User : IUser
+    public class User : Identity.User
     {
         // ----- CONSTANTS -----
 
@@ -497,7 +497,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// Indicates if the user is forced to change their password at next login. This setting doesn't apply when the user signs in via a third-party identity provider.
         /// </summary>
-        [GoogleWorkspacePropertyName(CHANGE_PASSWORD_AT_NEXT_LOGIN)]
+        [DirectorySystemPropertyName(CHANGE_PASSWORD_AT_NEXT_LOGIN)]
         public bool ChangePasswordAtNextLogin
         {
             get
@@ -518,7 +518,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The user's city.
         /// (Google: For the first address in the list of addresses associated with the user.)
         /// </summary>
-        public string City
+        public override string City
         {
             get => Locality;
             set
@@ -531,8 +531,8 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The user's country code as defined in ISO 3166-1 alpha-2.
         /// (Google: For the first addresses in the list of address associated with the user.)
         /// </summary>
-        [GoogleWorkspacePropertyName(ADDRESSES_COUNTRY_CODE)]
-        public string CountryCode
+        [DirectorySystemPropertyName(ADDRESSES_COUNTRY_CODE)]
+        public override string CountryCode
         {
             get
             {
@@ -554,15 +554,15 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The date and time that the object was created.
         /// </summary>
-        [GoogleWorkspacePropertyName(CREATION_TIME)]
-        public DateTime? CreationTime => user.CreationTime;
+        [DirectorySystemPropertyName(CREATION_TIME)]
+        public override DateTime? CreationTime => user.CreationTime;
 
         /// <summary>
         /// The user's department.
         /// (Google: For the first organization in the list of organizations associated with the user.)
         /// </summary>
-        [GoogleWorkspacePropertyName(ORGANIZATIONS_DEPARTMENT)]
-        public string Department
+        [DirectorySystemPropertyName(ORGANIZATIONS_DEPARTMENT)]
+        public override string Department
         {
             get
             {
@@ -584,7 +584,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's display name.
         /// </summary>
-        public string DisplayName
+        public override string DisplayName
         {
             get => FullName;
             set
@@ -597,7 +597,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// A list of the user's email addresses.
         /// The object's primary e-mail address will always be first in the list.
         /// </summary>
-        [GoogleWorkspacePropertyName(EMAILS)]
+        [DirectorySystemPropertyName(EMAILS)]
         public List<string> Emails
         {
             get
@@ -633,7 +633,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// A list of the object's e-mail addresses.
         /// The object's primary e-mail address will always be first in the list.
         /// </summary>
-        public List<string> EmailAddresses
+        public override List<string> EmailAddresses
         {
             get => Emails;
             set
@@ -647,7 +647,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// (Google: Google Workspace doesn't explicitly define how employee ids should be noted, other than that it supports various external ids.
         /// This method returns the first external id in the list of external ids associated with the user with a type that starts with the string "employee" (not case specific).
         /// </summary>
-        public string EmployeeNumber
+        public override string EmployeeNumber
         {
             get
             {
@@ -678,7 +678,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's last name. Required when creating a user account.
         /// </summary>
-        [GoogleWorkspacePropertyName(NAME_FAMILY_NAME)]
+        [DirectorySystemPropertyName(NAME_FAMILY_NAME)]
         public string FamilyName
         {
             get => user.Name.FamilyName;
@@ -688,7 +688,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's first name.
         /// </summary>
-        public string FirstName
+        public override string FirstName
         {
             get => GivenName;
             set
@@ -700,7 +700,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's full name formed by concatenating their first and last name values.
         /// </summary>
-        [GoogleWorkspacePropertyName(NAME_FULL_NAME)]
+        [DirectorySystemPropertyName(NAME_FULL_NAME)]
         public string FullName
         {
             get => user.Name.FullName;
@@ -710,7 +710,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's first name. Required whten creating a user account.
         /// </summary>
-        [GoogleWorkspacePropertyName(NAME_GIVEN_NAME)]
+        [DirectorySystemPropertyName(NAME_GIVEN_NAME)]
         public string GivenName
         {
             get => user.Name.GivenName;
@@ -720,7 +720,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The list of groups this object is a member of, or null if they couldn't be retrieved.
         /// </summary>
-        public List<IGroup> Groups
+        public override List<Identity.Group> Groups
         {
             get => throw new NotImplementedException();
         }
@@ -728,7 +728,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The unique ID for the user. A user id can be used as a user request URI's userKey.
         /// </summary>
-        [GoogleWorkspacePropertyName(ID)]
+        [DirectorySystemPropertyName(ID)]
         public string Id
         {
             get => user.Id;
@@ -738,10 +738,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// Whether the user is disabled or suspended in the system.
         /// </summary>
-        public bool IsDisabled
-        {
-            get => Suspended;
-        }
+        public override bool IsDisabled => Suspended;
 
         /// <summary>
         ///  The type of the API resource. For Users resources, the value is admin#directory#user.
@@ -754,7 +751,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The last time the user logged into the user's account.
         /// </summary>
-        [GoogleWorkspacePropertyName(LAST_LOGIN_TIME)]
+        [DirectorySystemPropertyName(LAST_LOGIN_TIME)]
         public DateTime? LastLoginTime
         {
             get => user.LastLoginTime;
@@ -763,7 +760,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's last name.
         /// </summary>
-        public string LastName
+        public override string LastName
         {
             get => FamilyName;
             set
@@ -776,7 +773,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The town or city of the address.
         /// (Google: For the first address in the list of addresses associated with the user.)
         /// </summary>
-        [GoogleWorkspacePropertyName(ADDRESSES_LOCALITY)]
+        [DirectorySystemPropertyName(ADDRESSES_LOCALITY)]
         public string Locality
         {
             get
@@ -799,7 +796,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The login name for the user in the system.
         /// </summary>
-        public string Login
+        public override string Login
         {
             get => PrimaryEmailAddress;
             set
@@ -811,7 +808,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The unique ID of the user's manager in the system.
         /// </summary>
-        public string ManagerId
+        public override string ManagerId
         {
             get => throw new NotImplementedException();
             set => throw new NotImplementedException();
@@ -820,16 +817,15 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The full name of the user's manager.
         /// </summary>
-        public string ManagerName
+        public override string ManagerName
         {
             get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
         }
 
         /// <summary>
         /// The user's middle name. (Not implemented by Google Workspace.)
         /// </summary>
-        public string MiddleName
+        public override string MiddleName
         {
             get => "";
             set { }
@@ -838,7 +834,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's mobile phone number.
         /// </summary>
-        public string MobilePhone
+        public override string MobilePhone
         {
             get
             {
@@ -868,7 +864,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The name of the organization the user belong's to.
         /// (Google: For the first organization in the list of organizations associated with the user.)
         /// </summary>
-        public string Organization
+        public override string Organization
         {
             get
             {
@@ -890,32 +886,23 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// Whether the user has to change their password at their next login.
         /// </summary>
-        public bool PasswordChangeRequiredAtNextLogin
-        {
-            get => ChangePasswordAtNextLogin;
-        }
+        public override bool PasswordChangeRequiredAtNextLogin => ChangePasswordAtNextLogin;
 
         /// <summary>
         /// Whether the user's password has expired.
         /// </summary>
-        public bool PasswordExpired
-        {
-            get => throw new NotImplementedException();
-        }
+        public override bool PasswordExpired => throw new NotImplementedException();
 
         /// <summary>
         /// The date and time that the user's password was last set.
         /// </summary>
-        public DateTime? PasswordLastSet
-        {
-            get => throw new NotImplementedException();
-        }
+        public override DateTime? PasswordLastSet => throw new NotImplementedException();
 
         /// <summary>
         /// The user's physical address.
-        /// (Google: For the first address in the list of addresses assocaited with the user.)
+        /// (Google: For the first address in the list of addresses associated with the user.)
         /// </summary>
-        public string PhyscialAddress
+        public override string PhyscialAddress
         {
             get => StreetAddress;
             set => StreetAddress = value;
@@ -925,18 +912,18 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The user's postal (mailing) address.
         /// (Google: Google Workspace doesn't have a defined concept of a mailing address. This returns the street address of the first address in the list of addresses associated with the user.)
         /// </summary>
-        public string PostalAddress
+        public override string PostalAddress
         {
             get => StreetAddress;
-            set => throw new NotImplementedException();
+            set => StreetAddress = value;
         }
 
         /// <summary>
         /// The postal code of the user. (ZIP code in the US.)
         /// (Google: The postal code of the first address in the list of addresses associated with the user.)
         /// </summary>
-        [GoogleWorkspacePropertyName(ADDRESSES_POSTAL_CODE)]
-        public string PostalCode
+        [DirectorySystemPropertyName(ADDRESSES_POSTAL_CODE)]
+        public override string PostalCode
         {
             get
             {
@@ -958,7 +945,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's primary email address. This property is required in a request to create a user account. The primaryEmail must be unique and cannot be an alias of another user.
         /// </summary>
-        [GoogleWorkspacePropertyName(PRIMARY_EMAIL)]
+        [DirectorySystemPropertyName(PRIMARY_EMAIL)]
         public string PrimaryEmail
         {
             get => user.PrimaryEmail;
@@ -968,7 +955,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The object's primary e-mail address.
         /// </summary>
-        public string PrimaryEmailAddress
+        public override string PrimaryEmailAddress
         {
             get => PrimaryEmail;
             set
@@ -980,7 +967,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's primary phone number.
         /// </summary>
-        public string PrimaryPhone
+        public override string PrimaryPhone
         {
             get
             {
@@ -1011,7 +998,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The abbreviated province or state.
         /// (Google: The region associated the first address in the list of addresses associated with the user.
         /// </summary>
-        [GoogleWorkspacePropertyName(ADDRESSES_REGION)]
+        [DirectorySystemPropertyName(ADDRESSES_REGION)]
         public string Region
         {
             get
@@ -1034,7 +1021,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's state.
         /// </summary>
-        public string State
+        public override string State
         {
             get => Region;
             set
@@ -1068,7 +1055,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// Indicates if user is suspended.
         /// </summary>
-        [GoogleWorkspacePropertyName(SUSPENDED)]
+        [DirectorySystemPropertyName(SUSPENDED)]
         public bool Suspended
         {
             get
@@ -1088,8 +1075,8 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The user's title.
         /// </summary>
-        [GoogleWorkspacePropertyName(ORGANIZATIONS_TITLE)]
-        public string Title
+        [DirectorySystemPropertyName(ORGANIZATIONS_TITLE)]
+        public override string Title
         {
             get
             {
@@ -1111,12 +1098,12 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The type or category of the object. Empty if unknown.
         /// </summary>
-        public string Type => Kind;
+        public override string Type => Kind;
 
         /// <summary>
         /// The object's unique ID in the system.
         /// </summary>
-        public string UniqueId => Id;
+        public override string UniqueId => Id;
 
         // ----- CONSTRUCTORS -----
 
@@ -1151,20 +1138,10 @@ namespace Galactic.Identity.GoogleWorkspace
         // ----- METHODS -----
 
         /// <summary>
-        /// Compares this identity object to another identity object.
-        /// </summary>
-        /// <param name="other">The other identity object to compare this one to.</param>
-        /// <returns>1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order.</returns>
-        public int CompareTo(IIdentityObject other)
-        {
-            return ((IIdentityObject)this).CompareTo(other);
-        }
-
-        /// <summary>
         /// Disables the user's account if it is enabled.
         /// </summary>
         /// <returns>True if the account is disabled successfully or was not enabled. False if the account could not be disabled.</returns>
-        public bool Disable()
+        public override bool Disable()
         {
             throw new NotImplementedException();
         }
@@ -1173,126 +1150,9 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Enables the user's account if it is disabled.
         /// </summary>
         /// <returns>True if the account is enabled successfully or was not disabled. False if the account could not be enabled.</returns>
-        public bool Enable()
+        public override bool Enable()
         {
             throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (have the same UniqueIds).
-        /// </summary>
-        /// <param name="x">The first identity object to check.</param>
-        /// <param name="y">The second identity object to check.</param>
-        /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public bool Equals(IIdentityObject x, IIdentityObject y)
-        {
-            return ((IIdentityObject)this).Equals(x, y);
-        }
-
-        /// <summary>
-        /// Gets the values of the attributes associated with the supplied names.
-        /// </summary>
-        /// <param name="names">The names of the attributes to get the values of.</param>
-        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.</returns>
-        public List<IdentityAttribute<object>> GetAttributes(List<string> names)
-        {
-            // Create a list of IdentityAttributes to return.
-            List<IdentityAttribute<object>> attributes = new();
-
-            if (names != null)
-            {
-                // Create a dictionary of properties in this class keyed by name.
-                PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
-                Dictionary<string, PropertyInfo> properties = new ();
-                foreach (PropertyInfo propertyInfo in propertyInfoList)
-                {
-                    foreach (GoogleWorkspacePropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<GoogleWorkspacePropertyNameAttribute>())
-                    {
-                        properties.Add(attribute.Name, propertyInfo);
-                    }
-                }
-                
-                // Fill the list of IdentityAttributes with the name and value of the attribute with the supplied name.
-                foreach (string name in names)
-                {
-                    if (properties.ContainsKey(name))
-                    {
-                        attributes.Add(new(name, properties[name].GetValue(this)));
-                    }
-                }
-            }
-
-            // Return the attributes found.
-            return attributes;
-        }
-
-        /// <summary>
-        /// Generates a hash code for the identity object supplied.
-        /// </summary>
-        /// <param name="obj">The identity object to generate a hash code for.</param>
-        /// <returns>An integer hash code for the identity object.</returns>
-        public int GetHashCode([DisallowNull] IIdentityObject obj) => IIdentityObject.GetHashCode(obj);
-
-        /// <summary>
-        /// Checks if the identity object is a member of the supplied group.
-        /// </summary>
-        /// <param name="group">The group to check.</param>
-        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
-        /// <returns>True if the object is a member, false otherwise.</returns>
-        public bool MemberOfGroup(IGroup group, bool recursive)
-        {
-            return ((IIdentityObject)this).MemberOfGroup(group, recursive);
-        }
-
-        /// <summary>
-        /// Sets attribute values of an identity object. If null or empty values are supplied the attribute's value will be deleted.
-        /// </summary>
-        /// <param name="attributes">The attribute to set.</param>
-        /// <returns>A list of identity attributes that have values of true if the attribute was set successfully, or false otherwise.</returns>
-        public List<IdentityAttribute<bool>> SetAttributes(List<IdentityAttribute<object>> attributes)
-        {
-            // TODO: Rework so all attributes are set in a single request.
-
-            // Create a list of IdentityAttributes to return with success or failure.
-            List<IdentityAttribute<bool>> attributeResults = new();
-
-            if (attributes != null)
-            {
-                // Create a dictionary of properties in this class keyed by name.
-                PropertyInfo[] propertyInfoList = typeof(User).GetProperties();
-                Dictionary<string, PropertyInfo> properties = new();
-                foreach (PropertyInfo propertyInfo in propertyInfoList)
-                {
-                    foreach (GoogleWorkspacePropertyNameAttribute attribute in propertyInfo.GetCustomAttributes<GoogleWorkspacePropertyNameAttribute>())
-                    {
-                        properties.Add(attribute.Name, propertyInfo);
-                    }
-                }
-
-                // Iterate over all the attributes supplied, setting their values and marking success or failure in the attribute list to return.
-                foreach (IdentityAttribute<object> attribute in attributes)
-                {
-                    // Check if the attribute supplied matches a property of the User.
-                    if (properties.ContainsKey(attribute.Name))
-                    {
-                        // Set the property with the attribute value supplied.
-                        try
-                        {
-                            properties[attribute.Name].SetValue(this, attribute.Value);
-                            attributeResults.Add(new(attribute.Name, true));
-                        }
-                        catch
-                        {
-                            // There was an error setting the attribute's value.
-                            attributeResults.Add(new(attribute.Name, false));
-
-                        }
-                    }
-                }
-            }
-
-            // Return the success / failure results of settings the attributes.
-            return attributeResults;
         }
 
         /// <summary>
@@ -1300,7 +1160,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         /// <param name="password">The new password to use for the user.</param>
         /// <returns>True if the password was set, false otherwise.</returns>
-        public bool SetPassword(string password)
+        public override bool SetPassword(string password)
         {
             throw new NotImplementedException();
         }
@@ -1309,7 +1169,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Unlocks the user's account if it is locked.
         /// </summary>
         /// <returns>True if the account is unlocked successfully or was not locked. False if the account could not be unlocked.</returns>
-        public bool Unlock()
+        public override bool Unlock()
         {
             throw new NotImplementedException();
         }
