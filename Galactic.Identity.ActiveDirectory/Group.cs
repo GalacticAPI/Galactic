@@ -79,22 +79,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// The distinguished name of the organizational unit or parent object containing the object.
         /// </summary>
-        public string OrganizationalUnit
-        {
-            get
-            {
-                string ou = DistinguishedName;
-                if (!string.IsNullOrWhiteSpace(ou))
-                {
-                    string[] ouComponents = ou.Split(',');
-                    return ou.Substring(ouComponents[0].Length + 1);
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
+        public string OrganizationalUnit => ad.GetOrganizationalUnit(DistinguishedName);
 
         /// <summary>
         /// The schema class types that identify the type of object this is in Active Directory.
@@ -207,19 +192,19 @@ namespace Galactic.Identity.ActiveDirectory
                     // Those in currentAddresses but not value.
                     foreach (string address in currentAddresses.Except(value))
                     {
-                        ad.RemoveProxyAddress(, address);
+                        ad.RemoveProxyAddress(ref entry, address);
                     }
 
                     // Add addresses that are new. Those in value but not in current addresses.
                     foreach (string address in value.Except(currentAddresses))
                     {
-                        AddProxyAddress(address);
+                        ad.AddProxyAddress(ref entry, address);
                     }
 
                     // Set the primary e-mail address.
                     if (value.Count > 0)
                     {
-                        SetPrimaryProxyAddress(value[0]);
+                        ad.SetPrimaryProxyAddress(ref entry, value[0]);
                         EMailAddress = value[0];
                     }
                 }
@@ -317,10 +302,10 @@ namespace Galactic.Identity.ActiveDirectory
                 if (!EmailAddresses.Contains(value))
                 {
                     // The address is not associated with the principal. Add it.
-                    AddProxyAddress(value);
+                    ad.AddProxyAddress(ref entry, value);
                 }
                 // Set the address as primary.
-                SetPrimaryProxyAddress(value);
+                ad.SetPrimaryProxyAddress(ref entry, value);
                 EMailAddress = value;
             }
         }

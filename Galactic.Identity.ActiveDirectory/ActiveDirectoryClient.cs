@@ -741,10 +741,10 @@ namespace Galactic.Identity.ActiveDirectory
                     {
                         // Get the OU's object.
                         Guid ouGuid = new(parentUniqueId);
-                        ActiveDirectoryObject ouObj = new(this, ouGuid);
+                        SearchResultEntry ouEntry = GetEntryByGUID(ouGuid);
 
                         // Get the distinguishedName of the OU.
-                        ouDn = ouObj.DistinguishedName;
+                        ouDn = ouEntry.DistinguishedName;
                     }
                     catch
                     {
@@ -825,10 +825,10 @@ namespace Galactic.Identity.ActiveDirectory
                     {
                         // Get the OU's object.
                         Guid ouGuid = new(parentUniqueId);
-                        ActiveDirectoryObject ouObj = new(this, ouGuid);
+                        SearchResultEntry ouEntry = GetEntryByGUID(ouGuid);
 
                         // Get the distinguishedName of the OU.
-                        ouDn = ouObj.DistinguishedName;
+                        ouDn = ouEntry.DistinguishedName;
                     }
                     catch
                     {
@@ -1634,6 +1634,24 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Given a distinguished name of an object, return the distinguished name of the organizational unit it belongs to.
+        /// </summary>
+        /// <param name="dn">The distinguished name of the object to get the organizational unit distinguished name of.</param>
+        /// <returns>The distinguished name of the organizational unit or parent object containing the object with the supplied distinguished name, or null if it could not be determined.</returns>
+        public string GetOrganizationalUnit(string dn)
+        {
+            if (!string.IsNullOrWhiteSpace(dn))
+            {
+                string[] ouComponents = dn.Split(',');
+                return dn.Substring(ouComponents[0].Length + 1);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Gets IUsers that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
@@ -1967,19 +1985,19 @@ namespace Galactic.Identity.ActiveDirectory
                 // Get the object that corresponds with the GUID supplied.
                 try
                 {
-                    ActiveDirectoryObject obj = new ActiveDirectoryObject(this, objectGuid);
+                    SearchResultEntry entry = GetEntryByGUID(objectGuid);
 
-                    ActiveDirectoryObject parentObj;
+                    SearchResultEntry parentEntry;
                     if (newParentObjectGuid != null && newParentObjectGuid != Guid.Empty)
                     {
                         // We're moving.
-                        parentObj = new ActiveDirectoryObject(this, newParentObjectGuid.Value);
+                        parentEntry = GetEntryByGUID(newParentObjectGuid.Value);
 
                     }
                     else
                     {
                         // Set the parent object to the current parent of the object supplied.
-                        parentObj = new ActiveDirectoryObject(this, GetGuidByDistinguishedName(obj.OrganizationalUnit));
+                        parentEntry = GetEntryByDistinguishedName(GetOrganizationalUnit(entry.DistinguishedName));
                     }
 
                     string commonName;
@@ -1991,11 +2009,11 @@ namespace Galactic.Identity.ActiveDirectory
                     else
                     {
                         // Set the common name to the object's existing common name.
-                        commonName = obj.CommonName;
+                        commonName = GetStringAttributeValue("cn", entry);
                     }
 
                     // Move and / or rename the object in Active Directory.
-                    return ldap.MoveRenameEntry(obj.DistinguishedName, parentObj.DistinguishedName, "CN=" + commonName);
+                    return ldap.MoveRenameEntry(entry.DistinguishedName, parentEntry.DistinguishedName, "CN=" + commonName);
                 }
                 catch
                 {

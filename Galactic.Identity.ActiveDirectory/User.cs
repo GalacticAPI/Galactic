@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 
@@ -17,11 +18,6 @@ namespace Galactic.Identity.ActiveDirectory
         // ----- CONSTANTS -----
 
         /// <summary>
-        /// The list of specific attributes that should be retrieved when searching for the entry in AD. The attributes of parent objects should be included as well.
-        /// </summary>
-        static protected new string[] AttributeNames = { "department" };
-
-        /// <summary>
         /// The default location for users to be created in Active Directory.
         /// </summary>
         public const string DEFAULT_CREATE_PATH = "CN=Users";
@@ -31,7 +27,343 @@ namespace Galactic.Identity.ActiveDirectory
         // The client used to query and manipulate Active Directory.
         protected ActiveDirectoryClient ad = null;
 
+        // The list of attributes to retrieve when searching for the entry in AD.
+        protected List<string> attributes = new List<string>(attributeNames);
+
+        /// <summary>
+        /// The list of specific attributes that should be retrieved when searching for the entry in AD. The attributes of parent objects should be included as well.
+        /// </summary>
+        static protected string[] attributeNames = { "department", "member", "groupType", "objectGUID", "distinguishedName", "description", "memberOf", "objectClass", "objectCategory", "displayName", "cn", "mail", "proxyAddresses", "mailNickname", "targetAddress", "userPrincipalName", "employeeNumber", "badPwdCount", "badPasswordTime", "division", "employeeID", "givenName", "msIIS-FTPDir", "msIIS-FTPRoot", "homeDirectory", "homeDrive", "wWWHomePage", "sn", "scriptPath", "manager", "pwdLastSet", "streetAddress", "title", "msDS-User-Account-Control-Computed", "userAccountControl", "sAMAccountName", "objectSid" };
+
+        // The SearchResultEntry object that represents the Group in Active Directory.
+        protected SearchResultEntry entry = null;
+
         // ----- PROPERTIES -----
+
+        // ----- ActiveDirectoryObject -----
+        /// <summary>
+        /// The Common Name (CN) of the object in Active Directory.
+        /// </summary>
+        public string CommonName => ad.GetStringAttributeValue("cn", entry);
+
+        /// <summary>
+        /// The time the object was created in UTC.
+        /// </summary>
+        public DateTime? CreateTimeStamp
+        {
+            get
+            {
+                string timeStamp = ad.GetStringAttributeValue("createTimeStamp", entry);
+                if (!string.IsNullOrWhiteSpace(timeStamp))
+                {
+                    return ActiveDirectoryClient.GetDateTimeFromUTCCodedTime(timeStamp);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The Distinguished Name (DN) of the object in Active Directory.
+        /// </summary>
+        public string DistinguishedName => ad.GetStringAttributeValue("distinguishedName", entry);
+
+        /// <summary>
+        /// The GUID of the object in Active Directory.
+        /// </summary>
+        public Guid Guid => ad.GetGuid(entry);
+
+        /// <summary>
+        /// The distinguished name of the organizational unit or parent object containing the object.
+        /// </summary>
+        public string OrganizationalUnit => ad.GetOrganizationalUnit(DistinguishedName);
+
+        /// <summary>
+        /// The schema class types that identify the type of object this is in Active Directory.
+        /// Examples: group, user, etc.
+        /// </summary>
+        public List<string> SchemaClasses => ad.GetStringAttributeValues("objectClass", entry);
+
+        // ----------
+
+        // ----- SECURITY PRINCIPAL ----
+
+        /// <summary>
+        /// The date and time that the object was created.
+        /// </summary>
+        public override DateTime? CreationTime => CreateTimeStamp;
+
+        /// <summary>
+        /// A description of the security principal.
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("description", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "description", value);
+            }
+        }
+
+        /// <summary>
+        /// The principal's e-mail address.
+        /// </summary>
+        public string EMailAddress
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("mail", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "mail", value);
+            }
+        }
+
+        /// <summary>
+        /// A list of the object's e-mail addresses.
+        /// The object's primary e-mail address will always be first in the list.
+        /// </summary>
+        public override List<string> EmailAddresses
+        {
+            get
+            {
+                // The list of e-mail addresses to return.
+                List<string> smtpAddresses = new List<string>();
+
+                // Get the attribute from Active Directory.
+                List<string> attribute = ad.GetStringAttributeValues("proxyAddresses", entry);
+
+                // Check that proxy addresses has values in it.
+                if (attribute != null)
+                {
+                    if (attribute.Count > 0)
+                    {
+                        // The attribute has values.
+
+                        // Create a list to return with only SMTP entries.
+                        foreach (string address in attribute)
+                        {
+                            if (address.StartsWith("SMTP:"))
+                            {
+                                // This is an primary SMTP entry.
+                                // Strip the prefix and add it to the beginning of the list.
+                                smtpAddresses.Insert(0, address.Substring(5));
+                            }
+                            else if (address.StartsWith("smtp:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // This is an SMTP entry.
+                                // Strip the prefix and add it to the list.
+                                smtpAddresses.Add(address.Substring(5));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Proxy addresses has no values. Check the mail property.
+                        string mailProperty = ad.GetStringAttributeValue("mail", entry);
+
+                        // Check if mail has a value.
+                        if (!string.IsNullOrWhiteSpace(mailProperty))
+                        {
+                            // The property has a value add it to the list.
+                            smtpAddresses.Add(mailProperty);
+                        }
+                    }
+                }
+
+                // Return the list of SMTP addresses.
+                return smtpAddresses;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    // Get the current list of email addresses associated with the principal.
+                    List<string> currentAddresses = EmailAddresses;
+
+                    // Remove addresses that should no longer be associated with the principal.
+                    // Those in currentAddresses but not value.
+                    foreach (string address in currentAddresses.Except(value))
+                    {
+                        ad.RemoveProxyAddress(ref entry, address);
+                    }
+
+                    // Add addresses that are new. Those in value but not in current addresses.
+                    foreach (string address in value.Except(currentAddresses))
+                    {
+                        ad.AddProxyAddress(ref entry, address);
+                    }
+
+                    // Set the primary e-mail address.
+                    if (value.Count > 0)
+                    {
+                        ad.SetPrimaryProxyAddress(ref entry, value[0]);
+                        EMailAddress = value[0];
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// The principal's Microsoft Exchange Alias.
+        /// </summary>
+        public string ExchangeAlias => ad.GetStringAttributeValue("mailNickname", entry);
+
+        /// <summary>
+        /// The list of groups this object is a member of.
+        /// </summary>
+        public override List<Identity.Group> Groups
+        {
+            get
+            {
+                List<string> groupDns = GroupDns;
+                if (groupDns != null)
+                {
+                    List<Identity.Group> groups = new();
+                    foreach (string groupDn in groupDns)
+                    {
+                        try
+                        {
+                            groups.Add(new Group(ad, ad.GetGuidByDistinguishedName(groupDn)));
+                        }
+                        catch
+                        {
+                            // Skip adding this group. There was an error getting its GUID.
+                        }
+                    }
+                    return groups;
+                }
+                else
+                {
+                    // The principal is not a member of any groups.
+                    return new();
+                }
+            }
+        }
+
+        /// <summary>
+        /// The distinguished names of groups that this principal is a member of.
+        /// </summary>
+        public List<string> GroupDns => ad.GetStringAttributeValues("memberOf", entry);
+
+        /// <summary>
+        /// The object's primary e-mail address.
+        /// </summary>
+        public override string PrimaryEmailAddress
+        {
+            get
+            {
+                // Get the attribute from Active Directory.
+                List<string> attribute = ad.GetStringAttributeValues("proxyAddresses", entry);
+
+                // Check that proxy addresses has values in it.
+                if (attribute != null)
+                {
+                    if (attribute.Count > 0)
+                    {
+                        // The attribute has values.
+
+                        // Find the SMTP entry in all caps. This is the primary e-mail address.
+                        foreach (string address in attribute)
+                        {
+                            if (address.StartsWith("SMTP:", StringComparison.Ordinal))
+                            {
+                                // This is the primary e-mail address.
+                                // Strip the prefix and add return it.
+                                return address.Substring(5);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Proxy addresses has no values. Check the mail property.
+                        string mailProperty = ad.GetStringAttributeValue("mail", entry);
+
+                        // Check if mail has a value.
+                        if (!string.IsNullOrWhiteSpace(mailProperty))
+                        {
+                            // The property has a value, return it.
+                            return mailProperty;
+                        }
+                    }
+                }
+                // No e-mail address could be found for the user.
+                return null;
+            }
+            set
+            {
+                if (!EmailAddresses.Contains(value))
+                {
+                    // The address is not associated with the principal. Add it.
+                    ad.AddProxyAddress(ref entry, value);
+                }
+                // Set the address as primary.
+                ad.SetPrimaryProxyAddress(ref entry, value);
+                EMailAddress = value;
+            }
+        }
+
+        /// <summary>
+        /// The principal's SAM Account Name.
+        /// </summary>
+        public string SAMAccountName
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("sAMAccountName", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "sAMAccountName", value);
+            }
+        }
+
+        /// <summary>
+        /// The principal's target e-mail address. Used by Exchange for routing e-mail to its
+        /// final destination which may lie outside of the organization. Allows for an object
+        /// to appear in the GAL even though its e-mail address may be outside of Exchange.
+        /// Also used when routing e-mail to the Microsoft Office365 cloud from an on-premises
+        /// Exchange server.
+        /// </summary>
+        public string TargetAddress
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("targetAddress", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "targetAddress", value);
+            }
+        }
+
+        /// <summary>
+        /// The object's unique ID in the system. (GUID)
+        /// </summary>
+        public override string UniqueId => Guid.ToString();
+
+        /// <summary>
+        /// The User Principal Name of the principal.
+        /// </summary>
+        public string UserPrincipalName
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("userPrincipalName", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "userPrincipalName", value);
+            }
+        }
+
+        // -----
 
         /// <summary>
         /// The number of times the user has entered a bad password.
@@ -43,7 +375,7 @@ namespace Galactic.Identity.ActiveDirectory
             {
                 try
                 {
-                    return Int32.Parse(GetStringAttributeValue("badPwdCount"));
+                    return Int32.Parse(ad.GetStringAttributeValue("badPwdCount", entry));
                 }
                 catch
                 {
@@ -60,7 +392,7 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                DateTime? returnValue = GetIntervalAttributeValue("badPasswordTime");
+                DateTime? returnValue = ad.GetIntervalAttributeValue("badPasswordTime", entry);
                 if (returnValue.HasValue)
                 {
                     return returnValue.Value.ToLocalTime();
@@ -75,97 +407,80 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// The user's city.
         /// </summary>
-        public string City
+        public override string City
         {
             get
             {
-                return GetStringAttributeValue("l");
+                return ad.GetStringAttributeValue("l", entry);
             }
             set
             {
-                SetStringAttribute("l", value);
+                ad.SetStringAttribute(ref entry, "l", value);
             }
         }
 
         /// <summary>
         /// The user's country code as defined in ISO 3166-1 alpha-2.
         /// </summary>
-        public string CountryCode
+        public override string CountryCode
         {
             get
             {
-                return GetStringAttributeValue("c");
+                return ad.GetStringAttributeValue("c", entry);
             }
             set
             {
-                SetStringAttribute("c", value);
+                ad.SetStringAttribute(ref entry, "c", value);
             }
         }
 
         /// <summary>
         /// The Department the user belongs to.
         /// </summary>
-        public string Department
+        public override string Department
         {
             get
             {
-                return GetStringAttributeValue("department");
+                return ad.GetStringAttributeValue("department", entry);
             }
             set
             {
-                SetStringAttribute("department", value);
+                ad.SetStringAttribute(ref entry, "department", value);
             }
         }
-
-        /// <summary>
-        /// The Distinguished Name (DN) of the object in Active Directory.
-        /// </summary>
-        public string DistinguishedName => ad.GetStringAttributeValue("distinguishedName", entry);
 
         /// <summary>
         /// The employee number of the user.
         /// </summary>
-        public string EmployeeNumber
+        public override string EmployeeNumber
         {
             get
             {
-                return GetStringAttributeValue("employeeNumber");
+                return ad.GetStringAttributeValue("employeeNumber", entry);
             }
             set
             {
-                SetStringAttribute("employeeNumber", value);
+                ad.SetStringAttribute(ref entry, "employeeNumber", value);
             }
         }
-
-
-        /// <summary>
-        /// The GUID of the object in Active Directory.
-        /// </summary>
-        public Guid Guid => ad.GetGuid(entry);
 
         /// <summary>
         /// Whether the user's account is disabled in Active Directory.
         /// </summary>
-        public bool IsDisabled
-        {
-            get
-            {
-                return ActiveDirectoryClient.UserAccountControlContains(UserAccountControl, ActiveDirectoryClient.UserAccountControl.Accountdisable);
-            }
-        }
+        public override bool IsDisabled => ActiveDirectoryClient.UserAccountControlContains(UserAccountControl, ActiveDirectoryClient.UserAccountControl.Accountdisable);
 
         /// <summary>
         /// The user's display name.
         /// </summary>
-        public string DisplayName
+        public override string DisplayName
         {
             get
             {
-                return GetStringAttributeValue("displayName");
+                return ad.GetStringAttributeValue("displayName", entry);
             }
             set
             {
-                SetStringAttribute("displayName", value);
+                ad.SetStringAttribute(ref entry, "displayName", value);
             }
         }
 
@@ -176,11 +491,11 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("division");
+                return ad.GetStringAttributeValue("division", entry);
             }
             set
             {
-                SetStringAttribute("division", value);
+                ad.SetStringAttribute(ref entry, "division", value);
             }
         }
 
@@ -191,26 +506,26 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("employeeID");
+                return ad.GetStringAttributeValue("employeeID", entry);
             }
             set
             {
-                SetStringAttribute("employeeID", value);
+                ad.SetStringAttribute(ref entry, "employeeID", value);
             }
         }
 
         /// <summary>
         /// The user's first name.
         /// </summary>
-        public string FirstName
+        public override string FirstName
         {
             get
             {
-                return GetStringAttributeValue("givenName");
+                return ad.GetStringAttributeValue("givenName", entry);
             }
             set
             {
-                SetStringAttribute("givenName", value);
+                ad.SetStringAttribute(ref entry, "givenName", value);
             }
         }
 
@@ -221,11 +536,11 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("msIIS-FTPDir");
+                return ad.GetStringAttributeValue("msIIS-FTPDir", entry);
             }
             set
             {
-                SetStringAttribute("msIIS-FTPDir", value);
+                ad.SetStringAttribute(ref entry, "msIIS-FTPDir", value);
             }
         }
 
@@ -236,11 +551,11 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("msIIS-FTPRoot");
+                return ad.GetStringAttributeValue("msIIS-FTPRoot", entry);
             }
             set
             {
-                SetStringAttribute("msIIS-FTPRoot", value);
+                ad.SetStringAttribute(ref entry, "msIIS-FTPRoot", value);
             }
         }
 
@@ -251,11 +566,11 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("homeDirectory");
+                return ad.GetStringAttributeValue("homeDirectory", entry);
             }
             set
             {
-                SetStringAttribute("homeDirectory", value);
+                ad.SetStringAttribute(ref entry, "homeDirectory", value);
             }
         }
 
@@ -266,11 +581,11 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("homeDrive");
+                return ad.GetStringAttributeValue("homeDrive", entry);
             }
             set
             {
-                SetStringAttribute("homeDrive", value);
+                ad.SetStringAttribute(ref entry, "homeDrive", value);
             }
         }
 
@@ -281,33 +596,33 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("wWWHomePage");
+                return ad.GetStringAttributeValue("wWWHomePage", entry);
             }
             set
             {
-                SetStringAttribute("wWWHomePage", value);
+                ad.SetStringAttribute(ref entry, "wWWHomePage", value);
             }
         }
 
         /// <summary>
         /// The user's last name.
         /// </summary>
-        public string LastName
+        public override string LastName
         {
             get
             {
-                return GetStringAttributeValue("sn");
+                return ad.GetStringAttributeValue("sn", entry);
             }
             set
             {
-                SetStringAttribute("sn", value);
+                ad.SetStringAttribute(ref entry, "sn", value);
             }
         }
 
         /// <summary>
         /// The login name (SAMAccountName) for the user in the system.
         /// </summary>
-        public string Login
+        public override string Login
         {
             get => SAMAccountName;
             set
@@ -323,11 +638,11 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("scriptPath");
+                return ad.GetStringAttributeValue("scriptPath", entry);
             }
             set
             {
-                SetStringAttribute("scriptPath", value);
+                ad.SetStringAttribute(ref entry, "scriptPath", value);
             }
         }
 
@@ -338,22 +653,22 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("manager");
+                return ad.GetStringAttributeValue("manager", entry);
             }
             set
             {
-                SetStringAttribute("manager", value);
+                ad.SetStringAttribute(ref entry, "manager", value);
             }
         }
 
         /// <summary>
         /// The unique ID of the user's manager in the system.
         /// </summary>
-        public string ManagerId
+        public override string ManagerId
         {
             get
             {
-                return AD.GetGuidByDistinguishedName(Manager).ToString();
+                return ad.GetGuidByDistinguishedName(Manager).ToString();
             }
             set
             {
@@ -361,7 +676,7 @@ namespace Galactic.Identity.ActiveDirectory
                 {
                     try
                     {
-                        User manager = new(AD, Guid.Parse(value));
+                        User manager = new(ad, Guid.Parse(value));
                         Manager = manager.DistinguishedName;
                     }
                     catch(FormatException)
@@ -380,41 +695,35 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// The full name of the user's manager.
         /// </summary>
-        public string ManagerName
-        {
-            get
-            {
-                return new User(AD, AD.GetGuidByDistinguishedName(Manager)).DisplayName;
-            }
-        }
+        public override string ManagerName => new User(ad, ad.GetGuidByDistinguishedName(Manager)).DisplayName;
 
         /// <summary>
         /// The user's middle name.
         /// </summary>
-        public string MiddleName
+        public override string MiddleName
         {
             get
             {
-                return GetStringAttributeValue("middleName");
+                return ad.GetStringAttributeValue("middleName", entry);
             }
             set
             {
-                SetStringAttribute("middleName", value);
+                ad.SetStringAttribute(ref entry, "middleName", value);
             }
         }
 
         /// <summary>
         /// The user's mobile phone number.
         /// </summary>
-        public string MobilePhone
+        public override string MobilePhone
         {
             get
             {
-                return GetStringAttributeValue("mobile");
+                return ad.GetStringAttributeValue("mobile", entry);
             }
             set
             {
-                SetStringAttribute("mobile", value);
+                ad.SetStringAttribute(ref entry, "mobile", value);
             }
         }
 
@@ -425,10 +734,10 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                DateTime? passwordLastSetTime = GetIntervalAttributeValue("pwdLastSet");
+                DateTime? passwordLastSetTime = ad.GetIntervalAttributeValue("pwdLastSet", entry);
                 if (passwordLastSetTime.HasValue)
                 {
-                    if (passwordLastSetTime.Value == JAN_01_1601 && !ActiveDirectoryClient.UserAccountControlContains(UserAccountControl, ActiveDirectoryClient.UserAccountControl.DontExpirePassword))
+                    if (passwordLastSetTime.Value == ad.JAN_01_1601 && !ActiveDirectoryClient.UserAccountControlContains(UserAccountControl, ActiveDirectoryClient.UserAccountControl.DontExpirePassword))
                     {
                         // The password last set time is not set, and the don't expire password bit in the UserAccountControl attribute isn't set.
                         // The user must change their password at next logon.
@@ -441,11 +750,11 @@ namespace Galactic.Identity.ActiveDirectory
             {
                 if (value)
                 {
-                    SetAttribute("pwdLastSet", new object[] { ActiveDirectoryClient.ToInterval(0) });
+                    ad.SetAttribute(ref entry, "pwdLastSet", new object[] { ActiveDirectoryClient.ToInterval(0) });
                 }
                 else
                 {
-                    SetAttribute("pwdLastSet", new object[] { "-1" });
+                    ad.SetAttribute(ref entry, "pwdLastSet", new object[] { "-1" });
                 }
             }
         }
@@ -453,43 +762,37 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// The name of the organization the user belong's to.
         /// </summary>
-        public string Organization
+        public override string Organization
         {
             get
             {
-                return GetStringAttributeValue("company");
+                return ad.GetStringAttributeValue("company", entry);
             }
             set
             {
-                SetStringAttribute("company", value);
+                ad.SetStringAttribute(ref entry, "company", value);
             }
         }
 
         /// <summary>
         /// Whether the user has to change their password at their next login.
         /// </summary>
-        public bool PasswordChangeRequiredAtNextLogin => MustChangePasswordAtNextLogon;
+        public override bool PasswordChangeRequiredAtNextLogin => MustChangePasswordAtNextLogon;
         
 
         /// <summary>
         /// Whether the user's password has expired.
         /// </summary>
-        public bool PasswordExpired
-        {
-            get
-            {
-                return ActiveDirectoryClient.UserAccountControlContains(UserAccountControlComputed, ActiveDirectoryClient.UserAccountControl.PasswordExpired);
-            }
-        }
+        public override bool PasswordExpired => ActiveDirectoryClient.UserAccountControlContains(UserAccountControlComputed, ActiveDirectoryClient.UserAccountControl.PasswordExpired);
 
         /// <summary>
         /// The date and time that the user's password was last set.
         /// </summary>
-        public DateTime? PasswordLastSet
+        public override DateTime? PasswordLastSet
         {
             get
             {
-                DateTime? returnValue = GetIntervalAttributeValue("pwdLastSet");
+                DateTime? returnValue = ad.GetIntervalAttributeValue("pwdLastSet", entry);
                 if (returnValue.HasValue)
                 {
                     return returnValue.Value.ToLocalTime();
@@ -508,18 +811,18 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("telephoneNumber");
+                return ad.GetStringAttributeValue("telephoneNumber", entry);
             }
             set
             {
-                SetStringAttribute("telephoneNumber", value);
+                ad.SetStringAttribute(ref entry, "telephoneNumber", value);
             }
         }
 
         /// <summary>
         /// The user's physical address.
         /// </summary>
-        public string PhyscialAddress
+        public override string PhyscialAddress
         {
             get => StreetAddress;
             set
@@ -531,37 +834,37 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// The user's postal (mailing) address.
         /// </summary>
-        public string PostalAddress
+        public override string PostalAddress
         {
             get
             {
-                return GetStringAttributeValue("postalAddress");
+                return ad.GetStringAttributeValue("postalAddress", entry);
             }
             set
             {
-                SetStringAttribute("postalAddress", value);
+                ad.SetStringAttribute(ref entry, "postalAddress", value);
             }
         }
 
         /// <summary>
         /// The postal code of the user. (ZIP code in the US.)
         /// </summary>
-        public string PostalCode
+        public override string PostalCode
         {
             get
             {
-                return GetStringAttributeValue("postalCode");
+                return ad.GetStringAttributeValue("postalCode", entry);
             }
             set
             {
-                SetStringAttribute("postalCode", value);
+                ad.SetStringAttribute(ref entry, "postalCode", value);
             }
         }
 
         /// <summary>
         /// The user's primary phone number.
         /// </summary>
-        public string PrimaryPhone
+        public override string PrimaryPhone
         {
             get => PhoneNumber;
             set
@@ -573,26 +876,20 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// The user's security identifier (SID).
         /// </summary>
-        public byte[] SecurityIdentifier
-        {
-            get
-            {
-                return GetByteAttributeValue("objectSid");
-            }
-        }
+        public byte[] SecurityIdentifier => ad.GetByteAttributeValue("objectSid", entry);
 
         /// <summary>
         /// The user's state.
         /// </summary>
-        public string State
+        public override string State
         {
             get
             {
-                return GetStringAttributeValue("st");
+                return ad.GetStringAttributeValue("st", entry);
             }
             set
             {
-                SetStringAttribute("st", value);
+                ad.SetStringAttribute(ref entry, "st", value);
             }
         }
 
@@ -603,39 +900,33 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return GetStringAttributeValue("streetAddress");
+                return ad.GetStringAttributeValue("streetAddress", entry);
             }
             set
             {
-                SetStringAttribute("streetAddress", value);
+                ad.SetStringAttribute(ref entry, "streetAddress", value);
             }
         }
 
         /// <summary>
         /// The user's title.
         /// </summary>
-        public string Title
+        public override string Title
         {
             get
             {
-                return GetStringAttributeValue("title");
+                return ad.GetStringAttributeValue("title", entry);
             }
             set
             {
-                SetStringAttribute("title", value);
+                ad.SetStringAttribute(ref entry, "title", value);
             }
         }
 
         /// <summary>
         /// The type or category of the User. Empty if unknown.
         /// </summary>
-        public override string Type
-        {
-            get
-            {
-                return GetStringAttributeValue("employeeType");
-            }
-        }
+        public override string Type => ad.GetStringAttributeValue("employeeType", entry);
 
         /// <summary>
         /// Gets the user's UserAccountControl property.
@@ -647,7 +938,7 @@ namespace Galactic.Identity.ActiveDirectory
             {
                 try
                 {
-                    return UInt32.Parse(GetStringAttributeValue("userAccountControl"));
+                    return UInt32.Parse(ad.GetStringAttributeValue("userAccountControl", entry));
                 }
                 catch
                 {
@@ -667,7 +958,7 @@ namespace Galactic.Identity.ActiveDirectory
             {
                 try
                 {
-                    return UInt32.Parse(GetStringAttributeValue("msDS-User-Account-Control-Computed"));
+                    return UInt32.Parse(ad.GetStringAttributeValue("msDS-User-Account-Control-Computed", entry));
                 }
                 catch
                 {
@@ -685,16 +976,14 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="ad">An Active Directory client used to query and manipulate the user.</param>
         /// <param name="guid">The GUID of the user.</param>
         public User(ActiveDirectoryClient ad, Guid guid)
-            : base(ad, guid)
         {
             if (ad != null && guid != Guid.Empty)
             {
-                // Add atttributes relevant to users to the list of base attributes
-                // to retrieve from entries queried from Active Directory.
-                Attributes.AddRange(AttributeNames);
+                // Set this object's Active Directory object.
+                this.ad = ad;
 
-                Entry = GetEntryFromAD(guid);
-                if (Entry == null)
+                entry = ad.GetEntryByGUID(guid);
+                if (entry == null)
                 {
                     throw new ArgumentException("The GUID provided could not be found in active directory.", "guid");
                 }
@@ -718,21 +1007,28 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="ad">An Active Directory client used to manipulate the user.</param>
         /// <param name="entry">The SearchResultEntry object containing attributes necessary to populate the object.</param>
         public User(ActiveDirectoryClient ad, SearchResultEntry entry)
-            : base(ad, entry)
         {
+            // Check that an Active Directory object and search result entry have been provided.
+            if (ad != null && entry != null)
+            {
+                // Set this object's Active Directory object.
+                this.ad = ad;
+                this.entry = entry;
+            }
+            else
+            {
+                if (ad == null)
+                {
+                    throw new ArgumentNullException(nameof(ad));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(entry));
+                }
+            }
         }
 
         // ----- METHODS -----
-
-        /// <summary>
-        /// Compares this User to another User.
-        /// </summary>
-        /// <param name="other">The other User to compare this one to.</param>
-        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
-        public int CompareTo(User other)
-        {
-            return CompareTo((ActiveDirectoryObject)other);
-        }
 
         /// <summary>
         /// Creates a new user within Active Directory given it's proposed name, the distinguished name of the OU to place it in, and other optional attributes.
@@ -807,7 +1103,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// Disables the user's account for authentication if it is enabled.
         /// </summary>
         /// <returns>True if the account is disabled successfully or was not enabled. False if the account could not be disabled.</returns>
-        public bool Disable()
+        public override bool Disable()
         {
             return SetUserAccountControlFlag(ActiveDirectoryClient.UserAccountControl.Accountdisable);
         }
@@ -816,20 +1112,9 @@ namespace Galactic.Identity.ActiveDirectory
         /// Enables the user's account for authentication if it is disabled.
         /// </summary>
         /// <returns>True if the account is enabled successfully or was not disabled. False if the account could not be enabled.</returns>
-        public bool Enable()
+        public override bool Enable()
         {
             return RemoveUserAccountControlFlag(ActiveDirectoryClient.UserAccountControl.Accountdisable);
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (using GUIDs).
-        /// </summary>
-        /// <param name="x">The first User to check.</param>
-        /// <param name="y">The second User to check against.</param>
-        /// <returns>True if the objects are equal, false otherwise.</returns>
-        public bool Equals(User x, User y)
-        {
-            return base.Equals(x, y);
         }
 
         /// <summary>
@@ -848,9 +1133,7 @@ namespace Galactic.Identity.ActiveDirectory
 
                 // Create a list of attributes that should be retrieved with the query.
                 List<string> attributes = new List<string>();
-                attributes.AddRange(ActiveDirectoryObject.AttributeNames);
-                attributes.AddRange(SecurityPrincipal.AttributeNames);
-                attributes.AddRange(AttributeNames);
+                attributes.AddRange(attributeNames);
 
                 // Search for the users in AD.
                 List<SearchResultEntry> entries = ad.GetEntries(FILTER, attributes);
@@ -872,16 +1155,6 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Generates a hash code for the User supplied.
-        /// </summary>
-        /// <param name="obj">The User to generate a hash code for.</param>
-        /// <returns>An integer hash code for the object.</returns>
-        public int GetHashCode(User obj)
-        {
-            return GetHashCode((ActiveDirectoryObject)obj);
-        }
-
-        /// <summary>
         /// Gets of all user accounts that were modified within the specified time frame.
         /// </summary>
         /// <param name="ad">The Active Directory client to retrieve users with.</param>
@@ -899,9 +1172,7 @@ namespace Galactic.Identity.ActiveDirectory
 
                 // Create a list of attributes that should be retrieved with the query.
                 List<string> attributes = new List<string>();
-                attributes.AddRange(ActiveDirectoryObject.AttributeNames);
-                attributes.AddRange(SecurityPrincipal.AttributeNames);
-                attributes.AddRange(AttributeNames);
+                attributes.AddRange(attributeNames);
 
                 // Search for the users in AD.
                 List<SearchResultEntry> entries = ad.GetEntries(FILTER, attributes);
@@ -927,21 +1198,21 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="password">The new password to use for the user.</param>
         /// <returns>True if the password was set, false otherwise.</returns>
-        public bool SetPassword(string password)
+        public override bool SetPassword(string password)
         {
             // Create a UTF16 array of bytes from the supplied password.
             byte[] bytes = Encoding.Unicode.GetBytes("\"" + password + "\"");
-            return SetAttribute("unicodePwd", new object[] { bytes });
+            return ad.SetAttribute(ref entry, "unicodePwd", new object[] { bytes });
         }
 
         /// <summary>
         /// Unlocks the user's account if it is locked.
         /// </summary>
         /// <returns>True if the account is unlocked successfully or was not locked. False if the account could not be unlocked.</returns>
-        public bool Unlock()
+        public override bool Unlock()
         {
             // Setting a user's lockout time to 0 unlocks the account.
-            return SetAttribute("lockoutTime", new object[] { BitConverter.GetBytes(0) });
+            return ad.SetAttribute(ref entry, "lockoutTime", new object[] { BitConverter.GetBytes(0) });
         }
 
         /// <summary>
@@ -953,13 +1224,7 @@ namespace Galactic.Identity.ActiveDirectory
         {
             // Use the normal user account control attribute.
             uint newUserAccountControl = UserAccountControl | (uint)flag;
-            if (SetStringAttribute("userAccountControl", newUserAccountControl.ToString()))
-            {
-                // Remove the userAccountControl attribute from the list so it is refreshed on the next request for it.
-                AdditionalAttributes.Remove("userAccountControl");
-                return true;
-            }
-            return false;
+            return ad.SetStringAttribute(ref entry, "userAccountControl", newUserAccountControl.ToString());
         }
 
         /// <summary>
@@ -971,13 +1236,7 @@ namespace Galactic.Identity.ActiveDirectory
         {
             // Use the normal user account control attribute.
             uint newUserAccountControl = UserAccountControl & ~(uint)flag;
-            if (SetStringAttribute("userAccountControl", newUserAccountControl.ToString()))
-            {
-                // Remove the userAccountControl attribute from the list so it is refreshed on the next request for it.
-                AdditionalAttributes.Remove("userAccountControl");
-                return true;
-            }
-            return false;
+            return ad.SetStringAttribute(ref entry, "userAccountControl", newUserAccountControl.ToString());
         }
     }
 }
