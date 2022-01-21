@@ -9,6 +9,7 @@ using System.Runtime.Versioning;
 using System.Security;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using DSAD = System.DirectoryServices.ActiveDirectory;
 
 namespace Galactic.Identity.ActiveDirectory
@@ -19,7 +20,7 @@ namespace Galactic.Identity.ActiveDirectory
     /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class ActiveDirectoryClient : IDirectorySystem, IDisposable
+    public class ActiveDirectoryClient : DirectorySystemClient, IDisposable
     {
         // ----- CONSTANTS -----
 
@@ -34,16 +35,16 @@ namespace Galactic.Identity.ActiveDirectory
         public const int GROUP_NAME_MAX_CHARS = 63;
 
         /// <summary>
-        /// The size of page to use when searching Active Directory. This number is based upon
-        /// hardcoded Microsoft limits within Active Directory's architecture.
-        /// </summary>
-        public const int PAGE_SIZE = 1000;
-
-        /// <summary>
         /// The maximum number of values that can be retrieved from a multi-value attribute in a single search request.
         /// Windows 2000 DCs do not support this value and default to a maximum of 1000;
         /// </summary>
         public const int MAX_NUM_MULTIVALUE_ATTRIBUTES = 1500;
+
+        /// <summary>
+        /// The size of page to use when searching Active Directory. This number is based upon
+        /// hardcoded Microsoft limits within Active Directory's architecture.
+        /// </summary>
+        public const int PAGE_SIZE = 1000;
 
         // ----- VARIABLES -----
 
@@ -85,6 +86,11 @@ namespace Galactic.Identity.ActiveDirectory
 
         // The client that manages the LDAP connection with the AD controller.
         private readonly LdapClient ldap = null;
+
+        /// <summary>
+        /// The date for January 1st, 1601. Used as a start date for intervals in various object attribute properties.
+        /// </summary>
+        public readonly DateTime JAN_01_1601 = new(1601, 1, 1);
 
         /// <summary>
         /// Flags for use with the UserAccountControl and ms-DS-User-Account-Control-Computed properties of a user.
@@ -518,15 +524,28 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="name">The name of the attribute to set.</param>
         /// <param name="values">The value(s) to set the attribute to.</param>
-        /// <param name="entry">The SearchResultEntry to set the attribute value in.</param>
+        /// <param name="entry">(Reference) The SearchResultEntry to set the attribute value in. Changes are reflected on return.</param>
         /// <returns>True if it was set, false otherwise.</returns>
-        public bool AddOrReplaceAttributeValue(string name, object[] values, SearchResultEntry entry)
+        public bool AddOrReplaceAttributeValue(string name, object[] values, ref SearchResultEntry entry)
         {
             try
             {
                 if (!string.IsNullOrWhiteSpace(name) && values != null && entry != null)
                 {
-                    return ldap.AddOrReplaceAttribute(entry.DistinguishedName, name, values);
+                    if (ldap.AddOrReplaceAttribute(entry.DistinguishedName, name, values))
+                    {
+                        // Update the entry.
+                        entry = GetEntryByDistinguishedName(entry.DistinguishedName);
+
+                        // Check whether an entry was returned.
+                        if (entry != null)
+                        {
+                            // The entry was updated.
+                            return true;
+                        }
+                    }
+                    // There was a problem updating the attribute or retrieving the entry.
+                    return false;
                 }
                 else
                 {
@@ -544,15 +563,28 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="name">The name of the attribute to set.</param>
         /// <param name="values">The value(s) to set the attribute to.</param>
-        /// <param name="entry">The SearchResultEntry to set the attribute value in.</param>
+        /// <param name="entry">(Reference) The SearchResultEntry to set the attribute value in. Changes are reflected on return.</param>
         /// <returns>True if it was set, false otherwise.</returns>
-        public bool AddAttributeValue(string name, object[] values, SearchResultEntry entry)
+        public bool AddAttributeValue(string name, object[] values, ref SearchResultEntry entry)
         {
             try
             {
                 if (!string.IsNullOrWhiteSpace(name) && values != null && entry != null)
                 {
-                    return ldap.AddAttribute(entry.DistinguishedName, name, values);
+                    if (ldap.AddAttribute(entry.DistinguishedName, name, values))
+                    {
+                        // Update the entry.
+                        entry = GetEntryByDistinguishedName(entry.DistinguishedName);
+
+                        // Check whether an entry was returned.
+                        if (entry != null)
+                        {
+                            // The entry was updated.
+                            return true;
+                        }
+                    }
+                    // There was a problem updating the attribute or retrieving the entry.
+                    return false;
                 }
                 else
                 {
@@ -561,6 +593,104 @@ namespace Galactic.Identity.ActiveDirectory
             }
             catch
             {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Adds a proxy e-mail address to the entry's proxyAddresses field.
+        /// </summary>
+        /// <param name="entry">(Reference) The entry to add the proxy address to. Changes are reflected on return.</param>
+        /// <param name="emailAddress">The address in standard e-mail format (username@domain.com)</param>
+        /// <param name="asPrimary">If the address should be added as the primary proxy address.</param>
+        /// <returns>True if the address was added, false otherwise.</returns>
+        public bool AddProxyAddress(ref SearchResultEntry entry, string emailAddress, bool asPrimary = false)
+        {
+            // Create a regular expression to verify that a properly formated e-mail address was provided.
+            Regex emailFormat = new Regex(@"\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*");
+
+            if (entry != null && !string.IsNullOrWhiteSpace(emailAddress) && emailFormat.IsMatch(emailAddress))
+            {
+                // Get the guid of the entry.
+                Guid entryGuid = GetGuid(entry);
+
+                // Get an IdentityObject representing the entry.
+                IdentityObject obj = null;
+                if (entryGuid != Guid.Empty)
+                {
+                    if (IsGroup(entryGuid))
+                    {
+                        obj = new Group(this, entryGuid);
+                    }
+                    else if (IsUser(entryGuid))
+                    {
+                        obj = new User(this, entryGuid);
+                    }
+                    else
+                    {
+                        // The object is not of the correct type.
+                        return false;
+                    }
+                }
+
+                // Create the address in proxy address format.
+                string proxyAddressToAdd = "";
+                // Check whether this address should be added as the primary address.
+                if (asPrimary)
+                {
+                    // Check that there is not a primary address currently associated with this account.
+                    if (string.IsNullOrWhiteSpace((obj as IMailSupportedObject).PrimaryEmailAddress))
+                    {
+                        // Create the address as a primary proxy address.
+                        proxyAddressToAdd = "SMTP:" + emailAddress;
+                    }
+                    else
+                    {
+                        // A primary address already exists.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Create the address as a normal proxy address.
+                    proxyAddressToAdd = "smtp:" + emailAddress;
+                }
+
+                // Get the proxyAddresses from Active Directory.
+                List<string> proxyAddresses = GetStringAttributeValues("proxyAddresses", entry);
+
+                // Check that proxy addresses has values in it.
+                if (proxyAddresses != null)
+                {
+                    if (proxyAddresses.Count > 0)
+                    {
+                        // There are values in the proxyAddresses attribute.
+
+                        // If the address doesn't already exist in the list. Add it.
+                        if (!proxyAddresses.Contains(proxyAddressToAdd))
+                        {
+                            proxyAddresses.Add(proxyAddressToAdd);
+
+                            // Set the modifications to the proxyAddress field in the account's AD object.
+                            return SetAttribute(ref entry, "proxyAddresses", proxyAddresses.ToArray());
+                        }
+                        else
+                        {
+                            // The address already exists in the list. Return true, since it's already there.
+                            return true;
+                        }
+                    }
+                }
+                // Proxy addresses has no values.
+                // Create a new object array with the address in it.
+                proxyAddresses = new List<string> { proxyAddressToAdd };
+
+                // Set the modifications to the proxyAddress field in the account's AD object.
+                return SetAttribute(ref entry, "proxyAddresses", proxyAddresses.ToArray());
+            }
+            else
+            {
+                // An object or e-mail address was not supplied or is inproperly formatted.
                 return false;
             }
         }
@@ -597,7 +727,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="parentUniqueId">(Optional) The unique id (GUID) of the object that will be the parent of the group. Defaults to the standard group create location for the system if not supplied or invalid.</param>
         /// <param name="additionalAttributes">(Optional) Additional attributes to set when creating the group.</param>
         /// <returns>The newly created group object, or null if it could not be created.</returns>
-        public IGroup CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
+        public override Identity.Group CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
         {
             if (!String.IsNullOrWhiteSpace(name) && !String.IsNullOrWhiteSpace(type))
             {
@@ -681,7 +811,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="parentUniqueId">(Optional) The unique id (GUID) of the object that will be the parent of the user. Defaults to the standard user create location for the system if not supplied or invalid.</param>
         /// <param name="additionalAttributes">Optional: Additional attribute values to set when creating the user.</param>
         /// <returns>The newly creaTed user object, or null if it could not be created.</returns>
-        public IUser CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
+        public override Identity.User CreateUser(string login, string parentUniqueId = null, List<IdentityAttribute<Object>> additionalAttributes = null)
         {
             if (!String.IsNullOrWhiteSpace(login))
             {
@@ -757,17 +887,30 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// Deletes an attribute's values from the specified entry in Active Directory.
         /// </summary>
+        /// <param name="entry">(Reference)The SearchResultEntry containing the attribute to delete. Changes to the entry are reflected on return.</param>
         /// <param name="name">The name of the attribute that should have its value deleted.</param>
-        /// <param name="entry">The SearchResultEntry containing the attribute to delete.</param>
         /// <param name="values">Optional: The specific values to delete. If null, all values will be deleted. Defaults to null.</param>
         /// <returns>True if the attribute's values are deleted, false otherwise.</returns>
-        public bool DeleteAttribute(string name, SearchResultEntry entry, object[] values = null)
+        public bool DeleteAttribute(ref SearchResultEntry entry, string name, object[] values = null)
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(name) && entry != null)
+                if (entry != null && !string.IsNullOrWhiteSpace(name))
                 {
-                    return ldap.DeleteAttribute(entry.DistinguishedName, name, values);
+                    if (ldap.DeleteAttribute(entry.DistinguishedName, name, values))
+                    {
+                        // Refresh the values of the entry to reflect the change.
+                        entry = GetEntryByDistinguishedName(entry.DistinguishedName);
+
+                        // Check if an entry was returned.
+                        if (entry != null)
+                        {
+                            // The entry was updated.
+                            return true;
+                        }
+                    }
+                    // There was a problem deleting the attribute or updating the entry.
+                    return false;
                 }
                 else
                 {
@@ -785,7 +928,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="uniqueId">The unique id of the group to delete.</param>
         /// <returns>True if the group was deleted, false otherwise.</returns>
-        public bool DeleteGroup(string uniqueId)
+        public override bool DeleteGroup(string uniqueId)
         {
             try
             {
@@ -802,7 +945,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="uniqueId">The unique id of the user to delete.</param>
         /// <returns>True if the user was deleted, false otherwise.</returns>
-        public bool DeleteUser(string uniqueId)
+        public override bool DeleteUser(string uniqueId)
         {
             try
             {
@@ -826,16 +969,16 @@ namespace Galactic.Identity.ActiveDirectory
         /// Gets all groups in the directory system.
         /// </summary>
         /// <returns>A list of all groups in the directory system.</returns>
-        public List<IGroup> GetAllGroups()
+        public override List<Identity.Group> GetAllGroups()
         {
             // Get all the group entries from AD.
             List<SearchResultEntry> entries = GetEntries("objectCategory=group");
 
             // Convert the results to Group objects.
-            List<IGroup> groups = new();
+            List<Identity.Group> groups = new();
             foreach (SearchResultEntry entry in entries)
             {
-                groups.Add((IGroup)new Group(this, entry));
+                groups.Add(new Group(this, entry));
             }
 
             // Return the list of groups.
@@ -846,9 +989,56 @@ namespace Galactic.Identity.ActiveDirectory
         /// Gets all users in the directory system.
         /// </summary>
         /// <returns>A list of all users in the directory system.</returns>
-        public List<IUser> GetAllUsers()
+        public override List<Identity.User> GetAllUsers()
         {
-            return User.GetAllUsers(this).ConvertAll<IUser>(user => user);
+            return User.GetAllUsers(this);
+        }
+
+        /// <summary>
+        /// Gets the values of the attributes associated with the supplied names.
+        /// </summary>
+        /// <param name="names">The names of the attributes to get the values of.</param>
+        /// <param name="entry">The SearchResultEntry to get the attribute values from.</param>
+        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.
+        /// If a returned value is null, there was an error retrieving that value.</returns>
+        public List<IdentityAttribute<object>> GetAttributes(List<string> names, SearchResultEntry entry)
+        {
+            List<IdentityAttribute<object>> attributes = new();
+            if (names != null)
+            {
+                foreach (string name in names)
+                {
+                    // TODO: See if its possible to determine type via the AD Schema.
+                    // Try getting the value by each possible type it could be.
+                    object value = GetStringAttributeValue(name, entry);
+                    if (value == null)
+                    {
+                        // It wasn't a string.
+                        value = GetStringAttributeValues(name, entry);
+                        if (value == null)
+                        {
+                            // It wasn't a list of strings.
+                            value = GetByteAttributeValue(name, entry);
+                            if (value == null)
+                            {
+                                // It wasn't a byte.
+                                value = GetByteAttributeValues(name, entry);
+                                if (value == null)
+                                {
+                                    // It wasn't a byte array.
+                                    value = GetIntervalAttributeValue(name, entry);
+                                }
+                            }
+                        }
+                    }
+
+                    // Add the attribute and it's value.
+                    attributes.Add(new(name, value));
+                }
+            }
+
+            // Return the list of attributes.
+            return attributes;
         }
 
         /// <summary>
@@ -973,7 +1163,7 @@ namespace Galactic.Identity.ActiveDirectory
 
                 // Search using LDAP to get a new SearchResultEntry with the desired attribute.
                 string rangeAttributeName = name + ";range=" + rangeStart + "-*";
-                Guid entryGuid = GetGUID(entry);
+                Guid entryGuid = GetGuid(entry);
                 entry = GetEntryByGUID(entryGuid, new List<string> { rangeAttributeName });
 
                 // Get the values of the ranged attribute.
@@ -1021,46 +1211,6 @@ namespace Galactic.Identity.ActiveDirectory
                 // Return the results.
                 return results;
             }
-        }
-
-        /// <summary>
-        /// Checks whether the group name supplied conforms to the limitations imposed by Active Directory.
-        /// Active Directory Group Name Limitations:
-        /// 63 character length limit
-        /// Can not consist solely of numbers, periods, or spaces.
-        /// There must be no leading periods or spaces.
-        /// </summary>
-        /// <param name="name">The name to check.</param>
-        /// <returns>True if it meets the limitations, false otherwise.</returns>
-        static public bool IsGroupNameValid(string name)
-        {
-            // Check whether the name supplied is valid.
-            if (!string.IsNullOrEmpty(name))
-            {
-                // Check whether the length of the name is less than or equal to 63 characters.
-                if (name.Length <= GROUP_NAME_MAX_CHARS)
-                {
-                    // The name is of an appropriate length.
-
-                    // Check whether the name begins with a period or space.
-                    if ((name[0] != ' ') && (name[0] != '.'))
-                    {
-                        // The name does not begin with a period or space.
-
-                        // Check whether the string contains letters.
-                        foreach (char c in name)
-                        {
-                            if (char.IsLetter(c))
-                            {
-                                // The name contains a letter and is therefore valid.
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            // The name is not valid.
-            return false;
         }
 
         /// <summary>
@@ -1334,12 +1484,12 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Gets IGroups that start with the attribute value in the supplied attribute.
+        /// Gets Groups that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of groups that match the attribute value supplied.</returns>
-        public List<IGroup> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
+        public override List<Identity.Group> GetGroupsByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
             if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
             {
@@ -1357,15 +1507,15 @@ namespace Galactic.Identity.ActiveDirectory
                 List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value + "*", attributeNames);
 
                 // Filter the list of entries returned so that only Groups are returned.
-                List<IGroup> matchedGroups = new();
+                List<Identity.Group> matchedGroups = new();
                 if (entries != null)
                 {
                     foreach (SearchResultEntry entry in entries)
                     {
-                        SecurityPrincipal principal = new(this, entry);
-                        if (principal.IsGroup)
+                        Guid entryGuid = GetGuid(entry);
+                        if (IsGroup(entryGuid))
                         {
-                            matchedGroups.Add((Group)principal);
+                            matchedGroups.Add(new Group(this, entryGuid));
                         }
                     }
                 }
@@ -1382,7 +1532,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// Gets a list of the types of groups supported by the directory system.
         /// </summary>
         /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
-        public List<string> GetGroupTypes()
+        public override List<string> GetGroupTypes()
         {
             return new List<string>() {
                 "Universal",
@@ -1397,7 +1547,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="entry">The entry to get the GUID of.</param>
         /// <returns>The GUID of the entry, or an Empty GUID if it could not be found, or there was an error retrieving it.</returns>
-        public Guid GetGUID(SearchResultEntry entry)
+        public Guid GetGuid(SearchResultEntry entry)
         {
             if (entry != null)
             {
@@ -1423,14 +1573,14 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="attributeName">The name of the attribute to search.</param>
         /// <param name="attributeValue">The attribute value of the entry to get the GUID of.</param>
         /// <returns>The GUID of the entry, or an Empty GUID if it could not be found, or there was an error retrieving it.</returns>
-        public Guid GetGUIDByAttribute(string attributeName, string attributeValue)
+        public Guid GetGuidByAttribute(string attributeName, string attributeValue)
         {
             if (!string.IsNullOrWhiteSpace(attributeName) && !string.IsNullOrWhiteSpace(attributeValue))
             {
                 SearchResultEntry entry = GetEntryByAttribute(attributeName, attributeValue, new List<string>() { "objectGUID" });
                 if (entry != null)
                 {
-                    return GetGUID(entry);
+                    return GetGuid(entry);
                 }
                 else
                 {
@@ -1448,9 +1598,9 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="employeeNumber">The employee number of the entry to get the GUID of.</param>
         /// <returns>The GUID of the entry, or an Empty GUID if it could not be found, or there was an error retrieving it.</returns>
-        public Guid GetGUIDByEmployeeNumber(string employeeNumber)
+        public Guid GetGuidByEmployeeNumber(string employeeNumber)
         {
-            return GetGUIDByAttribute("employeeNumber", employeeNumber);
+            return GetGuidByAttribute("employeeNumber", employeeNumber);
         }
 
         /// <summary>
@@ -1458,9 +1608,9 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="sAMAccountName">The SAM account name of the entry to get the GUID of.</param>
         /// <returns>The GUID of the entry, or an Empty GUID if it could not be found, or there was an error retrieving it.</returns>
-        public Guid GetGUIDBySAMAccountName(string sAMAccountName)
+        public Guid GetGuidBySAMAccountName(string sAMAccountName)
         {
-            return GetGUIDByAttribute("sAMAccountName", sAMAccountName);
+            return GetGuidByAttribute("sAMAccountName", sAMAccountName);
         }
 
         /// <summary>
@@ -1468,9 +1618,9 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="dn">The distinguished name of the entry to get the GUID of.</param>
         /// <returns>The GUID of the entry, or an Empty GUID if it could not be found, or there was an error retrieving it.</returns>
-        public Guid GetGUIDByDistinguishedName(string dn)
+        public Guid GetGuidByDistinguishedName(string dn)
         {
-            return GetGUIDByAttribute("distinguishedName", dn);
+            return GetGuidByAttribute("distinguishedName", dn);
         }
 
         /// <summary>
@@ -1478,9 +1628,9 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="cn">The common name of the entry to get the GUID of.</param>
         /// <returns>The GUID of the entry, or an Empty GUID if it could not be found, or there was an error retrieving it.</returns>
-        public Guid GetGUIDByCommonName(string cn)
+        public Guid GetGuidByCommonName(string cn)
         {
-            return GetGUIDByAttribute("cn", cn);
+            return GetGuidByAttribute("cn", cn);
         }
 
         /// <summary>
@@ -1489,7 +1639,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="attribute">The attribute with name and value to search against.</param>
         /// <param name="returnedAttributes">(Optional) The attributes that should be returned in the user found. If not supplied, the default list of attributes is returned.</param>
         /// <returns>A list of users that match the attribute value supplied.</returns>
-        public List<IUser> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
+        public override List<Identity.User> GetUsersByAttribute(IdentityAttribute<string> attribute, List<IdentityAttribute<object>> returnedAttributes = null)
         {
             if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
             {
@@ -1507,15 +1657,15 @@ namespace Galactic.Identity.ActiveDirectory
                 List<SearchResultEntry> entries = GetEntriesByAttribute(attribute.Name, attribute.Value + "*", attributeNames);
 
                 // Filter the list of entries returned so that only Users are returned.
-                List<IUser> matchedUsers = new();
+                List<Identity.User> matchedUsers = new();
                 if (entries != null)
                 {
                     foreach (SearchResultEntry entry in entries)
                     {
-                        SecurityPrincipal principal = new(this, entry);
-                        if (principal.IsUser)
+                        Guid entryGuid = GetGuid(entry);
+                        if (IsUser(entryGuid))
                         {
-                            matchedUsers.Add((User)principal);
+                            matchedUsers.Add(new User(this, entryGuid));
                         }
                     }
                 }
@@ -1589,6 +1739,221 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Indicates if this principal is a Group.
+        /// <param name="guid">The GUID of the object to check.</param>
+        /// </summary>
+        public bool IsGroup(Guid guid)
+        {
+            return IsObjectClass(guid, "group");
+        }
+
+        /// <summary>
+        /// Checks whether the group name supplied conforms to the limitations imposed by Active Directory.
+        /// Active Directory Group Name Limitations:
+        /// 63 character length limit
+        /// Can not consist solely of numbers, periods, or spaces.
+        /// There must be no leading periods or spaces.
+        /// </summary>
+        /// <param name="name">The name to check.</param>
+        /// <returns>True if it meets the limitations, false otherwise.</returns>
+        static public bool IsGroupNameValid(string name)
+        {
+            // Check whether the name supplied is valid.
+            if (!string.IsNullOrEmpty(name))
+            {
+                // Check whether the length of the name is less than or equal to 63 characters.
+                if (name.Length <= GROUP_NAME_MAX_CHARS)
+                {
+                    // The name is of an appropriate length.
+
+                    // Check whether the name begins with a period or space.
+                    if ((name[0] != ' ') && (name[0] != '.'))
+                    {
+                        // The name does not begin with a period or space.
+
+                        // Check whether the string contains letters.
+                        foreach (char c in name)
+                        {
+                            if (char.IsLetter(c))
+                            {
+                                // The name contains a letter and is therefore valid.
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            // The name is not valid.
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if this object is a member of the supplied group.
+        /// </summary>
+        /// <param name="obj">The object to check for membership in the group.</param>
+        /// <param name="guid">The GUID of the group to check.</param>
+        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
+        /// <returns>True if the object is a member, false otherwise.</returns>
+        public bool IsMemberOfGroup(IdentityObject obj, Guid guid, bool recursive)
+        {
+            if (obj != null && (obj is Group || obj is User) && guid != Guid.Empty)
+            {
+                Group group = new(this, guid);
+                if (!recursive)
+                {
+                    // Get the GUID associated with the object.
+                    Guid objGuid = new(obj.UniqueId);
+                    if (objGuid != Guid.Empty)
+                    {
+                        // Get the entry associated with the object.
+                        SearchResultEntry entry = GetEntryByGUID(objGuid);
+                        if (entry != null)
+                        {
+                            List<string> dns = GetStringAttributeValues("memberOf", entry);
+                            return dns.Contains(group.DistinguishedName);
+                        }
+                        else
+                        {
+                            // The object's entry wasn't found.
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        // The object's GUID wasn't found.
+                        return false;
+                    }
+                }
+                else
+                {
+                    foreach (IdentityObject member in group.Members)
+                    {
+                        if (member is Group)
+                        {
+                            // If the member is a group, do a recursive lookup of that group as well.
+                            if (IsMemberOfGroup(obj, (member as Group).Guid, true))
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            // If the member is not a group, check if it's the GUID we're looking for.
+                            if (obj.UniqueId == member.UniqueId)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Indicates if this object belongs to the designated object class.
+        /// Checks the "objectClass" attribute.
+        /// <param name="guid">The GUID of the object to check.</param>
+        /// <param name="schemaClass">The schema class of the object to check for.</param>
+        /// </summary>
+        public bool IsObjectClass(Guid guid, string schemaClass)
+        {
+            if (guid == Guid.Empty && !string.IsNullOrWhiteSpace(schemaClass))
+            {
+                // Check whether the class of this object in Active Directory is a user.
+                SearchResultEntry entry = GetEntryByGUID(guid);
+
+                if (entry != null)
+                {
+                    // Get the schema classes associated with the object.
+                    List<string> schemaClasses = GetStringAttributeValues("objectClass", entry);
+
+                    if (schemaClasses != null)
+                    {
+                        // Check if the object has the supplied schema class.
+                        if (schemaClasses.Contains(schemaClass))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        // There was an error retrieving the schema classes.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The entry wasn't found.
+                    return false;
+                }
+            }
+            else
+            {
+                // Valid parameters were not provided.
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Indicates if this principal is a User.
+        /// <param name="guid">The GUID of the object to check.</param>
+        /// </summary>
+        public bool IsUser(Guid guid)
+        {
+            return IsObjectClass(guid, "user");
+        }
+
+        /// <summary>
+        /// Moves and / or renames this object.
+        /// </summary>
+        /// <param name="obj">(Reference) The object to move and / or rename. Changes are reflected on return.</param>
+        /// <param name="newParentObjectGuid">(Optional: Required only if moving) The GUID of the new parent object for the object (if moving).</param>
+        /// <param name="newSAMAccountName">(Optional: Required only if renaming) The new SAM Account Name (if renaming).</param>
+        /// <returns>True if the object was moved or renamed, false otherwise.</returns>
+        public bool MoveRename(ref IdentityObject obj, Guid? newParentObjectGuid = null, string newSAMAccountName = null)
+        {
+            if (obj != null && (obj is Group || obj is User))
+            {
+                // Get old values necessary for replacement during the move / rename process.
+                string oldSAMAccountName = (obj as ISecurityPrincipal).SAMAccountName;
+
+                // Move / rename the object.
+                if (MoveRenameObject((obj as ISecurityPrincipal).Guid, newParentObjectGuid, newSAMAccountName))
+                {
+                    // The security principal was moved or renamed in AD.
+                    if (!string.IsNullOrWhiteSpace(newSAMAccountName))
+                    {
+                        // This is a rename, update all necessary attributes with the new name.
+                        
+                        // Refresh the object after the move / rename.
+                        if (obj is Group)
+                        {
+                            obj = new Group(this, (obj as Group).Guid);
+                        }
+                        else
+                        {
+                            obj = new User(this, (obj as User).Guid);
+                        }
+
+                        // Update the SAMAccountName
+                        (obj as ISecurityPrincipal).SAMAccountName = newSAMAccountName;
+
+                        // Update the user principal name.
+                        (obj as ISecurityPrincipal).UserPrincipalName = (obj as ISecurityPrincipal).UserPrincipalName.Replace(oldSAMAccountName, (obj as ISecurityPrincipal).SAMAccountName);
+
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Moves and / or renames an object in Active Directory.
         /// </summary>
         /// <param name="objectGuid">The GUID of the object to move and / or rename.</param>
@@ -1614,7 +1979,7 @@ namespace Galactic.Identity.ActiveDirectory
                     else
                     {
                         // Set the parent object to the current parent of the object supplied.
-                        parentObj = new ActiveDirectoryObject(this, GetGUIDByDistinguishedName(obj.OrganizationalUnit));
+                        parentObj = new ActiveDirectoryObject(this, GetGuidByDistinguishedName(obj.OrganizationalUnit));
                     }
 
                     string commonName;
@@ -1640,6 +2005,214 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Removes an object from a group.
+        /// </summary>
+        /// <param name="obj">(Reference) The object to remove from the group. Changes are reflected on return.</param>
+        /// <param name="guid">The GUID of the group to remove the object from.</param>
+        /// <returns>True if the object was removed, false otherwise.</returns>
+        public bool RemoveFromGroup(ref IdentityObject obj, Guid guid)
+        {
+            if (obj != null && (obj is Group || obj is User) && guid != Guid.Empty)
+            {
+                Group group = new Group(this, guid);
+                bool success = group.RemoveMembers(new () { obj });
+                if (success)
+                {
+                    // Refresh the object after the group removal.
+                    if (obj is Group)
+                    {
+                        obj = new Group(this, (obj as Group).Guid);
+                    }
+                    else
+                    {
+                        obj = new User(this, (obj as User).Guid);
+                    }
+
+                    // Verify that an object was returned.
+                    if (obj != null)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes a proxy e-mail address from an entry's proxyAddresses field.
+        /// </summary>
+        /// <param name="entry">(Reference) The entry to remove the proxy address from. Changes are refelected on return.</param>
+        /// <param name="emailAddress">The address in standard e-mail format (username@domain.com)</param>
+        /// <returns>True if the address was removed or not found, false otherwise.</returns>
+        public bool RemoveProxyAddress(ref SearchResultEntry entry, string emailAddress)
+        {
+            if (entry != null && !string.IsNullOrWhiteSpace(emailAddress))
+            {
+                // Create the address in proxy address format.
+                string proxyAddressToRemove = "smtp:" + emailAddress;
+                string primaryProxyAddressToRemove = "SMTP:" + emailAddress;
+
+                // Get a list of existing proxy addresses.
+                List<string> proxyAddresses = GetStringAttributeValues("proxyAddresses", entry);
+
+                // Check that proxy addresses has values in it.
+                if (proxyAddresses != null)
+                {
+                    if (proxyAddresses.Count > 0)
+                    {
+                        // There are existing proxy addresses.
+
+                        // Check whether the address to add already exists in the list.
+                        if (proxyAddresses.Contains(proxyAddressToRemove))
+                        {
+                            // Remove the existing entry.
+                            proxyAddresses.Remove(proxyAddressToRemove);
+                            return SetAttribute(ref entry, "proxyAddresses", proxyAddresses.ToArray());
+                        }
+                        else
+                        {
+                            // Check whether the proxy address to remove is a primary.
+                            if (proxyAddresses.Contains(primaryProxyAddressToRemove))
+                            {
+                                // Remove the existing entry.
+                                proxyAddresses.Remove(primaryProxyAddressToRemove);
+                                return SetAttribute(ref entry, "proxyAddresses", proxyAddresses.ToArray());
+                            }
+
+                            // This account did not have an e-mail address matching the one desired.
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        // Proxy addresses did not contain the e-mail address because it is empty.
+                        return true;
+                    }
+                }
+                else
+                {
+                    // There was an error retrieving the proxy addresses from the directory, or some other unspecified error.
+                    return false;
+                }
+            }
+            else
+            {
+                // An entry or e-mail address was not supplied.
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Sets attribute of an object. If a null or empty values object is supplied no modifications will be made.
+        /// </summary>
+        /// <param name="entry">(Reference) The entry to set the attribute of. Changes to the entry are reflected on return.</param>
+        /// <param name="attributeName">The name of the attribute to set.</param>
+        /// <param name="values">The value(s) to set the attribute to.</param>
+        /// <returns>True if the attribute was set successfully, false otherwise.</returns>
+        public bool SetAttribute(ref SearchResultEntry entry, string attributeName, object[] values)
+        {
+            // Check that an attribute name and associated value(s) are supplied.
+            if (entry != null && !string.IsNullOrWhiteSpace(attributeName) && values != null && values.Length > 0)
+            {
+                // Check if the attribute already has a value.
+                return AddOrReplaceAttributeValue(attributeName, values, ref entry);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Sets multi value attribute of an object. If a null or empty values object is supplied no modifications will be made.
+        /// </summary>
+        /// <param name="entry">(Reference) The entry to set the attribute of. Changes to the entry are reflected on return.</param>
+        /// <param name="attributeName">The name of the attribute to set.</param>
+        /// <param name="values">The value(s) to set the attribute to.</param>
+        /// <returns>True if the attribute was set successfully, false otherwise.</returns>
+        public bool SetMultiValueAttribute(ref SearchResultEntry entry, string attributeName, object[] values)
+        {
+            // Check that an attribute name and associated value(s) are supplied.
+            if (entry != null && !string.IsNullOrWhiteSpace(attributeName) && values != null && values.Length > 0)
+            {
+                // Check if the attribute already has a value.
+                return AddAttributeValue(attributeName, values, ref entry);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Sets the supplied e-mail address to be the primary e-mail address for receiving mail.
+        /// Note: This e-mail address must already be associated with the entry.
+        /// If the entry currently has a primary e-mail address, it will be set as a secondary.
+        /// </summary>
+        /// <param name="obj">(Reference) The entry to set the primary proxy address on. Changes are refelected on return.</param>
+        /// <param name="emailAddress">The e-mail address to make primary.</param>
+        /// <returns>Returns true if the e-mail address was made the primary, false if the e-mail address supplied was not already associated with the entry,
+        /// or the address could not be made primary for any reason.</returns>
+        public bool SetPrimaryProxyAddress(ref SearchResultEntry entry, string emailAddress)
+        {
+            // Check if an entry and e-mail address was supplied.
+            if (entry != null && !string.IsNullOrWhiteSpace(emailAddress))
+            {
+                // Get the GUID that corresponds with the entry.
+                Guid entryGuid = GetGuid(entry);
+                if (entryGuid != Guid.Empty)
+                {
+                    // Get an IdentityObject that corresponds with the entry.
+                    IdentityObject obj = null;
+                    if (IsGroup(entryGuid))
+                    {
+                        obj = new Group(this, entryGuid);
+                    }
+                    else if (IsUser(entryGuid))
+                    {
+                        obj = new User(this, entryGuid);
+                    }
+                    else
+                    {
+                        // The object is not of the correct type.
+                        return false;
+                    }
+
+                    // An entry and e-mail address were supplied.
+                    // Check if the e-mail is already associated with the account.
+                    if ((obj as IMailSupportedObject).EmailAddresses.Contains(emailAddress))
+                    {
+                        // The e-mail address is associated with the account.
+                        // Get the current primary address (if there is one).
+                        string currentPrimary = (obj as IMailSupportedObject).PrimaryEmailAddress;
+
+                        // Check that a current primary address was retrieved.
+                        if (!string.IsNullOrWhiteSpace(currentPrimary))
+                        {
+                            // The current primary address was retrieved.
+                            // Remove the current primary address from the account.
+                            if (RemoveProxyAddress(ref entry, currentPrimary))
+                            {
+                                // The primary was removed.
+                                // Add the primary back as a normal e-mail address.
+                                if (!AddProxyAddress(ref entry, currentPrimary))
+                                {
+                                    // There was an error adding the primary back.
+                                    return false;
+                                }
+                            }
+                        }
+
+                        // Remove the e-mail address to promote it to primary.
+                        if (RemoveProxyAddress(ref entry, emailAddress))
+                        {
+                            // The address was removed.
+                            // Add the e-mail address back as the primary.
+                            return AddProxyAddress(ref entry, emailAddress, true);
+                        }
+                    }
+                }
+            }
+            // An entry or e-mail address was not supplied or there was an error setting the primary address.
+            return false;
+        }
+
+        /// <summary>
         /// Sets the object that is the base for all searches within Active Directory.
         /// This only needs to be set if you need to search somewhere other than the base of the directory.
         /// </summary>
@@ -1648,6 +2221,34 @@ namespace Galactic.Identity.ActiveDirectory
         public bool SetSearchBase(string distinguishedName)
         {
             return ldap.SetSearchBaseAndScope(distinguishedName);
+        }
+
+        /// <summary>
+        /// Sets a single value string attribute of an object. If a null or empty value is supplied,
+        /// the attribute will be cleared / deleted.
+        /// </summary>
+        /// <param name="entry">(Reference) The entry to set the attribute of. Changes to the entry are reflected on return.</param>
+        /// <param name="attributeName">The name of the attribute to set.</param>
+        /// <param name="value">The string value to set the attribute to.</param>
+        /// <returns>True if the attribute was set successfully, false otherwise.</returns>
+        public bool SetStringAttribute(ref SearchResultEntry entry, string attributeName, string value)
+        {
+            if (entry != null && !string.IsNullOrWhiteSpace(attributeName))
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return SetAttribute(ref entry, attributeName, new object[] { value });
+                }
+                else
+                {
+                    return DeleteAttribute(ref entry, attributeName);
+                }
+            }
+            else
+            {
+                // The entry or attribute name was not supplied.
+                return false;
+            }
         }
 
         /// <summary>

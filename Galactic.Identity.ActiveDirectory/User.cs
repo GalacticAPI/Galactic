@@ -12,7 +12,7 @@ namespace Galactic.Identity.ActiveDirectory
     /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class User : SecurityPrincipal, IComparable<User>, IEqualityComparer<User>, IUser
+    public class User : Identity.User, ISecurityPrincipal
     {
         // ----- CONSTANTS -----
 
@@ -27,6 +27,9 @@ namespace Galactic.Identity.ActiveDirectory
         public const string DEFAULT_CREATE_PATH = "CN=Users";
 
         // ----- VARIABLES -----
+
+        // The client used to query and manipulate Active Directory.
+        protected ActiveDirectoryClient ad = null;
 
         // ----- PROPERTIES -----
 
@@ -115,6 +118,11 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// The Distinguished Name (DN) of the object in Active Directory.
+        /// </summary>
+        public string DistinguishedName => ad.GetStringAttributeValue("distinguishedName", entry);
+
+        /// <summary>
         /// The employee number of the user.
         /// </summary>
         public string EmployeeNumber
@@ -128,6 +136,12 @@ namespace Galactic.Identity.ActiveDirectory
                 SetStringAttribute("employeeNumber", value);
             }
         }
+
+
+        /// <summary>
+        /// The GUID of the object in Active Directory.
+        /// </summary>
+        public Guid Guid => ad.GetGuid(entry);
 
         /// <summary>
         /// Whether the user's account is disabled in Active Directory.
@@ -339,7 +353,7 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return AD.GetGUIDByDistinguishedName(Manager).ToString();
+                return AD.GetGuidByDistinguishedName(Manager).ToString();
             }
             set
             {
@@ -370,7 +384,7 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return new User(AD, AD.GetGUIDByDistinguishedName(Manager)).DisplayName;
+                return new User(AD, AD.GetGuidByDistinguishedName(Manager)).DisplayName;
             }
         }
 
@@ -768,7 +782,7 @@ namespace Galactic.Identity.ActiveDirectory
                 if (ad.Add(userDn, attributes.ToArray()))
                 {
                     // The user was created. Retrieve it from Active Directory.
-                    return new User(ad, ad.GetGUIDByDistinguishedName(userDn));
+                    return new User(ad, ad.GetGuidByDistinguishedName(userDn));
                 }
                 else
                 {
@@ -823,7 +837,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="ad">The Active Directory to retrieve users from.</param>
         /// <returns>A list of all users in the Active Directory.</returns>
-        static public List<User> GetAllUsers(ActiveDirectoryClient ad)
+        static public List<Identity.User> GetAllUsers(ActiveDirectoryClient ad)
         {
             // The LDAP search filter to use to find all the users.
             const string FILTER = "(&(objectCategory=person)(objectClass=user))";
@@ -846,7 +860,7 @@ namespace Galactic.Identity.ActiveDirectory
                 {
                     // The search returned results.
                     // Get user objects from the entries retrieved.
-                    List<User> users = new List<User>();
+                    List<Identity.User> users = new();
                     foreach (SearchResultEntry entry in entries)
                     {
                         users.Add(new User(ad, entry));
@@ -854,7 +868,7 @@ namespace Galactic.Identity.ActiveDirectory
                     return users;
                 }
             }
-            return new List<User>();
+            return new();
         }
 
         /// <summary>

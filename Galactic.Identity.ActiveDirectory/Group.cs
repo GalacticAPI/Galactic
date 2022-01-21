@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
+using System.Linq;
 using System.Runtime.Versioning;
 
 namespace Galactic.Identity.ActiveDirectory
@@ -12,15 +13,10 @@ namespace Galactic.Identity.ActiveDirectory
     /// </summary>
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("android")]
-    public class Group : SecurityPrincipal, IEnumerable<SecurityPrincipal>, IGroup
+    public class Group : Identity.Group, ISecurityPrincipal
     {
 
         // ----- CONSTANTS -----
-
-        /// <summary>
-        /// The list of specific attributes that should be retrieved when searching for the entry in AD. The attributes of parent objects should be included as well.
-        /// </summary>
-        static protected new string[] AttributeNames = { "department", "member", "groupType" };
 
         /// <summary>
         /// The default location for groups to be created in Active Directory.
@@ -29,50 +25,389 @@ namespace Galactic.Identity.ActiveDirectory
 
         // ----- VARIABLES -----
 
-        // ----- PROPERTIES -----
+        // The client used to query and manipulate Active Directory.
+        protected ActiveDirectoryClient ad = null;
+
+        // The list of attributes to retrieve when searching for the entry in AD.
+        protected List<string> attributes = new List<string>(attributeNames);
 
         /// <summary>
-        /// All users that are a member of this group or a subgroup.
+        /// The list of specific attributes that should be retrieved when searching for the entry in AD. The attributes of parent objects should be included as well.
         /// </summary>
-        List<IUser> IGroup.AllUserMembers
+        static protected string[] attributeNames = { "department", "member", "groupType", "objectGUID", "distinguishedName", "description", "memberOf", "objectClass", "objectCategory", "displayName", "cn", "mail", "proxyAddresses", "mailNickname", "targetAddress", "userPrincipalName", "employeeNumber", "badPwdCount", "badPasswordTime", "division", "employeeID", "givenName", "msIIS-FTPDir", "msIIS-FTPRoot", "homeDirectory", "homeDrive", "wWWHomePage", "sn", "scriptPath", "manager", "pwdLastSet", "streetAddress", "title", "msDS-User-Account-Control-Computed", "userAccountControl", "sAMAccountName", "objectSid" };
+
+        // The SearchResultEntry object that represents the Group in Active Directory.
+        protected SearchResultEntry entry = null;
+
+        // ----- PROPERTIES -----
+
+        // ----- ActiveDirectoryObject -----
+        /// <summary>
+        /// The Common Name (CN) of the object in Active Directory.
+        /// </summary>
+        public string CommonName => ad.GetStringAttributeValue("cn", entry);
+
+        /// <summary>
+        /// The time the object was created in UTC.
+        /// </summary>
+        public DateTime? CreateTimeStamp
         {
             get
             {
-                return AllUserMembers.ConvertAll<IUser>(user => user);
+                string timeStamp = ad.GetStringAttributeValue("createTimeStamp", entry);
+                if (!string.IsNullOrWhiteSpace(timeStamp))
+                {
+                    return ActiveDirectoryClient.GetDateTimeFromUTCCodedTime(timeStamp);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
+
+        /// <summary>
+        /// The Distinguished Name (DN) of the object in Active Directory.
+        /// </summary>
+        public string DistinguishedName => ad.GetStringAttributeValue("distinguishedName", entry);
+
+        /// <summary>
+        /// The GUID of the object in Active Directory.
+        /// </summary>
+        public Guid Guid => ad.GetGuid(entry);
+
+        /// <summary>
+        /// The distinguished name of the organizational unit or parent object containing the object.
+        /// </summary>
+        public string OrganizationalUnit
+        {
+            get
+            {
+                string ou = DistinguishedName;
+                if (!string.IsNullOrWhiteSpace(ou))
+                {
+                    string[] ouComponents = ou.Split(',');
+                    return ou.Substring(ouComponents[0].Length + 1);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The schema class types that identify the type of object this is in Active Directory.
+        /// Examples: group, user, etc.
+        /// </summary>
+        public List<string> SchemaClasses => ad.GetStringAttributeValues("objectClass", entry);
+
+        // ----------
+
+        // ----- SECURITY PRINCIPAL ----
+
+        /// <summary>
+        /// The date and time that the object was created.
+        /// </summary>
+        public override DateTime? CreationTime => CreateTimeStamp;
+
+        /// <summary>
+        /// A description of the security principal.
+        /// </summary>
+        public override string Description
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("description", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "description", value);
+            }
+        }
+
+        /// <summary>
+        /// The principal's e-mail address.
+        /// </summary>
+        public string EMailAddress
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("mail", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "mail", value);
+            }
+        }
+
+        /// <summary>
+        /// A list of the object's e-mail addresses.
+        /// The object's primary e-mail address will always be first in the list.
+        /// </summary>
+        public List<string> EmailAddresses
+        {
+            get
+            {
+                // The list of e-mail addresses to return.
+                List<string> smtpAddresses = new List<string>();
+
+                // Get the attribute from Active Directory.
+                List<string> attribute = ad.GetStringAttributeValues("proxyAddresses", entry);
+
+                // Check that proxy addresses has values in it.
+                if (attribute != null)
+                {
+                    if (attribute.Count > 0)
+                    {
+                        // The attribute has values.
+
+                        // Create a list to return with only SMTP entries.
+                        foreach (string address in attribute)
+                        {
+                            if (address.StartsWith("SMTP:"))
+                            {
+                                // This is an primary SMTP entry.
+                                // Strip the prefix and add it to the beginning of the list.
+                                smtpAddresses.Insert(0, address.Substring(5));
+                            }
+                            else if (address.StartsWith("smtp:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // This is an SMTP entry.
+                                // Strip the prefix and add it to the list.
+                                smtpAddresses.Add(address.Substring(5));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Proxy addresses has no values. Check the mail property.
+                        string mailProperty = ad.GetStringAttributeValue("mail", entry);
+
+                        // Check if mail has a value.
+                        if (!string.IsNullOrWhiteSpace(mailProperty))
+                        {
+                            // The property has a value add it to the list.
+                            smtpAddresses.Add(mailProperty);
+                        }
+                    }
+                }
+
+                // Return the list of SMTP addresses.
+                return smtpAddresses;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    // Get the current list of email addresses associated with the principal.
+                    List<string> currentAddresses = EmailAddresses;
+
+                    // Remove addresses that should no longer be associated with the principal.
+                    // Those in currentAddresses but not value.
+                    foreach (string address in currentAddresses.Except(value))
+                    {
+                        ad.RemoveProxyAddress(, address);
+                    }
+
+                    // Add addresses that are new. Those in value but not in current addresses.
+                    foreach (string address in value.Except(currentAddresses))
+                    {
+                        AddProxyAddress(address);
+                    }
+
+                    // Set the primary e-mail address.
+                    if (value.Count > 0)
+                    {
+                        SetPrimaryProxyAddress(value[0]);
+                        EMailAddress = value[0];
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// The principal's Microsoft Exchange Alias.
+        /// </summary>
+        public string ExchangeAlias => ad.GetStringAttributeValue("mailNickname", entry);
+
+        /// <summary>
+        /// The list of groups this object is a member of.
+        /// </summary>
+        public override List<Identity.Group> Groups
+        {
+            get
+            {
+                List<string> groupDns = GroupDns;
+                if (groupDns != null)
+                {
+                    List<Identity.Group> groups = new();
+                    foreach (string groupDn in groupDns)
+                    {
+                        try
+                        {
+                            groups.Add(new Group(ad, ad.GetGuidByDistinguishedName(groupDn)));
+                        }
+                        catch
+                        {
+                            // Skip adding this group. There was an error getting its GUID.
+                        }
+                    }
+                    return groups;
+                }
+                else
+                {
+                    // The principal is not a member of any groups.
+                    return new();
+                }
+            }
+        }
+
+        /// <summary>
+        /// The distinguished names of groups that this principal is a member of.
+        /// </summary>
+        public List<string> GroupDns => ad.GetStringAttributeValues("memberOf", entry);
+
+        /// <summary>
+        /// The object's primary e-mail address.
+        /// </summary>
+        public string PrimaryEmailAddress
+        {
+            get
+            {
+                // Get the attribute from Active Directory.
+                List<string> attribute = ad.GetStringAttributeValues("proxyAddresses", entry);
+
+                // Check that proxy addresses has values in it.
+                if (attribute != null)
+                {
+                    if (attribute.Count > 0)
+                    {
+                        // The attribute has values.
+
+                        // Find the SMTP entry in all caps. This is the primary e-mail address.
+                        foreach (string address in attribute)
+                        {
+                            if (address.StartsWith("SMTP:", StringComparison.Ordinal))
+                            {
+                                // This is the primary e-mail address.
+                                // Strip the prefix and add return it.
+                                return address.Substring(5);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Proxy addresses has no values. Check the mail property.
+                        string mailProperty = ad.GetStringAttributeValue("mail", entry);
+
+                        // Check if mail has a value.
+                        if (!string.IsNullOrWhiteSpace(mailProperty))
+                        {
+                            // The property has a value, return it.
+                            return mailProperty;
+                        }
+                    }
+                }
+                // No e-mail address could be found for the user.
+                return null;
+            }
+            set
+            {
+                if (!EmailAddresses.Contains(value))
+                {
+                    // The address is not associated with the principal. Add it.
+                    AddProxyAddress(value);
+                }
+                // Set the address as primary.
+                SetPrimaryProxyAddress(value);
+                EMailAddress = value;
+            }
+        }
+
+        /// <summary>
+        /// The principal's SAM Account Name.
+        /// </summary>
+        public string SAMAccountName
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("sAMAccountName", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "sAMAccountName", value);
+            }
+        }
+
+        /// <summary>
+        /// The principal's target e-mail address. Used by Exchange for routing e-mail to its
+        /// final destination which may lie outside of the organization. Allows for an object
+        /// to appear in the GAL even though its e-mail address may be outside of Exchange.
+        /// Also used when routing e-mail to the Microsoft Office365 cloud from an on-premises
+        /// Exchange server.
+        /// </summary>
+        public string TargetAddress
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("targetAddress", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "targetAddress", value);
+            }
+        }
+
+        /// <summary>
+        /// The object's unique ID in the system. (GUID)
+        /// </summary>
+        public override string UniqueId => Guid.ToString();
+
+        /// <summary>
+        /// The User Principal Name of the principal.
+        /// </summary>
+        public string UserPrincipalName
+        {
+            get
+            {
+                return ad.GetStringAttributeValue("userPrincipalName", entry);
+            }
+            set
+            {
+                ad.SetStringAttribute(ref entry, "userPrincipalName", value);
+            }
+        }
+
+        // -----
 
         /// <summary>
         /// Does a recursive lookup to find all users that are a member of this
         /// group by way of subgroup membership.
         /// </summary>
-        public List<User> AllUserMembers
+        public override List<Identity.User> AllUserMembers
         {
             get
             {
-                List<User> users = new List<User>();
-                List<SecurityPrincipal> members = Members;
+                List<Identity.User> users = new();
+                List<IdentityObject> members = Members;
 
                 // Check that there are members in the group.
                 if (members != null)
                 {
                     // There are members in the group.
-                    foreach (SecurityPrincipal member in members)
+                    foreach (IdentityObject member in members)
                     {
                         // Check if the member is a user.
-                        if (member.IsUser)
+                        if (member is User)
                         {
-                            // Get the user object from the principal's GUID.
-                            User user = new User(AD, member.GUID);
-
                             // Add the user to the list.
-                            users.Add(user);
+                            users.Add((User)member);
                         }
                         else
                         {
-                            // The members is a subgroup. Do a recursive lookup for more users.
-                            Group subGroup = new Group(AD, member.GUID);
-                            List<User> subGroupUsers = subGroup.AllUserMembers;
+                            // The member is a subgroup. Do a recursive lookup for more users.
+                            List<Identity.User> subGroupUsers = ((Group)member).AllUserMembers;
 
                             // Add any users found in the subgroup to the list.
                             users.AddRange(subGroupUsers);
@@ -86,24 +421,24 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// Groups that are members of the group.
         /// </summary>
-        public List<Group> GroupMembers
+        public override List<Identity.Group> GroupMembers
         {
             get
             {
-                List<Group> groups = new List<Group>();
-                List<SecurityPrincipal> members = Members;
+                List<Identity.Group> groups = new();
+                List<IdentityObject> members = Members;
 
-                // Check if there are security principals in the group.
+                // Check if there are members in the group.
                 if (members != null)
                 {
                     // There are members.
-                    foreach (SecurityPrincipal member in members)
+                    foreach (IdentityObject member in members)
                     {
-                        // Check if the security principal is a group.
-                        if (member.IsGroup)
+                        // Check if the member is a group.
+                        if (member is Group)
                         {
-                            // The principal is a group. Add it to the list.
-                            groups.Add(new Group(AD, member.GUID));
+                            // The member is a group. Add it to the list.
+                            groups.Add((Group)member);
                         }
                     }
                 }
@@ -112,48 +447,44 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Groups that are a member of the group.
-        /// </summary>
-        List<IGroup> IGroup.GroupMembers
-        {
-            get
-            {
-                return GroupMembers.ConvertAll<IGroup>(group => group);
-            }
-        }
-
-        /// <summary>
         /// The members of the group.
         /// </summary>
-        List<IIdentityObject> IGroup.Members
+        public override List<IdentityObject> Members
         {
             get
             {
-                return Members.ConvertAll<IIdentityObject>(principal => principal);
-            }
-        }
-
-        /// <summary>
-        /// The members of the group.
-        /// </summary>
-        public List<SecurityPrincipal> Members
-        {
-            get
-            {
-                List<string> dns = GetStringAttributeValues("member");
+                List<string> dns = ad.GetStringAttributeValues("member", entry);
                 if (dns != null)
                 {
-                    // Get a list of security principals by their distinguished names.
-                    List<SecurityPrincipal> securityPrincipals = new List<SecurityPrincipal>();
+                    // Get a list of objects by their distinguished names.
+                    List<IdentityObject> objs = new();
                     foreach (string dn in dns)
                     {
-                        securityPrincipals.Add(new SecurityPrincipal(AD, AD.GetGUIDByDistinguishedName(dn)));
+                        // Get the GUID of the member.
+                        Guid memberGuid = ad.GetGuidByDistinguishedName(dn);
+
+                        // Verify that a GUID was returned.
+                        if (memberGuid != Guid.Empty)
+                        {
+                            // Check which type of object the member is, and add it as the correct type to the list.
+                            if (ad.IsGroup(memberGuid))
+                            {
+                                // The member is a group.
+                                objs.Add(new Group(ad, memberGuid));
+                            }
+                            else if (ad.IsUser(memberGuid))
+                            {
+                                // The member is a user.
+                                objs.Add(new User(ad, memberGuid));
+                            }
+                        }
                     }
-                    return securityPrincipals;
+                    return objs;
                 }
                 else
                 {
-                    return new List<SecurityPrincipal>();
+                    // A list of distinguished names was not returned. Return an empty list.
+                    return new();
                 }
             }
         }
@@ -161,11 +492,11 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// The number of members in the group. 
         /// </summary>
-        public int MemberCount
+        public override int MemberCount
         {
             get
             {
-                List<string> dns = GetStringAttributeValues("member");
+                List<string> dns = ad.GetStringAttributeValues("member", entry);
                 if (dns != null)
                 {
                     //Count number of DNs listed.
@@ -186,7 +517,7 @@ namespace Galactic.Identity.ActiveDirectory
             get
             {
                 // Get the attribute value and convert it to a usable enum.
-                byte[] groupBits = GetByteAttributeValue("groupType");
+                byte[] groupBits = ad.GetByteAttributeValue("groupType", entry);
                 uint groupTypeNum = BitConverter.ToUInt32(groupBits);
                 ActiveDirectoryClient.GroupType groupType = (ActiveDirectoryClient.GroupType)groupTypeNum;
 
@@ -217,39 +548,28 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// Users who are members of the group.
         /// </summary>
-        public List<User> UserMembers
+        public override List<Identity.User> UserMembers
         {
             get
             {
-                List<User> users = new List<User>();
-                List<SecurityPrincipal> members = Members;
+                List<Identity.User> users = new();
+                List<IdentityObject> members = Members;
 
                 // Check if there are members in the group.
                 if (members != null)
                 {
                     // There are members.
-                    foreach (SecurityPrincipal member in members)
+                    foreach (IdentityObject member in members)
                     {
-                        // Check if the principal is a user.
-                        if (member.IsUser)
+                        // Check if the member is a user.
+                        if (member is User)
                         {
-                            // The principal is a user. Add them to the list.
-                            users.Add(new User(AD, member.GUID));
+                            // The member is a user. Add them to the list.
+                            users.Add((User)member);
                         }
                     }
                 }
                 return users;
-            }
-        }
-
-        /// <summary>
-        /// Users that are a member of the group. (Not including subgroups.)
-        /// </summary>
-        List<IUser> IGroup.UserMembers
-        {
-            get
-            {
-                return UserMembers.ConvertAll<IUser>(user => user);
             }
         }
 
@@ -261,16 +581,14 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="ad">An Active Directory client used to query and manipulate the directory object.</param>
         /// <param name="guid">The GUID of the user.</param>
         public Group(ActiveDirectoryClient ad, Guid guid)
-            : base(ad, guid)
         {
             if (ad != null && guid != Guid.Empty)
             {
-                // Add atttributes relevant to groups to the list of base attributes
-                // to retrieve from entries queried from Active Directory.
-                Attributes.AddRange(AttributeNames);
+                // Set this object's Active Directory object.
+                this.ad = ad;
 
-                Entry = GetEntryFromAD(guid);
-                if (Entry == null)
+                entry = ad.GetEntryByGUID(guid);
+                if (entry == null)
                 {
                     throw new ArgumentException("The GUID provided could not be found in active directory.", "guid");
                 }
@@ -294,8 +612,25 @@ namespace Galactic.Identity.ActiveDirectory
         /// <param name="ad">An Active Directory client used to manipulate the group.</param>
         /// <param name="entry">The SearchResultEntry object containing attributes necessary to populate the object.</param>
         public Group(ActiveDirectoryClient ad, SearchResultEntry entry)
-            : base(ad, entry)
         {
+            // Check that an Active Directory object and search result entry have been provided.
+            if (ad != null && entry != null)
+            {
+                // Set this object's Active Directory object.
+                this.ad = ad;
+                this.entry = entry;
+            }
+            else
+            {
+                if (ad == null)
+                {
+                    throw new ArgumentNullException(nameof(ad));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(entry));
+                }
+            }
         }
 
         // ----- METHODS -----
@@ -305,16 +640,19 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="members">The members to add.</param>
         /// <returns>True if the members were added, false otherwise.</returns>
-        public bool AddMembers(List<IIdentityObject> members)
+        public override bool AddMembers(List<IdentityObject> members)
         {
             if (members != null)
             {
-                List<SecurityPrincipal> securityPrincipals = new();
-                foreach (IIdentityObject member in members)
+                List<string> dns = new List<string>();
+                foreach (IdentityObject member in members)
                 {
-                    securityPrincipals.Add(member as SecurityPrincipal);
+                    if (member is Group || member is User)
+                    {
+                        dns.Add((member as ISecurityPrincipal).DistinguishedName);
+                    }
                 }
-                return AddMembers(securityPrincipals);
+                return ad.SetMultiValueAttribute(ref entry, "member", dns.ToArray());
             }
             else
             {
@@ -324,45 +662,12 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Adds security principals to the group.
-        /// </summary>
-        /// <param name="principals">The principals to add.</param>
-        /// <returns>True if the principals were added, false otherwise.</returns>
-        public bool AddMembers(List<SecurityPrincipal> principals)
-        {
-            if (principals != null)
-            {
-                List<string> dns = new List<string>();
-                foreach (SecurityPrincipal principal in principals)
-                {
-                    dns.Add(principal.DistinguishedName);
-                }
-                return SetMultiValueAttribute("member", dns.ToArray());
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Clears all members from this group.
         /// </summary>
         /// <returns>True if all members were cleared, false otherwise.</returns>
-        public bool ClearMembership()
+        public override bool ClearMembership()
         {
-            return DeleteAttribute("member");
-        }
-
-
-        /// <summary>
-        /// Compares this Group to another Group.
-        /// </summary>
-        /// <param name="other">The other Group to compare this one to.</param>
-        /// <returns>-1 if the object supplied comes before this one in the sort order, 0 if they occur at the same position, 1 if the object supplied comes after this one in the sort order</returns>
-        public int CompareTo(Group other)
-        {
-            return CompareTo((ActiveDirectoryObject)other);
+            return ad.DeleteAttribute(ref entry, "member");
         }
 
         /// <summary>
@@ -416,7 +721,7 @@ namespace Galactic.Identity.ActiveDirectory
                 if (ad.Add(groupDn, attributes.ToArray()))
                 {
                     // The group was created. Retrieve it from Active Directory.
-                    return new Group(ad, ad.GetGUIDByDistinguishedName(groupDn));
+                    return new Group(ad, ad.GetGuidByDistinguishedName(groupDn));
                 }
                 else
                 {
@@ -438,82 +743,14 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
-        /// Deletes a group from Active Directory.
+        /// Gets the values of the attributes associated with the supplied names.
         /// </summary>
-        /// <param name="ad">An Active Directory client used to delete the group.</param>
-        /// <param name="guid">The GUID of the group.</param>
-        /// <returns>True if the group was deleted, false otherwise.</returns>
-        static public bool Delete(ActiveDirectoryClient ad, Guid guid)
+        /// <param name="names">The names of the attributes to get the values of.</param>
+        /// <returns>A list of identity attributes that contain the attribute's name and value, or null if no values could be returned.
+        /// If a returned value is null, there was an error retrieving that value.</returns>
+        public override List<IdentityAttribute<object>> GetAttributes(List<string> names)
         {
-            if (ad != null && guid != Guid.Empty)
-            {
-                return ad.Delete(guid);
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Checks whether x and y are equal (using GUIDs).
-        /// </summary>
-        /// <param name="x">The first Group to check.</param>
-        /// <param name="y">The second Group to check against.</param>
-        /// <returns>True if the objects are equal, false otherwise.</returns>
-        public bool Equals(Group x, Group y)
-        {
-            return base.Equals(x, y);
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
-        IEnumerator<IIdentityObject> IEnumerable<IIdentityObject>.GetEnumerator()
-        {
-            return ((IGroup)this).GetEnumerator();
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>An IEnumerator object that can be used to iterate through the collection.</returns>
-        public IEnumerator<SecurityPrincipal> GetEnumerator()
-        {
-            foreach (SecurityPrincipal member in Members)
-            {
-                yield return member;
-            }
-        }
-
-        /// <summary>
-        /// Generates a hash code for the Group supplied.
-        /// </summary>
-        /// <param name="obj">The Group to generate a hash code for.</param>
-        /// <returns>An integer hash code for the object.</returns>
-        public int GetHashCode(Group obj)
-        {
-            return GetHashCode((ActiveDirectoryObject)obj);
-        }
-
-        /// <summary>
-        /// Removes a security principal from the group.
-        /// </summary>
-        /// <param name="principal">The principal to remove.</param>
-        /// <returns>True if the principal was removed, false otherwise.</returns>
-        public bool RemoveMember(SecurityPrincipal principal)
-        {
-            return RemoveMembers(new List<SecurityPrincipal> { principal });
+            return ad.GetAttributes(names, entry);
         }
 
         /// <summary>
@@ -521,41 +758,25 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         /// <param name="members">The objects to remove.</param>
         /// <returns>True if the objects were removed, false otherwise.</returns>
-        public bool RemoveMembers(List<IIdentityObject> members)
+        public override bool RemoveMembers(List<IdentityObject> members)
         {
             if (members != null)
             {
-                List<SecurityPrincipal> securityPrincipals = new();
-                foreach (IIdentityObject member in members)
+                List<string> dns = new List<string>();
+                foreach (IdentityObject member in members)
                 {
-                    securityPrincipals.Add(member as SecurityPrincipal);
+                    if (member is Group || member is User)
+                    {
+                        dns.Add((member as ISecurityPrincipal).DistinguishedName);
+                    }
                 }
-                return RemoveMembers(securityPrincipals);
+                return ad.DeleteAttribute(ref entry, "member", dns.ToArray());
             }
             else
             {
                 // No members were supplied.
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Removes security principals from the group.
-        /// </summary>
-        /// <param name="principals">The principals to remove.</param>
-        /// <returns>True if the principals were removed, false otherwise.</returns>
-        public bool RemoveMembers(List<SecurityPrincipal> principals)
-        {
-            if (principals != null)
-            {
-                List<string> dns = new List<string>();
-                foreach (SecurityPrincipal principal in principals)
-                {
-                    dns.Add(principal.DistinguishedName);
-                }
-                return DeleteAttribute("member", dns.ToArray());
-            }
-            return false;
         }
     }
 }

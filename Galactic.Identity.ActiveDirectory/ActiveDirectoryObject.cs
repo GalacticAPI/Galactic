@@ -84,7 +84,7 @@ namespace Galactic.Identity.ActiveDirectory
         {
             get
             {
-                return AD.GetGUID(Entry);
+                return AD.GetGuid(Entry);
             }
         }
 

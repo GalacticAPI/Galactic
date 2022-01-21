@@ -192,7 +192,7 @@ namespace Galactic.Identity.ActiveDirectory
                     {
                         try
                         {
-                            groups.Add(new Group(AD, AD.GetGUIDByDistinguishedName(groupDn)));
+                            groups.Add(new Group(AD, AD.GetGuidByDistinguishedName(groupDn)));
                         }
                         catch
                         {
