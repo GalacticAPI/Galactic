@@ -49,7 +49,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// A static list of groups to keep track of which have been seen when doing a recursirve search in GetMemberOfGroup().
         /// </summary>
-        private static List<Group> recursiveGroupsListed = new();
+        private static List<Identity.Group> recursiveGroupsListed = new();
 
         // ----- PROPERTIES -----
 
@@ -655,10 +655,10 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
         /// <param name="initial">(Optional) Whether, when doing a recursive lookup, this call is the initial call for the search.</param>
         /// <returns>True if the object is a member, false otherwise.</returns>
-        public bool GetMemberOfGroup(IdentityObject obj, Group group, bool recursive, bool initial = true)
+        public bool GetMemberOfGroup(IdentityObject obj, Identity.Group group, bool recursive, bool initial = true)
         {
             // Check that all parameters are supplied and are of the correct type.
-            if (obj != null && (obj is Group || obj is User) && group != null)
+            if (obj != null && (obj is Group || obj is User) && group != null && group is Group)
             {
                 try
                 {

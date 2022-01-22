@@ -109,7 +109,7 @@ namespace Galactic.Identity
         /// <summary>
         /// The user's physical address.
         /// </summary>
-        public abstract string PhyscialAddress { get; set; }
+        public abstract string PhysicalAddress { get; set; }
 
         /// <summary>
         /// The user's postal (mailing) address.

@@ -326,7 +326,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <param name="group">The group to check.</param>
         /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
         /// <returns>True if the object is a member, false otherwise.</returns>
-        public override bool MemberOfGroup(Identity.Group group, bool recursive) => throw new NotImplementedException();
+        public override bool MemberOfGroup(Identity.Group group, bool recursive) => gws.GetMemberOfGroup(this, group, recursive);
 
         /// <summary>
         /// Removes identity objects from the group. (Skips any non-Google Workspace members supplied.)

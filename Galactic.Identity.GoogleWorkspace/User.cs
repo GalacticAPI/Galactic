@@ -902,7 +902,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The user's physical address.
         /// (Google: For the first address in the list of addresses associated with the user.)
         /// </summary>
-        public override string PhyscialAddress
+        public override string PhysicalAddress
         {
             get => StreetAddress;
             set => StreetAddress = value;
@@ -1154,6 +1154,14 @@ namespace Galactic.Identity.GoogleWorkspace
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Checks if the identity object is a member of the supplied group.
+        /// </summary>
+        /// <param name="group">The group to check.</param>
+        /// <param name="recursive">Whether to do a recursive lookup of all sub groups that this object might be a member of.</param>
+        /// <returns>True if the object is a member, false otherwise.</returns>
+        public override bool MemberOfGroup(Identity.Group group, bool recursive) => gws.GetMemberOfGroup(this, group, recursive);
 
         /// <summary>
         /// Sets the password of the user.

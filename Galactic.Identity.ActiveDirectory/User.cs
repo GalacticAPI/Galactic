@@ -822,7 +822,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// <summary>
         /// The user's physical address.
         /// </summary>
-        public override string PhyscialAddress
+        public override string PhysicalAddress
         {
             get => StreetAddress;
             set

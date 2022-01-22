@@ -9,7 +9,7 @@ namespace Galactic.Identity
     /// object classes (Users, Groups, etc.) implemented by the Galactic API should
     /// support.
     /// </summary>
-    public abstract class IdentityObject : IComparable<IdentityObject>, IEqualityComparer<IdentityObject>
+    public abstract class IdentityObject : IComparable<IdentityObject>, IEquatable<IdentityObject>
     {
         // ----- CONSTANTS -----
 
@@ -116,53 +116,44 @@ namespace Galactic.Identity
         }
 
         /// <summary>
-        /// Checks whether x and y are equal (have the same UniqueIds).
+        /// Indicates whether the current object is equal to another object of the same type.
         /// </summary>
-        /// <param name="x">The first identity object to check.</param>
-        /// <param name="y">The second identity object to check.</param>
-        /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public virtual bool Equals(IdentityObject x, IdentityObject y)
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+        public virtual bool Equals(IdentityObject other)
         {
-            if (x != null && y != null)
+            if (other != null)
             {
-                return x.UniqueId.Equals(y.UniqueId);
+                return UniqueId.Equals(other.UniqueId);
             }
             else
             {
-                if (x == null)
-                {
-                    throw new ArgumentNullException(nameof(x));
-                }
-                else
-                {
-                    throw new ArgumentNullException(nameof(y));
-                }
+                return false;
             }
         }
 
         /// <summary>
-        /// Checks whether x and y are equal using the supplied attribute names as the attributes for checking equality against.
+        /// Checks whether this object is equal to another using the supplied attribute names as the attributes for checking equality against.
         /// </summary>
-        /// <typeparam name="T">The type of the attributes to compare. Both attributes must be of the same type.</typeparam>
-        /// <param name="x">The first identity object to check.</param>
-        /// <param name="xAttributeName">The name of the attribute in x object to use when comparing.</param>
-        /// <param name="y">The second identity object to check.</param>
-        /// <param name="yAttributeName">The name of the attribute in y object to use when comparing.</param>
+        /// <typeparam name="T">The type of the attribute to compare.</typeparam>
+        /// <param name="other">The identity object to compare against.</param>
+        /// <param name="attributeName">The name of the attribute in this object to use when comparing.</param>
+        /// <param name="otherAttributeName">The name of the attribute in the other object to use when comparing.</param>
         /// <returns>True if the identity objects are equal, false otherwise.</returns>
-        public virtual bool Equals<T>(IdentityObject x, string xAttributeName, IdentityObject y, string yAttributeName)
+        public virtual bool Equals<T>(IdentityObject other, string attributeName, string otherAttributeName)
         {
-            if (x != null & y != null & !string.IsNullOrWhiteSpace(xAttributeName) && !string.IsNullOrWhiteSpace(yAttributeName))
+            if (other != null && !string.IsNullOrWhiteSpace(attributeName) && !string.IsNullOrWhiteSpace(otherAttributeName))
             {
                 // Get the attributes of each object.
-                List<IdentityAttribute<object>> xAttributes = x.GetAttributes(new() { xAttributeName });
-                List<IdentityAttribute<object>> yAttributes = y.GetAttributes(new() { yAttributeName });
+                List<IdentityAttribute<object>> attributes = GetAttributes(new() { attributeName });
+                List<IdentityAttribute<object>> otherAttributes = other.GetAttributes(new() { attributeName });
 
                 // Verify that attributes were found with the supplied names.
-                if (xAttributes.Count == 1 && yAttributes.Count == 1)
+                if (attributes.Count == 1 && otherAttributes.Count == 1)
                 {
-                    T xAttribute = (T)xAttributes[0].Value;
-                    T yAttribute = (T)yAttributes[0].Value;
-                    return xAttribute.Equals(yAttribute);
+                    T attribute = (T)attributes[0].Value;
+                    T otherAttribute = (T)otherAttributes[0].Value;
+                    return attribute.Equals(otherAttribute);
                 }
                 else
                 {
@@ -172,21 +163,17 @@ namespace Galactic.Identity
             }
             else
             {
-                if (x == null)
+                if (other == null)
                 {
-                    throw new ArgumentNullException(nameof(x));
+                    throw new ArgumentNullException(nameof(other));
                 }
-                else if (y == null)
+                else if (string.IsNullOrWhiteSpace(attributeName))
                 {
-                    throw new ArgumentNullException(nameof(y));
-                }
-                else if (string.IsNullOrWhiteSpace(xAttributeName))
-                {
-                    throw new ArgumentNullException(nameof(xAttributeName));
+                    throw new ArgumentNullException(nameof(attributeName));
                 }
                 else
                 {
-                    throw new ArgumentNullException(nameof(yAttributeName));
+                    throw new ArgumentNullException(nameof(otherAttributeName));
                 }
             }
         }

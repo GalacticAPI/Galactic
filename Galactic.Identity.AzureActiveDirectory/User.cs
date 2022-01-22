@@ -332,7 +332,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// The user's physical address.
         /// </summary>
         [DirectorySystemPropertyName("officeLocation")]
-        public override string PhyscialAddress
+        public override string PhysicalAddress
         {
             get
             {
