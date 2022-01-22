@@ -1,4 +1,5 @@
 ﻿
+using Galactic.Cryptography;
 using SearchOperatorType = Galactic.Identity.GoogleWorkspace.GoogleWorkspaceClient.SearchOperatorType;
 using Google.Apis.Admin.Directory.directory_v1.Data;
 using GoogleGroup = Google.Apis.Admin.Directory.directory_v1.Data.Group;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using HashAlgorithmName = System.Security.Cryptography.HashAlgorithmName;
 
 namespace Galactic.Identity.GoogleWorkspace
 {
@@ -500,6 +502,16 @@ namespace Galactic.Identity.GoogleWorkspace
         // ----- PROPERTIES -----
 
         /// <summary>
+        /// A list of the user's addresses. The maximum allowed data size is 10Kb.
+        /// </summary>
+        [DirectorySystemPropertyName(ADDRESSES)]
+        public List<UserAddress> Addresses
+        {
+            get => (List<UserAddress>)user.Addresses;
+            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES, value) });
+        }
+
+        /// <summary>
         /// Indicates if the user is forced to change their password at next login. This setting doesn't apply when the user signs in via a third-party identity provider.
         /// </summary>
         [DirectorySystemPropertyName(CHANGE_PASSWORD_AT_NEXT_LOGIN)]
@@ -517,6 +529,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return false;
                 }
             }
+            set => gws.UpdateUser(UniqueId, new() { new(CHANGE_PASSWORD_AT_NEXT_LOGIN, value) });
         }
 
         /// <summary>
@@ -553,7 +566,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_COUNTRY_CODE, value) });
         }
 
         /// <summary>
@@ -583,7 +596,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS_DEPARTMENT, value) });
         }
 
         /// <summary>
@@ -631,7 +644,7 @@ namespace Galactic.Identity.GoogleWorkspace
                 // Return the list of e-mail addresses.
                 return emails;
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(EMAILS, value) });
         }
 
         /// <summary>
@@ -650,7 +663,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// An organization assigned identifier for the user.
         /// (Google: Google Workspace doesn't explicitly define how employee ids should be noted, other than that it supports various external ids.
-        /// This method returns the first external id in the list of external ids associated with the user with a type that starts with the string "employee" (not case specific).
+        /// This method returns the "organization" id of the user, which corresponds with "Employee ID" field in Google Workspace Admin.
         /// </summary>
         public override string EmployeeNumber
         {
@@ -659,10 +672,10 @@ namespace Galactic.Identity.GoogleWorkspace
                 {
                     if (user.ExternalIds != null)
                     {
-                        // Returns any external id with a type that starts with "employee" (not case specific).
+                        // Returns the "organization" external id.
                         foreach (UserExternalId externalId in user.ExternalIds)
                         {
-                            if (externalId.Type.StartsWith("employee", StringComparison.OrdinalIgnoreCase))
+                            if (externalId.Type == "organization")
                             {
                                 return externalId.Value;
                             }
@@ -677,7 +690,38 @@ namespace Galactic.Identity.GoogleWorkspace
                     }
                 }
             }
-            set => throw new NotImplementedException();
+            set
+            {
+                UserExternalId extId = new();
+                extId.Type = "organization";
+                extId.Value = value;
+                IList<UserExternalId> extIds = user.ExternalIds;
+                bool existingFound = false;
+                foreach (UserExternalId id in extIds)
+                {
+                    if (id.Type == "organization")
+                    {
+                        // Update the existing entry.
+                        id.Value = extId.Value;
+                        existingFound = true;
+                    }
+                }
+                if (!existingFound)
+                {
+                    // An existing employee id wasn't found. Add one.
+                    user.ExternalIds.Add(extId);
+                }
+                gws.UpdateUser(UniqueId, new() { new(EXTERNAL_IDS, extIds) });
+            }
+        }
+
+        /// <summary>
+        /// A list of external IDs for the user, such as an employee or network ID. The maximum allowed data size is 2Kb.
+        /// </summary>
+        public List<UserExternalId> ExternalIds
+        {
+            get => (List<UserExternalId>)user.ExternalIds;
+            set => gws.UpdateUser(UniqueId, new() { new(EXTERNAL_IDS, value) });
         }
 
         /// <summary>
@@ -687,7 +731,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string FamilyName
         {
             get => user.Name.FamilyName;
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(NAME_FAMILY_NAME, value) });
         }
 
         /// <summary>
@@ -709,7 +753,17 @@ namespace Galactic.Identity.GoogleWorkspace
         public string FullName
         {
             get => user.Name.FullName;
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(NAME_FULL_NAME, value) });
+        }
+
+        /// <summary>
+        /// An object containing the user's gender. Maximum allowed data size for this field is 1Kb.
+        /// </summary>
+        [DirectorySystemPropertyName(GENDER)]
+        public UserGender Gender
+        {
+            get => (UserGender)user.Gender;
+            set => gws.UpdateUser(UniqueId, new() { new(GENDER, value) });
         }
 
         /// <summary>
@@ -719,7 +773,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string GivenName
         {
             get => user.Name.GivenName;
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(NAME_GIVEN_NAME, value) });
         }
 
         /// <summary>
@@ -731,12 +785,38 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// Stores the hash format of the password property. We recommend sending the password property value as a base 16 bit hexadecimal-encoded hash value.
+        /// The following hashFunction values are allowed:
+        /// DES
+        /// MD5 - hash prefix is $1$
+        /// SHA2-256 - hash prefix is $5$
+        /// SHA2-512 - hash prefix is $6$
+        /// If rounds are specified as part of the prefix, they must be 10,000 or fewer.
+        /// </summary>
+        [DirectorySystemPropertyName(HASH_FUNCTION)]
+        public string HashFunction
+        {
+            get => user.HashFunction;
+            set => gws.UpdateUser(UniqueId, new() { new(HASH_FUNCTION, value) });
+        }
+
+        /// <summary>
         /// The unique ID for the user. A user id can be used as a user request URI's userKey.
         /// </summary>
         [DirectorySystemPropertyName(ID)]
         public string Id
         {
             get => user.Id;
+        }
+
+        /// <summary>
+        /// The user's Instant Messenger (IM) accounts. A user account can have multiple ims properties, but only one of these ims properties can be the primary IM contact.
+        /// </summary>
+        [DirectorySystemPropertyName(IMS)]
+        public List<UserIm> Ims
+        {
+            get => (List<UserIm>)user.Ims;
+            set => gws.UpdateUser(UniqueId, new() { new(IMS, value) });
         }
 
         /// <summary>
@@ -756,7 +836,27 @@ namespace Galactic.Identity.GoogleWorkspace
                     return false;
                 }
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(INCLUDE_IN_GLOBAL_ADDRESS_LIST, value) });
+        }
+
+        /// <summary>
+        /// If true, the user's IP address is whitelisted.
+        /// </summary>
+        [DirectorySystemPropertyName(IP_WHITELISTED)]
+        public bool IpWhitelisted
+        {
+            get
+            {
+                if (user.IpWhitelisted != null)
+                {
+                    return user.IpWhitelisted.Value;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            set => gws.UpdateUser(UniqueId, new() { new(IP_WHITELISTED, value) });
         }
 
         /// <summary>
@@ -765,11 +865,31 @@ namespace Galactic.Identity.GoogleWorkspace
         public override bool IsDisabled => Suspended;
 
         /// <summary>
+        /// A list of the user's keywords. The maximum allowed data size is 1Kb.
+        /// </summary>
+        [DirectorySystemPropertyName(KEYWORDS)]
+        public List<UserKeyword> Keywords
+        {
+            get => (List<UserKeyword>)user.Keywords;
+            set => gws.UpdateUser(UniqueId, new() { new(KEYWORDS, value) });
+        }
+
+        /// <summary>
         ///  The type of the API resource. For Users resources, the value is admin#directory#user.
         /// </summary>
         public string Kind
         {
             get => user.Kind;
+        }
+
+        /// <summary>
+        /// A list of the user's languages. The maximum allowed data size is 1Kb.
+        /// </summary>
+        [DirectorySystemPropertyName(LANGUAGES)]
+        public List<UserLanguage> Languages
+        {
+            get => (List<UserLanguage>)user.Languages;
+            set => gws.UpdateUser(UniqueId, new() { new(LANGUAGES, value) });
         }
 
         /// <summary>
@@ -814,7 +934,17 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_LOCALITY, value) });
+        }
+
+        /// <summary>
+        /// A list of the user's locations. The maximum allowed data size is 10Kb.
+        /// </summary>
+        [DirectorySystemPropertyName(LOCATIONS)]
+        public List<UserLocation> Locations
+        {
+            get => (List<UserLocation>)user.Locations;
+            set => gws.UpdateUser(UniqueId, new() { new(LOCATIONS, value) });
         }
 
         /// <summary>
@@ -834,17 +964,51 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public override string ManagerId
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get
+            {
+                foreach(UserRelation relation in user.Relations)
+                {
+                    if (relation.Type == "manager")
+                    {
+                        return relation.Value;
+                    }
+                }
+                return null;
+            }
+            set
+            {
+                IList<UserRelation> relations = user.Relations;
+
+                // Update the existing manager relation if it exists.
+                bool existingUpdated = false;
+                foreach (UserRelation relation in relations)
+                {
+                    if (relation.Type == "manager")
+                    {
+                        // Update the existing relation.
+                        relation.Value = value;
+                        existingUpdated = true;
+                    }
+                }
+                if (!existingUpdated)
+                {
+                    // Create a new relation and add it to the list.
+                    UserRelation relation = new UserRelation();
+                    relation.Type = "manager";
+                    relation.Value = value;
+                    relations.Add(relation);
+                }
+
+                // Update the group with the new relation value.
+                gws.UpdateUser(UniqueId, new() { new(RELATIONS, relations) });
+            }
         }
 
         /// <summary>
         /// The full name of the user's manager.
+        /// (Google: Google doesn't have a name field for relations. This returns the relation value field. Same value as ManagerId.)
         /// </summary>
-        public override string ManagerName
-        {
-            get => throw new NotImplementedException();
-        }
+        public override string ManagerName => ManagerId;
 
         /// <summary>
         /// The user's middle name. (Not implemented by Google Workspace.)
@@ -881,7 +1045,33 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set
+            {
+                IList<UserPhone> phones = user.Phones;
+
+                // Update the existing mobile phone if it exists.
+                bool existingUpdated = false;
+                foreach (UserPhone phone in phones)
+                {
+                    if (phone.Type == "mobile")
+                    {
+                        // Update the existing phone.
+                        phone.Value = value;
+                        existingUpdated = true;
+                    }
+                }
+                if (!existingUpdated)
+                {
+                    // Create a new phone and add it to the list.
+                    UserPhone phone = new UserPhone();
+                    phone.Type = "mobile";
+                    phone.Value = value;
+                    phones.Add(phone);
+                }
+
+                // Update the group with the new phone value.
+                gws.UpdateUser(UniqueId, new() { new(PHONES, phones) });
+            }
         }
 
         /// <summary>
@@ -904,7 +1094,36 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set
+            {
+                IList<UserOrganization> orgs = user.Organizations;
+
+                // Update the existing organization if it exists
+                if (orgs.Count > 0)
+                {
+                    orgs[0].Name = value;
+                }
+                else
+                {
+                    // Add a new organization and set its name.
+                    UserOrganization org = new();
+                    org.Name = value;
+                    orgs.Add(org);
+                }
+
+                // Update the group with the new organization value.
+                gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS, orgs) });
+            }
+        }
+
+        /// <summary>
+        /// A list of organizations the user belongs to. The maximum allowed data size is 10Kb.
+        /// </summary>
+        [DirectorySystemPropertyName(ORGANIZATIONS)]
+        public List<UserOrganization> Organizations
+        {
+            get => (List<UserOrganization>)user.Organizations;
+            set => gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS, value) });
         }
 
         /// <summary>
@@ -914,13 +1133,25 @@ namespace Galactic.Identity.GoogleWorkspace
 
         /// <summary>
         /// Whether the user's password has expired.
+        /// (Google: Not supported. Will always return false.)
         /// </summary>
-        public override bool PasswordExpired => throw new NotImplementedException();
+        public override bool PasswordExpired => false;
 
         /// <summary>
         /// The date and time that the user's password was last set.
+        /// (Google: Not supported. Will always return null.)
         /// </summary>
-        public override DateTime? PasswordLastSet => throw new NotImplementedException();
+        public override DateTime? PasswordLastSet => null;
+
+        /// <summary>
+        /// A list of the user's phone numbers. The maximum allowed data size is 1Kb.
+        /// </summary>
+        [DirectorySystemPropertyName(PHONES)]
+        public List<UserPhone> Phones
+        {
+            get => (List<UserPhone>)user.Phones;
+            set => gws.UpdateUser(UniqueId, new() { new(PHONES, value) });
+        }
 
         /// <summary>
         /// The user's physical address.
@@ -930,6 +1161,16 @@ namespace Galactic.Identity.GoogleWorkspace
         {
             get => StreetAddress;
             set => StreetAddress = value;
+        }
+
+        /// <summary>
+        /// A list of POSIX account information for the user.
+        /// </summary>
+        [DirectorySystemPropertyName(POSIX_ACCOUNTS)]
+        public List<UserPosixAccount> PosixAccounts
+        {
+            get => (List<UserPosixAccount>)user.PosixAccounts;
+            set => gws.UpdateUser(UniqueId, new() { new(POSIX_ACCOUNTS, value) });
         }
 
         /// <summary>
@@ -963,7 +1204,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_POSTAL_CODE, value) });
         }
 
         /// <summary>
@@ -973,7 +1214,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string PrimaryEmail
         {
             get => user.PrimaryEmail;
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(PRIMARY_EMAIL, value) });
         }
 
         /// <summary>
@@ -1014,9 +1255,44 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set
+            {
+                IList<UserPhone> phones = user.Phones;
+
+                // Update the existing primary phone if it exists.
+                bool existingUpdated = false;
+                foreach (UserPhone phone in phones)
+                {
+                    if (phone.Primary != null && phone.Primary.Value)
+                    {
+                        // Update the existing phone.
+                        phone.Value = value;
+                        existingUpdated = true;
+                    }
+                }
+                if (!existingUpdated)
+                {
+                    // Create a new phone and add it to the list.
+                    UserPhone phone = new UserPhone();
+                    phone.Value = value;
+                    phone.Primary = true;
+                    phones.Add(phone);
+                }
+
+                // Update the group with the new phone value.
+                gws.UpdateUser(UniqueId, new() { new(PHONES, phones) });
+            }
         }
 
+        /// <summary>
+        /// Recovery email of the user.
+        /// </summary>
+        [DirectorySystemPropertyName(RECOVERY_EMAIL)]
+        public string RecoveryEmail
+        {
+            get => user.RecoveryEmail;
+            set => gws.UpdateUser(UniqueId, new() { new(RECOVERY_EMAIL, value) });
+        }
 
         /// <summary>
         /// The abbreviated province or state.
@@ -1039,7 +1315,27 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_REGION, value) });
+        }
+
+        /// <summary>
+        /// A list of the user's relationships to other users. The maximum allowed data size for this field is 2Kb.
+        /// </summary>
+        [DirectorySystemPropertyName(RELATIONS)]
+        public List<UserRelation> Relations
+        {
+            get => (List<UserRelation>)user.Relations;
+            set => gws.UpdateUser(UniqueId, new() { new(RELATIONS, value) });
+        }
+
+        /// <summary>
+        /// A list of SSH public keys.
+        /// </summary>
+        [DirectorySystemPropertyName(SSH_PUBLIC_KEYS)]
+        public List<UserSshPublicKey> SshPublicKeys
+        {
+            get => (List<UserSshPublicKey>)user.SshPublicKeys;
+            set => gws.UpdateUser(UniqueId, new() { new(SSH_PUBLIC_KEYS, value) });
         }
 
         /// <summary>
@@ -1074,7 +1370,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_STREET_ADDRESS, value) });
         }
 
         /// <summary>
@@ -1117,7 +1413,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => throw new NotImplementedException();
+            set => gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS_TITLE, value) });
         }
 
         /// <summary>
@@ -1129,6 +1425,16 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The object's unique ID in the system.
         /// </summary>
         public override string UniqueId => Id;
+
+        /// <summary>
+        /// A list of the user's websites.
+        /// </summary>
+        [DirectorySystemPropertyName(WEBSITES)]
+        public List<UserWebsite> Websites
+        {
+            get => (List<UserWebsite>)user.Websites;
+            set => gws.UpdateUser(UniqueId, new() { new(WEBSITES, value) });
+        }
 
         // ----- CONSTRUCTORS -----
 
@@ -1189,13 +1495,26 @@ namespace Galactic.Identity.GoogleWorkspace
         public override bool MemberOfGroup(Identity.Group group, bool recursive) => gws.GetMemberOfGroup(this, group, recursive);
 
         /// <summary>
-        /// Sets the password of the user.
+        /// Sets the password of the user. (Uses a SHA2-512 hash.)
         /// </summary>
         /// <param name="password">The new password to use for the user.</param>
         /// <returns>True if the password was set, false otherwise.</returns>
         public override bool SetPassword(string password)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrWhiteSpace(password))
+            {
+                // Hash the password.
+                string hashedPassword = Hash.GetHash(password, HashAlgorithmName.SHA512);
+
+                // Send the password update.
+                if (gws.UpdateUser(UniqueId, new() { new(PASSWORD, hashedPassword), new(HASH_FUNCTION, "SHA2-512") }) != null)
+                {
+                    // The update was successful.
+                    return true;
+                }
+            }
+            // A password wasn't supplied or the request to set the password wasn't successful.
+            return false;
         }
 
         /// <summary>
