@@ -508,7 +508,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserAddress> Addresses
         {
             get => (List<UserAddress>)user.Addresses;
-            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ADDRESSES, value) });
         }
 
         /// <summary>
@@ -529,7 +529,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return false;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(CHANGE_PASSWORD_AT_NEXT_LOGIN, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(CHANGE_PASSWORD_AT_NEXT_LOGIN, value) });
         }
 
         /// <summary>
@@ -566,7 +566,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_COUNTRY_CODE, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ADDRESSES_COUNTRY_CODE, value) });
         }
 
         /// <summary>
@@ -596,7 +596,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS_DEPARTMENT, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS_DEPARTMENT, value) });
         }
 
         /// <summary>
@@ -644,7 +644,7 @@ namespace Galactic.Identity.GoogleWorkspace
                 // Return the list of e-mail addresses.
                 return emails;
             }
-            set => gws.UpdateUser(UniqueId, new() { new(EMAILS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(EMAILS, value) });
         }
 
         /// <summary>
@@ -711,7 +711,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     // An existing employee id wasn't found. Add one.
                     user.ExternalIds.Add(extId);
                 }
-                gws.UpdateUser(UniqueId, new() { new(EXTERNAL_IDS, extIds) });
+                user = gws.UpdateUser(UniqueId, new() { new(EXTERNAL_IDS, extIds) });
             }
         }
 
@@ -721,7 +721,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserExternalId> ExternalIds
         {
             get => (List<UserExternalId>)user.ExternalIds;
-            set => gws.UpdateUser(UniqueId, new() { new(EXTERNAL_IDS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(EXTERNAL_IDS, value) });
         }
 
         /// <summary>
@@ -731,7 +731,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string FamilyName
         {
             get => user.Name.FamilyName;
-            set => gws.UpdateUser(UniqueId, new() { new(NAME_FAMILY_NAME, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(NAME_FAMILY_NAME, value) });
         }
 
         /// <summary>
@@ -753,7 +753,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string FullName
         {
             get => user.Name.FullName;
-            set => gws.UpdateUser(UniqueId, new() { new(NAME_FULL_NAME, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(NAME_FULL_NAME, value) });
         }
 
         /// <summary>
@@ -763,7 +763,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public UserGender Gender
         {
             get => (UserGender)user.Gender;
-            set => gws.UpdateUser(UniqueId, new() { new(GENDER, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(GENDER, value) });
         }
 
         /// <summary>
@@ -773,7 +773,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string GivenName
         {
             get => user.Name.GivenName;
-            set => gws.UpdateUser(UniqueId, new() { new(NAME_GIVEN_NAME, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(NAME_GIVEN_NAME, value) });
         }
 
         /// <summary>
@@ -781,7 +781,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// </summary>
         public override List<Identity.Group> Groups
         {
-            get => throw new NotImplementedException();
+            get => gws.GetMemberGroups(UniqueId);
         }
 
         /// <summary>
@@ -797,7 +797,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string HashFunction
         {
             get => user.HashFunction;
-            set => gws.UpdateUser(UniqueId, new() { new(HASH_FUNCTION, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(HASH_FUNCTION, value) });
         }
 
         /// <summary>
@@ -816,7 +816,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserIm> Ims
         {
             get => (List<UserIm>)user.Ims;
-            set => gws.UpdateUser(UniqueId, new() { new(IMS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(IMS, value) });
         }
 
         /// <summary>
@@ -836,7 +836,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return false;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(INCLUDE_IN_GLOBAL_ADDRESS_LIST, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(INCLUDE_IN_GLOBAL_ADDRESS_LIST, value) });
         }
 
         /// <summary>
@@ -856,7 +856,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return false;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(IP_WHITELISTED, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(IP_WHITELISTED, value) });
         }
 
         /// <summary>
@@ -871,7 +871,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserKeyword> Keywords
         {
             get => (List<UserKeyword>)user.Keywords;
-            set => gws.UpdateUser(UniqueId, new() { new(KEYWORDS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(KEYWORDS, value) });
         }
 
         /// <summary>
@@ -889,7 +889,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserLanguage> Languages
         {
             get => (List<UserLanguage>)user.Languages;
-            set => gws.UpdateUser(UniqueId, new() { new(LANGUAGES, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(LANGUAGES, value) });
         }
 
         /// <summary>
@@ -934,7 +934,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_LOCALITY, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ADDRESSES_LOCALITY, value) });
         }
 
         /// <summary>
@@ -944,7 +944,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserLocation> Locations
         {
             get => (List<UserLocation>)user.Locations;
-            set => gws.UpdateUser(UniqueId, new() { new(LOCATIONS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(LOCATIONS, value) });
         }
 
         /// <summary>
@@ -1000,7 +1000,7 @@ namespace Galactic.Identity.GoogleWorkspace
                 }
 
                 // Update the group with the new relation value.
-                gws.UpdateUser(UniqueId, new() { new(RELATIONS, relations) });
+                user = gws.UpdateUser(UniqueId, new() { new(RELATIONS, relations) });
             }
         }
 
@@ -1070,7 +1070,7 @@ namespace Galactic.Identity.GoogleWorkspace
                 }
 
                 // Update the group with the new phone value.
-                gws.UpdateUser(UniqueId, new() { new(PHONES, phones) });
+                user = gws.UpdateUser(UniqueId, new() { new(PHONES, phones) });
             }
         }
 
@@ -1112,7 +1112,7 @@ namespace Galactic.Identity.GoogleWorkspace
                 }
 
                 // Update the group with the new organization value.
-                gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS, orgs) });
+                user = gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS, orgs) });
             }
         }
 
@@ -1123,7 +1123,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserOrganization> Organizations
         {
             get => (List<UserOrganization>)user.Organizations;
-            set => gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS, value) });
         }
 
         /// <summary>
@@ -1150,7 +1150,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserPhone> Phones
         {
             get => (List<UserPhone>)user.Phones;
-            set => gws.UpdateUser(UniqueId, new() { new(PHONES, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(PHONES, value) });
         }
 
         /// <summary>
@@ -1170,7 +1170,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserPosixAccount> PosixAccounts
         {
             get => (List<UserPosixAccount>)user.PosixAccounts;
-            set => gws.UpdateUser(UniqueId, new() { new(POSIX_ACCOUNTS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(POSIX_ACCOUNTS, value) });
         }
 
         /// <summary>
@@ -1204,7 +1204,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_POSTAL_CODE, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ADDRESSES_POSTAL_CODE, value) });
         }
 
         /// <summary>
@@ -1214,7 +1214,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string PrimaryEmail
         {
             get => user.PrimaryEmail;
-            set => gws.UpdateUser(UniqueId, new() { new(PRIMARY_EMAIL, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(PRIMARY_EMAIL, value) });
         }
 
         /// <summary>
@@ -1280,7 +1280,7 @@ namespace Galactic.Identity.GoogleWorkspace
                 }
 
                 // Update the group with the new phone value.
-                gws.UpdateUser(UniqueId, new() { new(PHONES, phones) });
+                user = gws.UpdateUser(UniqueId, new() { new(PHONES, phones) });
             }
         }
 
@@ -1291,7 +1291,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string RecoveryEmail
         {
             get => user.RecoveryEmail;
-            set => gws.UpdateUser(UniqueId, new() { new(RECOVERY_EMAIL, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(RECOVERY_EMAIL, value) });
         }
 
         /// <summary>
@@ -1315,7 +1315,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_REGION, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ADDRESSES_REGION, value) });
         }
 
         /// <summary>
@@ -1325,7 +1325,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserRelation> Relations
         {
             get => (List<UserRelation>)user.Relations;
-            set => gws.UpdateUser(UniqueId, new() { new(RELATIONS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(RELATIONS, value) });
         }
 
         /// <summary>
@@ -1335,7 +1335,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserSshPublicKey> SshPublicKeys
         {
             get => (List<UserSshPublicKey>)user.SshPublicKeys;
-            set => gws.UpdateUser(UniqueId, new() { new(SSH_PUBLIC_KEYS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(SSH_PUBLIC_KEYS, value) });
         }
 
         /// <summary>
@@ -1370,7 +1370,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(ADDRESSES_STREET_ADDRESS, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ADDRESSES_STREET_ADDRESS, value) });
         }
 
         /// <summary>
@@ -1391,6 +1391,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return false;
                 }
             }
+            set => user = gws.UpdateUser(UniqueId, new() { new(SUSPENDED, value) });
         }
 
         /// <summary>
@@ -1413,7 +1414,7 @@ namespace Galactic.Identity.GoogleWorkspace
                     return null;
                 }
             }
-            set => gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS_TITLE, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(ORGANIZATIONS_TITLE, value) });
         }
 
         /// <summary>
@@ -1433,7 +1434,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public List<UserWebsite> Websites
         {
             get => (List<UserWebsite>)user.Websites;
-            set => gws.UpdateUser(UniqueId, new() { new(WEBSITES, value) });
+            set => user = gws.UpdateUser(UniqueId, new() { new(WEBSITES, value) });
         }
 
         // ----- CONSTRUCTORS -----
@@ -1474,7 +1475,8 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>True if the account is disabled successfully or was not enabled. False if the account could not be disabled.</returns>
         public override bool Disable()
         {
-            throw new NotImplementedException();
+            Suspended = true;
+            return (Suspended);
         }
 
         /// <summary>
@@ -1483,7 +1485,8 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>True if the account is enabled successfully or was not disabled. False if the account could not be enabled.</returns>
         public override bool Enable()
         {
-            throw new NotImplementedException();
+            Suspended = false;
+            return !Suspended;
         }
 
         /// <summary>
@@ -1507,7 +1510,7 @@ namespace Galactic.Identity.GoogleWorkspace
                 string hashedPassword = Hash.GetHash(password, HashAlgorithmName.SHA512);
 
                 // Send the password update.
-                if (gws.UpdateUser(UniqueId, new() { new(PASSWORD, hashedPassword), new(HASH_FUNCTION, "SHA2-512") }) != null)
+                if ((user = gws.UpdateUser(UniqueId, new() { new(PASSWORD, hashedPassword), new(HASH_FUNCTION, "SHA2-512") })) != null)
                 {
                     // The update was successful.
                     return true;
@@ -1521,9 +1524,6 @@ namespace Galactic.Identity.GoogleWorkspace
         /// Unlocks the user's account if it is locked.
         /// </summary>
         /// <returns>True if the account is unlocked successfully or was not locked. False if the account could not be unlocked.</returns>
-        public override bool Unlock()
-        {
-            throw new NotImplementedException();
-        }
+        public override bool Unlock() => Enable();
     }
 }

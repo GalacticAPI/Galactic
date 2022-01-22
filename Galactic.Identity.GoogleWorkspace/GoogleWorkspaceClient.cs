@@ -487,6 +487,39 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// Get's users deleted within the last five days in the directory system.
+        /// </summary>
+        /// <returns>A list of deleted users in the directory system.</returns>
+        public List<GoogleUser> GetDeletedUsers()
+        {
+            try
+            {
+                // Create a request to retrieve all the users and execute it.
+                UsersResource.ListRequest request = Service.Users.List();
+                request.Domain = Domain;
+                request.ShowDeleted = "true";
+                Users usersRequest = request.Execute();
+                IList<GoogleUser> requestUsers = usersRequest.UsersValue;
+
+                // Verify that users were returned by the request.
+                if (requestUsers != null)
+                {
+                    return (List<GoogleUser>)requestUsers;
+                }
+                else
+                {
+                    // No users were returned.
+                    return new();
+                }
+            }
+            catch
+            {
+                // There was an error retrieving the users.
+                return new();
+            }
+        }
+
+        /// <summary>
         /// Gets a list of identity objects that are a member of the supplied group.
         /// </summary>
         /// <param name="groupKey">The group's e-mail address or unique id.</param>
@@ -977,6 +1010,39 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// Makes a user with the specified unique id from the directory system a Super Administrator.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to make a Super Administrator.</param>
+        /// <returns>True if the user was made a Super Administrator, false otherwise.</returns>
+        public bool MakeUserAnAdmin(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                // Perform the Google Workspace API request.
+                UserMakeAdmin userMakeAdmin = new();
+                userMakeAdmin.Status = true;
+                UsersResource.MakeAdminRequest request = Service.Users.MakeAdmin(userMakeAdmin, uniqueId);
+                try
+                {
+                    request.Execute();
+                }
+                catch
+                {
+                    // There was an error making the user and admin.
+                    return false;
+                }
+
+                // Return that the user was made an admin.
+                return true;
+
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Remove a member (Group or User) from a group.
         /// </summary>
         /// <param name="memberId">The unique id of the member to remove. (Group or User)</param>
@@ -1364,6 +1430,12 @@ namespace Galactic.Identity.GoogleWorkspace
                                     user.SshPublicKeys = ((List<UserSshPublicKey>)attribute.Value).ToArray();
                                 }
                                 break;
+                            case User.SUSPENDED:
+                                if (attribute.Value != null && attribute.Value is bool)
+                                {
+                                    user.Suspended = (bool)attribute.Value;
+                                }
+                                break;
                             case User.WEBSITES:
                                 if (attribute.Value != null && attribute.Value is List<UserWebsite>)
                                 {
@@ -1400,6 +1472,67 @@ namespace Galactic.Identity.GoogleWorkspace
                 else
                 {
                     throw new ArgumentNullException(nameof(attributes));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Undeletes a user with the specified primary e-mail address from the directory system.
+        /// The user must have been deleted within the last five days to be avalable to undelete.
+        /// </summary>
+        /// <param name="primaryEmail">The primary e-mail address of the user to undelete.</param>
+        /// <param name="orgUnitPath">(Optional) The organization unit path to restore the undeleted user to. Defaults to the base of the domain.</param>
+        /// <returns>True if the user was deleted, false otherwise.</returns>
+        public bool UndeleteUser(string primaryEmail, string orgUnitPath = "/")
+        {
+            if (!string.IsNullOrWhiteSpace(primaryEmail) && !string.IsNullOrWhiteSpace(orgUnitPath))
+            {
+                // Check whether the user is currently available to undelete.
+                List<GoogleUser> deletedUsers = GetDeletedUsers();
+                string deletedUserId = null;
+                foreach (GoogleUser deletedUser in deletedUsers)
+                {
+                    if (deletedUser.PrimaryEmail == primaryEmail)
+                    {
+                        deletedUserId = deletedUser.Id;
+                    }
+                }
+
+                // Make the request if the user was available for undelete.
+                if (!string.IsNullOrWhiteSpace(deletedUserId))
+                {
+                    // Perform the Google Workspace API request.
+                    UserUndelete userUndelete = new();
+                    userUndelete.OrgUnitPath = orgUnitPath;
+                    UsersResource.UndeleteRequest request = Service.Users.Undelete(userUndelete, deletedUserId);
+                    try
+                    {
+                        request.Execute();
+                    }
+                    catch
+                    {
+                        // There was an error deleting the user.
+                        return false;
+                    }
+
+                    // Return that the user was deleted.
+                    return true;
+                }
+                else
+                {
+                    // The user was not available to undelete.
+                    return false;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(primaryEmail))
+                {
+                    throw new ArgumentNullException(nameof(primaryEmail));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(orgUnitPath));
                 }
             }
         }
