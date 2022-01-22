@@ -98,6 +98,52 @@ namespace Galactic.Identity.GoogleWorkspace
         // ----- METHODS -----
 
         /// <summary>
+        /// Add a member (Group or User) to a group.
+        /// </summary>
+        /// <param name="memberId">The unique id of the member to add. (Group or User)</param>
+        /// <param name="groupId">The unique id of the group to add the member to.</param>
+        /// <param name="role">(Optional) The role to assign to the member in the group. Defaults to MEMBER. Role string constants can be found in Member. <see cref="Galactic.Identity.GoogleWorkspace.Member"/></param>
+        /// <returns>True if the member was added, false otherwise.</returns>
+        public bool AddMemberToGroup(string memberId, string groupId, string role = Member.ROLE_MEMBER)
+        {
+            if (!string.IsNullOrWhiteSpace(memberId) && !string.IsNullOrWhiteSpace(groupId) && !string.IsNullOrWhiteSpace(role))
+            {
+                // Create the member for the request.
+                Member member = new(this);
+                member.Id = memberId;
+                member.Role = role;
+
+                // Perform the Google Workspace API request.
+                MembersResource.InsertRequest request = Service.Members.Insert(member.MemberObject, groupId);
+                try
+                {
+                    if(request.Execute() != null)
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                    // There was an error adding the member.
+                }
+                // The member wasn't added.
+                return false;
+            }
+            else if (string.IsNullOrWhiteSpace(memberId))
+            {
+                throw new ArgumentNullException(nameof(memberId));
+            }
+            else if (string.IsNullOrWhiteSpace(groupId))
+            {
+                throw new ArgumentNullException(nameof(groupId));
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(role));
+            }
+        }
+
+        /// <summary>
         /// Builds an OAuth2.0 serivce account based credential for use when authenticating the client.
         /// </summary>
         /// <param name="path">The path to the JSON credential file provided by Google for the service account.</param>
@@ -928,6 +974,434 @@ namespace Galactic.Identity.GoogleWorkspace
 
             // Return the list of users.
             return users;
+        }
+
+        /// <summary>
+        /// Remove a member (Group or User) from a group.
+        /// </summary>
+        /// <param name="memberId">The unique id of the member to remove. (Group or User)</param>
+        /// <param name="groupId">The unique id of the group to remove the member from.</param>
+        /// <returns>True if the member was removed, false otherwise.</returns>
+        public bool RemoveMemberFromGroup(string memberId, string groupId)
+        {
+            if (!string.IsNullOrWhiteSpace(memberId) && !string.IsNullOrWhiteSpace(groupId))
+            {
+                // Perform the Google Workspace API request.
+                MembersResource.DeleteRequest request = Service.Members.Delete(groupId, memberId);
+                try
+                {
+                    request.Execute();
+                    return true;
+                }
+                catch
+                {
+                    // There was an error removing the member.
+                    return false;
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(memberId))
+            {
+                throw new ArgumentNullException(nameof(memberId));
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(groupId));
+            }
+        }
+
+        /// <summary>
+        /// Updates a group's properties.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the group to update.</param>
+        /// <param name="attributes">The attributes representing the the properties of the group to update.</param>
+        /// <returns>A new GoogleGroup object representing the new state of the group after the update, or null if the update was not completed.</returns>
+        public GoogleGroup UpdateGroup(string uniqueId, List<IdentityAttribute<object>> attributes)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId) && attributes != null)
+            {
+                // Check if attributes are supplied.
+                if (attributes.Count != 0)
+                {
+                    // Populate the group's properties to update.
+                    GoogleGroup group = new GoogleGroup();
+                    foreach (IdentityAttribute<object> attribute in attributes)
+                    {
+                        switch (attribute.Name)
+                        {
+                            case Group.DESCRIPTION:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    group.Description = (string)attribute.Value;
+                                }
+                                break;
+                            case Group.EMAIL:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    group.Email = (string)attribute.Value;
+                                }
+                                break;
+                            case Group.NAME:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    group.Name = (string)attribute.Value;
+                                }
+                                break;
+                        }
+                    }
+
+                    // Perform the Google Workspace API request.
+                    GroupsResource.UpdateRequest request = Service.Groups.Update(group, uniqueId);
+                    try
+                    {
+                        return request.Execute();
+                    }
+                    catch
+                    {
+                        // The group wasn't updated.
+                        return null;
+                    }
+                }
+                else
+                {
+                    // No attributes were supplied.
+                    return null;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(uniqueId))
+                {
+                    throw new ArgumentNullException(nameof(uniqueId));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(attributes));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates a user's properties.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to update.</param>
+        /// <param name="attributes">The attributes representing the the properties of the user to update.</param>
+        /// <returns>A new GoogleUser object representing the new state of the user after the update, or null if the update was not completed.</returns>
+        public GoogleUser UpdateUser(string uniqueId, List<IdentityAttribute<object>> attributes)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId) && attributes != null)
+            {
+                // Check if attributes are supplied.
+                if (attributes.Count != 0)
+                {
+                    // Populate the user's properties to update.
+                    GoogleUser user = new GoogleUser();
+                    foreach (IdentityAttribute<object> attribute in attributes)
+                    {
+                        switch (attribute.Name)
+                        {
+                            case User.ADDRESSES:
+                                if (attribute.Value != null && attribute.Value is List<UserAddress>)
+                                {
+                                    if (user.Addresses == null)
+                                    {
+                                        user.Addresses = new List<UserAddress>();
+                                    }
+                                    foreach(UserAddress address in (List<UserAddress>)attribute.Value)
+                                    {
+                                        // Add it to the list.
+                                        user.Addresses.Add(address);
+                                    }
+                                }
+                                break;
+                            case User.ADDRESSES_COUNTRY_CODE:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Addresses == null)
+                                    {
+                                        user.Addresses = new List<UserAddress>() { new() };
+                                    }
+                                    user.Addresses[0].CountryCode = (string)attribute.Value;
+                                }
+                                break;
+                            case User.ADDRESSES_LOCALITY:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Addresses == null)
+                                    {
+                                        user.Addresses = new List<UserAddress>() { new() };
+                                    }
+                                    user.Addresses[0].Locality = (string)attribute.Value;
+                                }
+                                break;
+                            case User.ADDRESSES_POSTAL_CODE:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Addresses == null)
+                                    {
+                                        user.Addresses = new List<UserAddress>() { new() };
+                                    }
+                                    user.Addresses[0].PostalCode = (string)attribute.Value;
+                                }
+                                break;
+                            case User.ADDRESSES_REGION:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Addresses == null)
+                                    {
+                                        user.Addresses = new List<UserAddress>() { new() };
+                                    }
+                                    user.Addresses[0].Region = (string)attribute.Value;
+                                }
+                                break;
+                            case User.ADDRESSES_STREET_ADDRESS:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Addresses == null)
+                                    {
+                                        user.Addresses = new List<UserAddress>() { new() };
+                                    }
+                                    user.Addresses[0].StreetAddress = (string)attribute.Value;
+                                }
+                                break;
+                            case User.CHANGE_PASSWORD_AT_NEXT_LOGIN:
+                                if (attribute.Value != null && attribute.Value is bool)
+                                {
+                                    user.ChangePasswordAtNextLogin = (bool)attribute.Value;
+                                }
+                                break;
+                            case User.EMAILS:
+                                if (attribute.Value != null && attribute.Value is List<string>)
+                                {
+                                    user.Emails = new List<UserEmail>();
+                                    for (int i = 0; i < (attribute.Value as List<string>).Count; i++)
+                                    {
+                                        // Create the e-mail.
+                                        UserEmail userEmail = new();
+                                        userEmail.Address = (string)attribute.Value;
+                                        if (i == 0)
+                                        {
+                                            userEmail.Primary = true;
+                                        }
+
+                                        // Add it to the list.
+                                        user.Emails.Add(userEmail);
+                                    }
+                                }
+                                break;
+                            case User.EXTERNAL_IDS:
+                                if (attribute.Value != null && attribute.Value is List<UserExternalId>)
+                                {
+                                    user.ExternalIds = (attribute.Value as List<UserExternalId>);
+                                }
+                                break;
+                            case User.GENDER:
+                                if (attribute.Value != null && attribute.Value is UserGender)
+                                {
+                                    user.Gender = (attribute.Value as UserGender);
+                                }
+                                break;
+                            case User.HASH_FUNCTION:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    user.HashFunction = (string)attribute.Value;
+                                }
+                                break;
+                            case User.INCLUDE_IN_GLOBAL_ADDRESS_LIST:
+                                if (attribute.Value != null && attribute.Value is bool)
+                                {
+                                    user.IncludeInGlobalAddressList = (bool)attribute.Value;
+                                }
+                                break;
+                            case User.IMS:
+                                if (attribute.Value != null && attribute.Value is List<UserIm>)
+                                {
+                                    user.Ims = new List<UserIm>();
+                                    foreach (UserIm im in (attribute.Value as List<UserIm>))
+                                    {
+                                        // Add it to the list.
+                                        user.Ims.Add(im);
+                                    }
+                                }
+                                break;
+                            case User.IP_WHITELISTED:
+                                if (attribute.Value != null && attribute.Value is bool)
+                                {
+                                    user.IpWhitelisted = (bool)attribute.Value;
+                                }
+                                break;
+                            case User.KEYWORDS:
+                                if (attribute.Value != null && attribute.Value is List<UserKeyword>)
+                                {
+                                    user.Keywords = (attribute.Value as List<UserKeyword>).ToArray();
+                                }
+                                break;
+                            case User.LANGUAGES:
+                                if (attribute.Value != null && attribute.Value is List<UserLanguage>)
+                                {
+                                    user.Languages = (attribute.Value as List<UserLanguage>).ToArray();
+                                }
+                                break;
+                            case User.LOCATIONS:
+                                if (attribute.Value != null && attribute.Value is List<UserLocation>)
+                                {
+                                    user.Locations = (attribute.Value as List<UserLocation>).ToArray();
+                                }
+                                break;
+                            case User.NAME:
+                                if (attribute.Value != null && attribute.Value is UserName)
+                                {
+                                    user.Name = (UserName)attribute.Value;
+                                }
+                                break;
+                            case User.NAME_FAMILY_NAME:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Name == null)
+                                    {
+                                        user.Name = new();
+                                    }
+                                    user.Name.FamilyName = (string)attribute.Value;
+                                }
+                                break;
+                            case User.NAME_FULL_NAME:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Name == null)
+                                    {
+                                        user.Name = new();
+                                    }
+                                    user.Name.FullName = (string)attribute.Value;
+                                }
+                                break;
+                            case User.NAME_GIVEN_NAME:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Name == null)
+                                    {
+                                        user.Name = new();
+                                    }
+                                    user.Name.GivenName = (string)attribute.Value;
+                                }
+                                break;
+                            case User.NOTES:
+                                // TODO
+                                break;
+                            case User.ORG_UNIT_PATH:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    user.OrgUnitPath = (string)attribute.Value;
+                                }
+                                break;
+                            case User.ORGANIZATIONS:
+                                if (attribute.Value != null && attribute.Value is List<UserOrganization>)
+                                {
+                                    user.Organizations = (List<UserOrganization>)attribute.Value;
+                                }
+                                break;
+                            case User.ORGANIZATIONS_DEPARTMENT:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Organizations == null)
+                                    {
+                                        user.Organizations = new List<UserOrganization>() { new() };
+                                    }
+                                    user.Organizations[0].Department = (string)attribute.Value;
+                                }
+                                break;
+                            case User.ORGANIZATIONS_TITLE:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    if (user.Organizations == null)
+                                    {
+                                        user.Organizations = new List<UserOrganization>() { new() };
+                                    }
+                                    user.Organizations[0].Title = (string)attribute.Value;
+                                }
+                                break;
+                            case User.PASSWORD:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    user.Password = (string)attribute.Value;
+                                }
+                                break;
+                            case User.PHONES:
+                                if (attribute.Value != null && attribute.Value is UserPhone)
+                                {
+                                    if (user.Phones == null)
+                                    {
+                                        user.Phones = new List<UserPhone>();
+                                    }
+                                    user.Phones.Add((UserPhone)attribute.Value);
+                                }
+                                break;
+                            case User.POSIX_ACCOUNTS:
+                                if (attribute.Value != null && attribute.Value is List<UserPosixAccount>)
+                                {
+                                    user.PosixAccounts = ((List<UserPosixAccount>)attribute.Value).ToArray();
+                                }
+                                break;
+                            case User.PRIMARY_EMAIL:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    user.PrimaryEmail = (string)attribute.Value;
+                                }
+                                break;
+                            case User.RECOVERY_EMAIL:
+                                if (attribute.Value != null && attribute.Value is string)
+                                {
+                                    user.RecoveryEmail = (string)attribute.Value;
+                                }
+                                break;
+                            case User.RELATIONS:
+                                if (attribute.Value != null && attribute.Value is List<UserRelation>)
+                                {
+                                    user.Relations = ((List<UserRelation>)attribute.Value).ToArray();
+                                }
+                                break;
+                            case User.SSH_PUBLIC_KEYS:
+                                if (attribute.Value != null && attribute.Value is List<UserSshPublicKey>)
+                                {
+                                    user.SshPublicKeys = ((List<UserSshPublicKey>)attribute.Value).ToArray();
+                                }
+                                break;
+                            case User.WEBSITES:
+                                if (attribute.Value != null && attribute.Value is List<UserWebsite>)
+                                {
+                                    user.Websites = (List<UserWebsite>)attribute.Value;
+                                }
+                                break;
+                        }
+                    }
+
+                    // Perform the Google Workspace API request.
+                    UsersResource.UpdateRequest request = Service.Users.Update(user, uniqueId);
+                    try
+                    {
+                        return request.Execute();
+                    }
+                    catch
+                    {
+                        // The user wasn't updated.
+                        return null;
+                    }
+                }
+                else
+                {
+                    // No attributes were supplied.
+                    return null;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(uniqueId))
+                {
+                    throw new ArgumentNullException(nameof(uniqueId));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(attributes));
+                }
+            }
         }
     }
 }

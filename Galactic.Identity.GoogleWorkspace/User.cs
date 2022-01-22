@@ -40,6 +40,11 @@ namespace Galactic.Identity.GoogleWorkspace
         public const string ADDRESSES_REGION = "region";
 
         /// <summary>
+        /// Addresses[].StreetAddress property name.
+        /// </summary>
+        public const string ADDRESSES_STREET_ADDRESS = "streetAddress";
+
+        /// <summary>
         /// AgreedToTerms property name.
         /// </summary>
         public const string AGREED_TO_TERMS = "agreedToTerms";
@@ -734,6 +739,25 @@ namespace Galactic.Identity.GoogleWorkspace
             get => user.Id;
         }
 
+        /// <summary>
+        /// Indicates if the user's profile is visible in the Google Workspace global address list when the contact sharing feature is enabled for the domain.
+        /// </summary>
+        [DirectorySystemPropertyName(INCLUDE_IN_GLOBAL_ADDRESS_LIST)]
+        public bool IncludeInGlobalAddressList
+        {
+            get
+            {
+                if (user.IncludeInGlobalAddressList != null)
+                {
+                    return user.IncludeInGlobalAddressList.Value;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            set => throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Whether the user is disabled or suspended in the system.
@@ -1033,6 +1057,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The street address portion of the user's first address in the list of addresses associated with their account.
         /// </summary>
+        [DirectorySystemPropertyName(ADDRESSES_STREET_ADDRESS)]
         public string StreetAddress
         {
             get

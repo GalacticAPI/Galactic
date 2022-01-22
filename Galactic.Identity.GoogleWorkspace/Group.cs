@@ -132,7 +132,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public override string Description
         {
             get => group.Description;
-            set => throw new NotImplementedException();
+            set => group = gws.UpdateGroup(UniqueId, new() { new(DESCRIPTION, value) });
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string Email
         {
             get => group.Email;
-            set => throw new NotImplementedException();
+            set => group = gws.UpdateGroup(UniqueId, new() { new(EMAIL, value) });
         }
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace Galactic.Identity.GoogleWorkspace
         public string Name
         {
             get => group.Name;
-            set => throw new NotImplementedException();
+            set => group = gws.UpdateGroup(UniqueId, new() { new(NAME, value) });
         }
 
         /// <summary>
@@ -298,26 +298,23 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>True if the members were added, false otherwise.</returns>
         public override bool AddMembers(List<IdentityObject> members)
         {
-            throw new NotImplementedException();
-            /*
             if (members != null)
             {
-                foreach (IIdentityObject member in members)
+                foreach (IdentityObject member in members)
                 {
-                    if (member is User)
+                    if (member is User || member is Group)
                     {
-                        // The user was an Google Workspace User.
-                        if (!gws.AddUserToGroup(member.UniqueId, UniqueId))
+                        // The member was an Google Workspace User or Group.
+                        if (!gws.AddMemberToGroup(member.UniqueId, UniqueId))
                         {
-                            // The user wasn't added.
+                            // The member wasn't added.
                             return false;
                         }
                     }
                 }
             }
-            // All Google Users were added, or none were supplied.
+            // All Google members were added, or none were supplied.
             return true;
-            */
         }
 
         /// <summary>
@@ -335,15 +332,13 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <returns>True if the objects were removed, false otherwise.</returns>
         public override bool RemoveMembers(List<IdentityObject> members)
         {
-            throw new NotImplementedException();
-            /*
             if (members != null)
             {
-                foreach (IIdentityObject member in members)
+                foreach (IdentityObject member in members)
                 {
-                    if (member is User)
+                    if (member is User || member is Group)
                     {
-                        if (!gws.RemoveUserFromGroup(member.UniqueId, UniqueId))
+                        if (!gws.RemoveMemberFromGroup(member.UniqueId, UniqueId))
                         {
                             // The user was not removed.
                             return false;
@@ -355,7 +350,6 @@ namespace Galactic.Identity.GoogleWorkspace
             }
             // There were no objects to remove.
             return false;
-            */
         }
     }
 }

@@ -83,13 +83,21 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The group member's e-mail address.
         /// </summary>
         [DirectorySystemPropertyName(EMAIL)]
-        public string Email => member.Email;
+        public string Email
+        {
+            get => member.Email;
+            set => member.Email = value;
+        }
 
         /// <summary>
         /// The group member's unique ID.
         /// </summary>
         [DirectorySystemPropertyName(ID)]
-        public string Id => member.Id;
+        public string Id
+        {
+            get => member.Id;
+            set => member.Id = value;
+        }
 
         /// <summary>
         /// The kind of object the member is in Google Workspace.
@@ -98,45 +106,61 @@ namespace Galactic.Identity.GoogleWorkspace
         public string Kind => member.Kind;
 
         /// <summary>
+        /// The native GoogleMember object representing the Member in Google Workspace.
+        /// </summary>
+        public GoogleMember MemberObject => member;
+
+        /// <summary>
         /// The role of the member within the group.
         /// </summary>
         [DirectorySystemPropertyName(ROLE)]
-        public string Role => member.Role;
+        public string Role
+        {
+            get => member.Role;
+            set => member.Role = value;
+        }
 
         /// <summary>
         /// The type of object the member is. (Group or User)
         /// </summary>
         [DirectorySystemPropertyName(TYPE)]
-        public string MemberType => member.Type;
+        public string MemberType
+        {
+            get => member.Type;
+            set => member.Type = value;
+        }
 
 
         // ----- CONSTRUCTORS -----
 
         /// <summary>
-        /// Initializes a Google Workspace member from a native object representing its properties.
+        /// Initializes a Google Workspace member.
         /// </summary>
         /// <param name="gws">A Google Workspace client object used to query and manipulate the member.</param>
-        /// <param name="group">A Google Workspace native object representing this member's properties.</param>
-        public Member(GoogleWorkspaceClient gws, GoogleMember member)
+        /// <param name="member">(Optional) A Google Workspace native object representing this member's properties.
+        /// A new native object is created if not provided.</param>
+        public Member(GoogleWorkspaceClient gws, GoogleMember member = null)
         {
-            if (gws != null && member != null)
+            if (gws != null)
             {
                 // Initialize the client.
                 this.gws = gws;
 
                 // Initialize the member data from the native object supplied.
-                this.member = member;
-            }
-            else
-            {
-                if (gws == null)
+                if (member != null)
                 {
-                    throw new ArgumentNullException(nameof(gws));
+                    // Use the supplied member.
+                    this.member = member;
                 }
                 else
                 {
-                    throw new ArgumentNullException(nameof(member));
+                    // Create a new member object.
+                    this.member = new();
                 }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(gws));
             }
         }
 
