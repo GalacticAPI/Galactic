@@ -1876,7 +1876,7 @@ namespace Galactic.Identity.ActiveDirectory
         /// </summary>
         public bool IsObjectClass(Guid guid, string schemaClass)
         {
-            if (guid == Guid.Empty && !string.IsNullOrWhiteSpace(schemaClass))
+            if (guid != Guid.Empty && !string.IsNullOrWhiteSpace(schemaClass))
             {
                 // Check whether the class of this object in Active Directory is a user.
                 SearchResultEntry entry = GetEntryByGUID(guid);

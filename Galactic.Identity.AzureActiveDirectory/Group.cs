@@ -43,8 +43,6 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                //Members.AddRange(UserMembers.ConvertAll<IIdentityObject>(member => member));
-                //Members.AddRange(GroupMembers.ConvertAll<IIdentityObject>(member => member));
                 List <IdentityObject> temp = new ();
                 temp.AddRange(UserMembers);
                 temp.AddRange(GroupMembers);
@@ -334,7 +332,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                 foreach (IdentityObject member in members)
                 {
                     // Skip non-AAD members.
-                    if (member is Group || members is User)
+                    if (member is Group || member is User)
                     {
                         if (!aad.DeleteObjectFromGroup(member.UniqueId, UniqueId))
                         {
