@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ReleaseVersion>2.0.0.0</ReleaseVersion>
+	<Description>A base class library for identity related objects common to the Galactic API.</Description>
+	<PackageTags>Galactic;identity;directory system;group;user</PackageTags>
   </PropertyGroup>
 
 </Project>

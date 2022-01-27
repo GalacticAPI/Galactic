@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ReleaseVersion>2.0.0.0</ReleaseVersion>
+    <Description>A fast and robust class library that allows you to easily query and manipulate users, groups, and objects in LDAP directories.</Description>
+	<PackageTags>Galactic;identity;directory system;group;user;ldap</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

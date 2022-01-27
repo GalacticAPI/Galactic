@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ReleaseVersion>2.0.0.0</ReleaseVersion>
+	<Description>A base class library for querying and manipulating NoSQL document stores.</Description>
+	<PackageTags>Galactic;nosql</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

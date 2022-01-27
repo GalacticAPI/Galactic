@@ -4,6 +4,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Description>A robust class library that allows you to easily query and manipulate users and groups in Google Workspace.</Description>
+	<PackageTags>Galactic;identity;directory system;group;user;google workspace;google;workspace;gsuite</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

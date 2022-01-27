@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ReleaseVersion>2.0.0.0</ReleaseVersion>
+	<Description>A class library for common file system operations including inheritance and permissions.</Description>
+	<PackageTags>Galactic;file;directory;permissions;inheritance</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

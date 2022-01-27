@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ReleaseVersion>2.0.0.0</ReleaseVersion>
+    <Description>A base class library for logging application events.</Description>
+    <PackageTags>Galactic;event;logging</PackageTags>
   </PropertyGroup>
 
 </Project>

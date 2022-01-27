@@ -1,8 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ReleaseVersion>2.0.0.0</ReleaseVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ReleaseVersion>2.0.0.0</ReleaseVersion>
+		<Description>A class library for common encryption tasks. Supports various hash and encryption algorithms.</Description>
+		<PackageTags>Galactic;cryptography;hash;aes256;sha256;salt</PackageTags>
+	</PropertyGroup>
 
 </Project>

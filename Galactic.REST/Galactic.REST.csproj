@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+	<ReleaseVersion>2.0.0.0</ReleaseVersion>
+	<Description>A class library that allows you to easily query REST APIs.</Description>
+	<PackageTags>Galactic;rest;api;web service;web;service;query</PackageTags>
   </PropertyGroup>
 
 </Project>

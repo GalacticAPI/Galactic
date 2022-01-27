@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ReleaseVersion>2.0.0.0</ReleaseVersion>
+	<Description>A robust class library that allows you to easily query and manipulate users and groups in Azure Active Directory.</Description>
+	<PackageTags>Galactic;identity;directory system;group;user;azure active directory;active directory;active;directory;ad;azure;aad</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
