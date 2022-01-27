@@ -1,5 +1,5 @@
 <Project>
 	<Target Name="PostBuild" AfterTargets="Pack">
-	  <Exec Command="move $(ProjectDir)bin\$(ConfigurationName)\*.nupkg $(SolutionDir)packages\" />
+	  <Exec Command="move $(ProjectDir)bin\$(ConfigurationName)\*.nupkg $(SolutionDir)NugetPackages\" />
 	</Target>
 </Project>

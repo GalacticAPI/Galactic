@@ -1,1 +1,0 @@
-move $(TargetDir)..\*.nupkg $(SolutionDir)packages\
