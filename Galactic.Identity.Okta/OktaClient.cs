@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -670,6 +671,36 @@ namespace Galactic.Identity.Okta
             {
                 // Nothing was returned.
                 return new();
+            }
+        }
+
+        /// <summary>
+        /// Gets a User from Okta given its ID or Login.
+        /// </summary>
+        /// <param name="id">The ID or login of the user to retrieve from Okta.</param>
+        /// <returns>A User object.</returns>
+        public User GetUser(string id)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                // Return the result.
+                JsonRestResponse<UserJson> jsonResponse = rest.GetFromJson<UserJson>("/users/" + WebUtility.UrlEncode(id));
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
+
+                    return new User(this, oktaResponse.Value);
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(id));
             }
         }
 
