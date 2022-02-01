@@ -1,17 +1,25 @@
 <Project>
-		  
-  <PropertyGroup>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Authors>galacticapi</Authors>
-    <Copyright>Copyright (c) 2022 Galactic API Team</Copyright>
-    <PackageProjectUrl>https://galacticapi.github.io/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/GalacticAPI/Galactic</RepositoryUrl>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageIcon>GalacticAPIIcon128.png</PackageIcon>
-    <VersionPrefix>2.0.0.0</VersionPrefix>
-    <VersionSuffix>beta</VersionSuffix>
-  </PropertyGroup>
+
+	<PropertyGroup>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Authors>galacticapi</Authors>
+		<Copyright>Copyright (c) 2022 Galactic API Team</Copyright>
+		<PackageProjectUrl>https://galacticapi.github.io/</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/GalacticAPI/Galactic</RepositoryUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<PackageIcon>GalacticAPIIcon128.png</PackageIcon>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<VersionPrefix>2.0.0.0</VersionPrefix>
+		<VersionSuffix>beta-build$([System.DateTime]::Now.ToString(yyyyMMddHHmm))</VersionSuffix>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<VersionPrefix>2.0.0.0</VersionPrefix>
+		<VersionSuffix>release</VersionSuffix>
+	</PropertyGroup>
 
   <ItemGroup>
     <None Include="..\GalacticAPIIcon128.png">
