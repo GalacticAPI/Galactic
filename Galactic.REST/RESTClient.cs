@@ -197,5 +197,79 @@ namespace Galactic.Rest
                 }    
             }
         }
+
+        /// <summary>
+        /// Puts to a API endpoint at the supplied path, where the body of the message isn't relevant.
+        /// </summary>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <returns>An object with the request response, or null if the request could not be completed.</returns>
+        public EmptyRestResponse Put(string path)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                try
+                {
+                    // Send the POST request.
+                    Task<HttpResponseMessage> responseTask = httpClient.PutAsync(httpClient.BaseAddress + path, null);
+
+                    // Wait for the response to complete.
+                    responseTask.Wait();
+
+                    // Return the response.
+                    return new(responseTask.Result);
+                }
+                catch
+                {
+                    // There was an error sending the request.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+        }
+
+        /// <summary>
+        /// Puts to a JSON API endpoint at the supplied path.
+        /// </summary>
+        /// <typeparam name="T">The type of object returned.</typeparam>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <param name="content">An object that can be serialized to JSON and used as the content of the requst.</param>
+        /// <returns>An object with the request reponse, or null if the request could not be completed.</returns>
+        public JsonRestResponse<T> PutAsJson<T>(string path, object content)
+        {
+            if (!string.IsNullOrWhiteSpace(path) && content != null)
+            {
+                // Send the POST request.
+                Task<HttpResponseMessage> responseTask = httpClient.PutAsJsonAsync(httpClient.BaseAddress + path, content);
+
+                // Wait for the response to complete.
+                responseTask.Wait();
+
+                // Check whether the response was successful.
+                if (responseTask.Result.IsSuccessStatusCode)
+                {
+                    // Return the response object.
+                    return new(responseTask.Result);
+                }
+                else
+                {
+                    // The resquest wasn't successful.
+                    return null;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    throw new ArgumentNullException(nameof(path));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(content));
+                }
+            }
+        }
     }
 }

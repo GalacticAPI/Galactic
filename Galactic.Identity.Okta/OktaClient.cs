@@ -128,11 +128,11 @@ namespace Galactic.Identity.Okta
         {
             if (!string.IsNullOrWhiteSpace(userId) && !string.IsNullOrWhiteSpace(groupId))
             {
-                EmptyRestResponse response = rest.Post("/groups/" + groupId + "/users/" + userId);
+                EmptyRestResponse response = rest.Put("/groups/" + groupId + "/users/" + userId);
 
                 if (response != null)
                 {
-                    HttpResponseMessage message =response.Message;
+                    HttpResponseMessage message = response.Message;
 
                     // Check that the request was a success.
                     if (message.IsSuccessStatusCode)
