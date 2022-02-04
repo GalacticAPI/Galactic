@@ -883,6 +883,132 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets IGroups that match the supplied search filter.
+        /// </summary>
+        /// <param name="filter">Okta search filter.</param>
+        /// <returns>A list of groups that match the supplied search filter.</returns>
+        public List<Identity.Group> GetGroupsByFilter(string filter)
+        {
+            // Check whether an attribute was supplied.
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                // An attribute was supplied.
+                JsonRestResponse<GroupJson[]> jsonResponse = null;
+
+                // Use a search request to search for the group.
+                jsonResponse = rest.GetFromJson<GroupJson[]>("/groups?search=" + Uri.EscapeDataString(filter) + "%22&limit=" + MAX_PAGE_SIZE);
+
+                if (jsonResponse != null)
+                {
+                    // Creates an OktaJsonResponse object from the JSON one.
+                    OktaJsonRestResponse<GroupJson[]> oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of group JSON objects.
+                    List<GroupJson> jsonList = new(oktaResponse.Value);
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<GroupJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional groups to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    // Create the list groups to return.
+                    List<Identity.Group> groups = new();
+                    foreach (GroupJson groupJson in jsonList)
+                    {
+                        groups.Add(new Group(this, groupJson));
+                    }
+
+                    // Return the list of groups.
+                    return groups;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // An attribute was not supplied.
+                return new();
+            }
+        }
+
+        /// <summary>
+        /// Gets IUsers that match the supplied search filter.
+        /// </summary>
+        /// <param name="filter">Okta search filter.</param>
+        /// <returns>A list of users that match the supplied search filter.</returns>
+        public List<Identity.User> GetUsersByFilter(string filter)
+        {
+            // Check whether an attribute was supplied.
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                // An attribute was supplied.
+                JsonRestResponse<UserJson[]> jsonResponse = null;
+
+                // Use a search request to search for the user. (This uses a search index which may not contain the most up to date information in Okta.)
+                jsonResponse = rest.GetFromJson<UserJson[]>($"/users?search={Uri.EscapeDataString(filter)}");
+
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<UserJson[]> oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of user JSON objects.
+                    List<UserJson> jsonList = new(oktaResponse.Value);
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional users to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    // Create the list users to return.
+                    List<Identity.User> users = new();
+                    foreach (UserJson userJson in jsonList)
+                    {
+                        users.Add(new User(this, userJson));
+                    }
+
+                    // Return the list of users.
+                    return users;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // An attribute was not supplied.
+                return new();
+            }
+        }
+
+        /// <summary>
         /// Gets IUsers that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>
