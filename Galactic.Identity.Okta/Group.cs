@@ -103,7 +103,7 @@ namespace Galactic.Identity.Okta
         /// The name of the group.
         /// </summary>
         [DirectorySystemPropertyName(GroupProfileJson.NAME)]
-        public string Name
+        public override string Name
         {
             get => json.Profile.Name;
             set

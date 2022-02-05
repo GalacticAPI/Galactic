@@ -53,6 +53,15 @@ namespace Galactic.Identity.AzureActiveDirectory
         }
 
         /// <summary>
+        /// The group's name.
+        /// </summary>
+        public override string Name
+        {
+            get => DisplayName;
+            set => DisplayName = value;
+        }
+
+        /// <summary>
         /// Users that are a member of the group. (Not including subgroups.)
         /// </summary>
         public override List<Identity.User> UserMembers

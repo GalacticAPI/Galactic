@@ -42,6 +42,11 @@ namespace Galactic.Identity
         public virtual int MemberCount => Members.Count;
 
         /// <summary>
+        /// The group's name.
+        /// </summary>
+        public abstract string Name { get; set; }
+
+        /// <summary>
         /// Users that are a member of the group. (Not including subgroups.)
         /// </summary>
         public abstract List<User> UserMembers { get; }

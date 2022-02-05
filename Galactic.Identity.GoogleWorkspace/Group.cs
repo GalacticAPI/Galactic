@@ -217,7 +217,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// The name of the group.
         /// </summary>
         [DirectorySystemPropertyName(NAME)]
-        public string Name
+        public override string Name
         {
             get => group.Name;
             set => group = gws.UpdateGroup(UniqueId, new() { new(NAME, value) });

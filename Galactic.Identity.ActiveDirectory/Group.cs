@@ -495,6 +495,15 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// The group's name.
+        /// </summary>
+        public override string Name
+        {
+            get => SAMAccountName;
+            set => SAMAccountName = value;
+        }
+
+        /// <summary>
         /// The type or category of the Group. Empty if unknown.
         /// </summary>
         public override string Type
