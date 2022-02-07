@@ -147,6 +147,16 @@ namespace Galactic.Identity.Okta
             }
         }
 
+        /// <summary>
+        /// A hashed version of the group's Name to allow for faster compare operations.
+        /// </summary>
+        public override int HashedIdentifier
+        {
+            get
+            {
+                return Name.GetHashCode();
+            }
+        }
 
         // ----- CONSTRUCTORS -----
 

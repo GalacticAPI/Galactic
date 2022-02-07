@@ -37,6 +37,11 @@ namespace Galactic.Identity
         /// </summary>
         public abstract string UniqueId { get; }
 
+        /// <summary>
+        /// A hashed version of the objects identifer to allow for faster compare operations.
+        /// </summary>
+        public abstract int HashedIdentifier { get; }
+
         // ----- CONSTRUCTORS -----
 
         // ----- METHODS -----

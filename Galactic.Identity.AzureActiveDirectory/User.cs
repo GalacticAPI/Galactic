@@ -534,6 +534,17 @@ namespace Galactic.Identity.AzureActiveDirectory
             }
         }
 
+        /// <summary>
+        /// A hashed version of the user's Login to allow for faster compare operations.
+        /// </summary>
+        public override int HashedIdentifier
+        {
+            get
+            {
+                return Login.GetHashCode();
+            }
+        }
+
         // ----- CONSTRUCTORS -----
 
         public User(AzureActiveDirectoryClient aad, GraphUser graphUser)

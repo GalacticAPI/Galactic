@@ -968,6 +968,17 @@ namespace Galactic.Identity.ActiveDirectory
             }
         }
 
+        /// <summary>
+        /// A hashed version of the user's UPN to allow for faster compare operations.
+        /// </summary>
+        public override int HashedIdentifier
+        {
+            get
+            {
+                return UserPrincipalName.GetHashCode();
+            }
+        }
+
         // ----- CONSTRUCTORS -----
 
         /// <summary>
