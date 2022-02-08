@@ -1,4 +1,5 @@
 ﻿using GraphGroup = Microsoft.Graph.Group;
+using GraphUser = Microsoft.Graph.User;
 
 namespace Galactic.Identity.AzureActiveDirectory
 {
@@ -15,13 +16,38 @@ namespace Galactic.Identity.AzureActiveDirectory
         // ----- PROPERTIES -----
 
         /// <summary>
-        /// All users that are a member of this group or a subgroup.
+        /// All users that are a member of this group or a subgroup (recursive).
         /// </summary>
         public override List<Identity.User> AllUserMembers
         {
             get
             {
                 return aad.GetUserMembers(UniqueId, true);
+            }
+        }
+
+        /// <summary>
+        /// UPNs of all users that are members of this group or a subgroup (recursive).
+        /// </summary>
+        public override List<string> AllUserMemberNames
+        {
+            get
+            {
+                List<string> names = new List<string>();
+
+                List<Microsoft.Graph.DirectoryObject> members = aad.GetMembers(UniqueId, true);
+
+                foreach (Microsoft.Graph.DirectoryObject member in members)
+                {
+                    if (member.ODataType == "#microsoft.graph.user")
+                    {
+                        GraphUser user = (GraphUser)member;
+
+                        names.Add(user.UserPrincipalName);
+                    }
+                }
+
+                return names;
             }
         }
 
@@ -33,6 +59,29 @@ namespace Galactic.Identity.AzureActiveDirectory
             get
             {
                 return aad.GetGroupMembers(UniqueId, false);
+            }
+        }
+
+        /// <summary>
+        /// Names of groups that are a member of the group.
+        /// </summary>
+        public override List<string> GroupMemberNames
+        {
+            get
+            {
+                List<string> names = new List<string>();
+
+                foreach (Microsoft.Graph.DirectoryObject member in DirectoryObjectMembers)
+                {
+                    if (member.ODataType == "#microsoft.graph.group")
+                    {
+                        GraphGroup group = (GraphGroup)member;
+
+                        names.Add(group.DisplayName);
+                    }
+                }
+
+                return names;
             }
         }
 
@@ -53,6 +102,37 @@ namespace Galactic.Identity.AzureActiveDirectory
         }
 
         /// <summary>
+        /// The names (group) or UPN (user) of the members of the group.
+        /// </summary>
+        public override List<string> MemberNames
+        {
+            get
+            {
+                List<string> names = new List<string> ();
+
+                //List<Microsoft.Graph.DirectoryObject> results = aad.GetMembers(UniqueId, false);
+
+                foreach(Microsoft.Graph.DirectoryObject member in DirectoryObjectMembers)
+                {
+                    if (member.ODataType == "#microsoft.graph.user")
+                    {
+                        GraphUser user = (GraphUser)member;
+
+                        names.Add(user.UserPrincipalName);
+                    }
+                    else if(member.ODataType == "#microsoft.graph.group")
+                    {
+                        GraphGroup group = (GraphGroup)member;
+
+                        names.Add(group.DisplayName);
+                    }
+                }
+
+                return names;
+            }
+        }
+
+        /// <summary>
         /// The group's name.
         /// </summary>
         public override string Name
@@ -69,6 +149,29 @@ namespace Galactic.Identity.AzureActiveDirectory
             get
             {
                 return aad.GetUserMembers(UniqueId, false);
+            }
+        }
+
+        /// <summary>
+        /// UPNs of users that are members of the group. (Not including subgroups.)
+        /// </summary>
+        public override List<string> UserMemberNames
+        {
+            get
+            {
+                List<string> names = new List<string>();
+
+                foreach (Microsoft.Graph.DirectoryObject member in DirectoryObjectMembers)
+                {
+                    if (member.ODataType == "#microsoft.graph.user")
+                    {
+                        GraphUser user = (GraphUser)member;
+
+                        names.Add(user.UserPrincipalName);
+                    }
+                }
+
+                return names;
             }
         }
 
@@ -257,6 +360,15 @@ namespace Galactic.Identity.AzureActiveDirectory
             get
             {
                 return Name.GetHashCode();
+            }
+        }
+
+        // ----- Private Properties -----
+        private List<Microsoft.Graph.DirectoryObject> DirectoryObjectMembers
+        {
+            get
+            {
+                return aad.GetMembers(UniqueId, false);
             }
         }
 
