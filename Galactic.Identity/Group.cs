@@ -22,6 +22,11 @@ namespace Galactic.Identity
         public abstract List<User> AllUserMembers { get; }
 
         /// <summary>
+        /// The names of all users that are a member of this group or a subgroup.
+        /// </summary>
+        public abstract List<string> AllUserMemberNames { get; }
+
+        /// <summary>
         /// A description of the object.
         /// </summary>
         public abstract string Description { get; set; }
@@ -32,9 +37,19 @@ namespace Galactic.Identity
         public abstract List<Group> GroupMembers { get; }
 
         /// <summary>
+        /// The names of groups that are members of the group.
+        /// </summary>
+        public abstract List<string> GroupMemberNames { get; }
+
+        /// <summary>
         /// The members of the group.
         /// </summary>
         public abstract List<IdentityObject> Members { get; }
+
+        /// <summary>
+        /// The names of members of the group.
+        /// </summary>
+        public abstract List<string> MemberNames { get; }
 
         /// <summary>
         /// The number of members in the group.
@@ -50,6 +65,11 @@ namespace Galactic.Identity
         /// Users that are a member of the group. (Not including subgroups.)
         /// </summary>
         public abstract List<User> UserMembers { get; }
+
+        /// <summary>
+        /// The names of users that are members of the group. (Not including subgroups.) 
+        /// </summary>
+        public abstract List<string> UserMemberNames { get; }
 
         // ----- STATIC CONSTRUCTORS -----
 

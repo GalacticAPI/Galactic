@@ -254,6 +254,11 @@ namespace Galactic.Identity.ActiveDirectory
         public List<string> GroupDns => ad.GetStringAttributeValues("memberOf", entry);
 
         /// <summary>
+        /// The distinguished names of members of this group.
+        /// </summary>
+        public List<string> MemberDns => ad.GetStringAttributeValues("member", entry);
+
+        /// <summary>
         /// The object's primary e-mail address.
         /// </summary>
         public string PrimaryEmailAddress
@@ -404,6 +409,44 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Does a recursive lookup to find all users that are members of this group and returns their UPNs.
+        /// </summary>
+        public override List<string> AllUserMemberNames
+        {
+            get
+            {
+                List<string> names = new List<string>();
+
+                try
+                {
+                    // Perform recursive user member lookup.
+                    List<SearchResultEntry> results = ad.GetEntries($"(&(objectCategory=person)(objectClass=user)(memberOf:1.2.840.113556.1.4.1941:={DistinguishedName}))", new List<string> { "userprincipalname" });
+
+                    // Check that results were returned.
+                    if (results != null && results.Count > 0)
+                    {
+                        // Add UPN of each user to list.
+                        foreach (SearchResultEntry result in results)
+                        {
+                            names.Add(ad.GetStringAttributeValue("userprincipalname", result));
+                        }
+                    }
+                    else
+                    {
+                        return new();
+                    }
+
+                    return names;
+                }
+                catch
+                {
+                    // An error was encountered getting group members.
+                    return new();
+                }
+            }
+        }
+
+        /// <summary>
         /// Groups that are members of the group.
         /// </summary>
         public override List<Identity.Group> GroupMembers
@@ -428,6 +471,93 @@ namespace Galactic.Identity.ActiveDirectory
                     }
                 }
                 return groups;
+            }
+        }
+
+        /// <summary>
+        /// The samaccountnames of groups that are members of the group.
+        /// </summary>
+        public override List<string> GroupMemberNames
+        {
+            get
+            {
+                List<string> dns = ad.GetStringAttributeValues("member", entry);
+                if (dns != null)
+                {
+                    // Get a list of objects by their distinguished names.
+                    List<string> names = new();
+
+                    foreach (string dn in dns)
+                    {
+                        // Get the GUID of the member.
+                        Guid memberGuid = ad.GetGuidByDistinguishedName(dn);
+
+                        // Verify that a GUID was returned.
+                        if (memberGuid != Guid.Empty)
+                        {
+                            // Check which type of object the member is, and add it as the correct type to the list.
+                            if (ad.IsGroup(memberGuid))
+                            {
+                                // The member is a user.
+
+                                // Get search result entry for member.
+                                SearchResultEntry result = ad.GetEntryByGUID(memberGuid, new List<string> { "samaccountname" });
+
+                                // Verify result is not null.
+                                if (result != null)
+                                {
+                                    // Add samaccountname of entry to list.
+                                    names.Add(ad.GetStringAttributeValue("samaccountname", result));
+                                }
+
+                            }
+                        }
+                    }
+                    return names;
+                }
+                else
+                {
+                    // A list of distinguished names was not returned. Return an empty list.
+                    return new();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Alternate version of GroupMemberNames. For testing purposes only. Final release will include version with best performance. 
+        /// </summary>
+        public List<string> GroupMemberNamesAlternate
+        {
+            get
+            {
+                List<string> names = new List<string>();
+
+                try
+                {
+                    // Perform group member lookup.
+                    List<SearchResultEntry> results = ad.GetEntries($"(&(objectCategory=group)(memberOf={DistinguishedName}))", new List<string> { "samaccountname" });
+
+                    // Check that results were returned.
+                    if (results != null && results.Count > 0)
+                    {
+                        // Add samaccountname of each user to list.
+                        foreach (SearchResultEntry result in results)
+                        {
+                            names.Add(ad.GetStringAttributeValue("samaccountname", result));
+                        }
+                    }
+                    else
+                    {
+                        return new();
+                    }
+
+                    return names;
+                }
+                catch
+                {
+                    // An error was encountered getting group members.
+                    return new();
+                }
             }
         }
 
@@ -469,6 +599,79 @@ namespace Galactic.Identity.ActiveDirectory
                 else
                 {
                     // A list of distinguished names was not returned. Return an empty list.
+                    return new();
+                }
+            }
+        }
+
+        /// <summary>
+        /// The samaccountnames of the members of the group.
+        /// </summary>
+        public override List<string> MemberNames
+        {
+            get
+            {
+                List<string> dns = ad.GetStringAttributeValues("member", entry);
+                if (dns != null)
+                {
+                    // Get a list of objects by their distinguished names.
+                    List<string> names = new();
+
+                    foreach (string dn in dns)
+                    {
+                        // Get search result entry for member.
+                        SearchResultEntry result = ad.GetEntryByDistinguishedName(dn, new List<string> { "samaccountname" });
+
+                        // Verify result is not null.
+                        if (result != null)
+                        {
+                            // Add samaccountname of entry to list.
+                            names.Add(ad.GetStringAttributeValue("samaccountname", result));
+                        }
+                    }
+                    return names;
+                }
+                else
+                {
+                    // A list of distinguished names was not returned. Return an empty list.
+                    return new();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Alternate version of MemberNames. For testing purposes only. Final release will include version with best performance. 
+        /// </summary>
+        public List<string> MemberNamesAlternate
+        {
+            get
+            {
+                List<string> names = new List<string>();
+
+                try
+                {
+                    // Perform group member lookup.
+                    List<SearchResultEntry> results = ad.GetEntries($"(memberOf={DistinguishedName})", new List<string> { "samaccountname" });
+
+                    // Check that results were returned.
+                    if (results != null && results.Count > 0)
+                    {
+                        // Add samaccountname of each user to list.
+                        foreach (SearchResultEntry result in results)
+                        {
+                            names.Add(ad.GetStringAttributeValue("samaccountname", result));
+                        }
+                    }
+                    else
+                    {
+                        return new();
+                    }
+
+                    return names;
+                }
+                catch
+                {
+                    // An error was encountered getting group members.
                     return new();
                 }
             }
@@ -564,6 +767,93 @@ namespace Galactic.Identity.ActiveDirectory
                     }
                 }
                 return users;
+            }
+        }
+
+        /// <summary>
+        /// The UPNs of users that are members of the group.
+        /// </summary>
+        public override List<string> UserMemberNames
+        {
+            get
+            {
+                List<string> dns = ad.GetStringAttributeValues("member", entry);
+                if (dns != null)
+                {
+                    // Get a list of objects by their distinguished names.
+                    List<string> names = new();
+
+                    foreach (string dn in dns)
+                    {
+                        // Get the GUID of the member.
+                        Guid memberGuid = ad.GetGuidByDistinguishedName(dn);
+
+                        // Verify that a GUID was returned.
+                        if (memberGuid != Guid.Empty)
+                        {
+                            // Check which type of object the member is, and add it as the correct type to the list.
+                            if (ad.IsUser(memberGuid))
+                            {
+                                // The member is a user.
+
+                                // Get search result entry for member.
+                                SearchResultEntry result = ad.GetEntryByGUID(memberGuid, new List<string> { "userprincipalname" });
+
+                                // Verify result is not null.
+                                if (result != null)
+                                {
+                                    // Add samaccountname of entry to list.
+                                    names.Add(ad.GetStringAttributeValue("userprincipalname", result));
+                                }
+
+                            }
+                        }
+                    }
+                    return names;
+                }
+                else
+                {
+                    // A list of distinguished names was not returned. Return an empty list.
+                    return new();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Alternate version of UserMemberNames. For testing purposes only. Final release will include version with best performance. 
+        /// </summary>
+        public List<string> UserMemberNamesAlternate
+        {
+            get
+            {
+                List<string> names = new List<string>();
+
+                try
+                {
+                    // Perform group member lookup.
+                    List<SearchResultEntry> results = ad.GetEntries($"(&(objectCategory=person)(objectClass=user)(memberOf={DistinguishedName}))", new List<string> { "userprincipalname" });
+
+                    // Check that results were returned.
+                    if (results != null && results.Count > 0)
+                    {
+                        // Add samaccountname of each user to list.
+                        foreach (SearchResultEntry result in results)
+                        {
+                            names.Add(ad.GetStringAttributeValue("userprincipalname", result));
+                        }
+                    }
+                    else
+                    {
+                        return new();
+                    }
+
+                    return names;
+                }
+                catch
+                {
+                    // An error was encountered getting group members.
+                    return new();
+                }
             }
         }
 
