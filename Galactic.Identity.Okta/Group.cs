@@ -30,6 +30,11 @@ namespace Galactic.Identity.Okta
         public override List<Identity.User> AllUserMembers => UserMembers;
 
         /// <summary>
+        /// Logins of all users that are a member of this group or a subgroup.
+        /// </summary>
+        public override List<string> AllUserMemberNames => UserMemberNames;
+
+        /// <summary>
         /// Timestamp when Group was created.
         /// </summary>
         [DirectorySystemPropertyName(GroupJson.CREATED)]
@@ -72,6 +77,11 @@ namespace Galactic.Identity.Okta
         public override List<Identity.Group> GroupMembers => new();    // Okta doesn't support nested groups.
 
         /// <summary>
+        /// Names of groups that are a member of the group.
+        /// </summary>
+        public override List<string> GroupMemberNames => new();
+
+        /// <summary>
         /// Unique key for Group.
         /// </summary>
         [DirectorySystemPropertyName(GroupJson.ID)]
@@ -93,6 +103,11 @@ namespace Galactic.Identity.Okta
         /// The members of the group.
         /// </summary>
         public override List<IdentityObject> Members => UserMembers.ConvertAll(member => (IdentityObject)member);
+
+        /// <summary>
+        /// Logins of the members of the group.
+        /// </summary>
+        public override List<string> MemberNames => UserMemberNames;
 
         /// <summary>
         /// The number of members in the group.
@@ -144,6 +159,24 @@ namespace Galactic.Identity.Okta
                     users.Add(new User(okta, userJson));
                 }
                 return users;
+            }
+        }
+
+        /// <summary>
+        /// Login of users that are a member of the group.
+        /// </summary>
+        public override List<string> UserMemberNames
+        {
+            get
+            {
+                List<string> names = new List<string>();
+
+                foreach (UserJson userJson in okta.GetGroupMembership(UniqueId))
+                {
+                    names.Add(userJson.Profile.Login);
+                }
+
+                return names;
             }
         }
 
