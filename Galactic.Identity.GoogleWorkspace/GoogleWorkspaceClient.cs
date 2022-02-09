@@ -618,6 +618,76 @@ namespace Galactic.Identity.GoogleWorkspace
         }
 
         /// <summary>
+        /// Gets a list of the e-mail addresses of identity objects that are a member of the supplied group.
+        /// </summary>
+        /// <param name="groupKey">The group's e-mail address or unique id.</param>
+        /// <param name="objectType">(Optional) The type of object to limit results to. Use Member.TYPE_GROUP or Member.TYPE_USER.</param>
+        /// <returns>A list of e-mail addresses representing each user and group that is a member of the group.</returns>
+        public List<string> GetGroupMembershipAsEmails(string groupKey, string objectType = null)
+        {
+            if (!string.IsNullOrWhiteSpace(groupKey))
+            {
+                // Create a list of e-mail addresses to return.
+                List<string> emails = new();
+
+                try
+                {
+                    // Create a request to retrieve all the group members and execute it.
+                    MembersResource.ListRequest request = Service.Members.List(groupKey);
+                    Members membersRequest = request.Execute();
+                    IList<GoogleMember> requestMembers = membersRequest.MembersValue;
+
+                    // Check for additional pages of group members. 
+                    while (membersRequest.NextPageToken != null)
+                    {
+                        request.PageToken = membersRequest.NextPageToken;
+                        membersRequest = request.Execute();
+                        foreach (GoogleMember member in membersRequest.MembersValue)
+                        {
+                            requestMembers.Add(member);
+                        }
+
+                    }
+
+                    // Verify that members were returned by the request.
+                    if (requestMembers != null)
+                    {
+                        // Convert the members.
+                        List<Member> members = Member.FromGoogleMembers(this, requestMembers);
+
+                        // Create the list of e-mail addresses.
+                        foreach (Member member in members)
+                        {
+                            if (objectType != null)
+                            {
+                                // Return only e-mail addresses associated with the supplied type of identity object.
+                                if (member.MemberType == objectType)
+                                {
+                                    emails.Add(member.Email);
+                                }
+                            }
+                            else
+                            {
+                                emails.Add(member.Email);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the members.
+                }
+
+                // Return the list of e-mail addresses.
+                return emails;
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(groupKey));
+            }
+        }
+
+        /// <summary>
         /// Gets IGroups that start with the attribute value in the supplied attribute.
         /// </summary>
         /// <param name="attribute">The attribute with name and value to search against.</param>

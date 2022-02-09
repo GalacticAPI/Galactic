@@ -207,26 +207,7 @@ namespace Galactic.Identity.GoogleWorkspace
             }
         }
 
-        public override List<string> GroupMemberNames
-        {
-            // This is a placeholder until a more efficient method can be developed. 
-            get
-            {
-                List<string> names = new List<string>();
-
-                foreach (IdentityObject member in Members)
-                {
-                    if (member is Group)
-                    {
-                        Group group = (Group)member;
-
-                        names.Add(group.Email);
-                    }
-                }
-
-                return names;
-            }
-        }
+        public override List<string> GroupMemberNames => gws.GetGroupMembershipAsEmails(UniqueId, Member.TYPE_GROUP);
 
         /// <summary>
         /// Unique key for Group.
@@ -242,32 +223,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The email addresses of the members of the group.
         /// </summary>
-        public override List<string> MemberNames
-        {
-            // This is a placeholder until a more efficient method can be developed. 
-            get
-            {
-                List<string> names = new List<string>();
-
-                foreach(IdentityObject member in Members)
-                {
-                    if(member is User)
-                    {
-                        User user = (User)member;
-
-                        names.Add(user.PrimaryEmail);
-                    }
-                    else if(member is Group)
-                    {
-                        Group group = (Group)member;
-
-                        names.Add(group.Email);
-                    }
-                }
-
-                return names;
-            }
-        }
+        public override List<string> MemberNames => gws.GetGroupMembershipAsEmails(UniqueId);
 
         /// <summary>
         /// The name of the group.
@@ -317,26 +273,7 @@ namespace Galactic.Identity.GoogleWorkspace
         /// <summary>
         /// The names of users that are members of the group. (Not including subgroups.)
         /// </summary>
-        public override List<string> UserMemberNames
-        {
-            // This is a placeholder until a more efficient method can be developed. 
-            get
-            {
-                List<string> names = new List<string>();
-
-                foreach (IdentityObject member in Members)
-                {
-                    if (member is User)
-                    {
-                        User user = (User)member;
-
-                        names.Add(user.PrimaryEmail);
-                    }
-                }
-
-                return names;
-            }
-        }
+        public override List<string> UserMemberNames => gws.GetGroupMembershipAsEmails(UniqueId, Member.TYPE_USER);
 
         /// <summary>
         /// A hashed version of the group's Name to allow for faster compare operations.
