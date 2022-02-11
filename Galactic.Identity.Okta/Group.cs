@@ -82,6 +82,28 @@ namespace Galactic.Identity.Okta
         public override List<string> GroupMemberNames => new();
 
         /// <summary>
+        /// The enumerated value of the group's Okta group type.
+        /// </summary>
+        public OktaClient.GroupType GroupType
+        {
+            get
+            {
+                if (Type == "APP_GROUP")
+                {
+                    return OktaClient.GroupType.APP_GROUP;
+                }
+                else if (Type == "BUILT_IN")
+                {
+                    return OktaClient.GroupType.BUILT_IN;
+                }
+                else
+                {
+                    return OktaClient.GroupType.OKTA_GROUP;
+                }
+            }
+        }
+
+        /// <summary>
         /// Unique key for Group.
         /// </summary>
         [DirectorySystemPropertyName(GroupJson.ID)]
