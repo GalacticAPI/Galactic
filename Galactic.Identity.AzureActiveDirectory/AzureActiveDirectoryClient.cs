@@ -820,7 +820,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <param name="attributeName">The name of the attribute to search against.</param>
 		/// <param name="attributeValue">The value to search for in the attribute.</param>
 		/// <param name="attributeNames">(Optional) The attributes that should be returned in the entry found. If not provided, all non-constructed attributes are returned. Constructed attributes must be explicitly defined.</param>
-		/// <returns></returns>
+		/// <returns>List of GraphGroup objects matching search criteria.</returns>
 		public List<GraphGroup> GetGraphGroupsByAttribute(string attributeName, string attributeValue, List<string> attributeNames = null)
 		{
             try
@@ -879,6 +879,100 @@ namespace Galactic.Identity.AzureActiveDirectory
 				// An error occurred.
 				return null;
             }
+		}
+
+		/// <summary>
+		/// Gets Groups that match the supplied search filter.
+		/// </summary>
+		/// <param name="filter">The search filter.</param>
+		/// <param name="returnedAttributes">(Optional) The attributes that should be returned in the group found. If not supplied, the default list of attributes is returned.</param>
+		/// <returns>A list of groups that match the search filter.</returns>
+		public List<Identity.Group> GetGroupsByFilter(string filter, List<IdentityAttribute<Object>> returnedAttributes = null)
+		{
+			if (!String.IsNullOrWhiteSpace(filter))
+			{
+				// Get the names of any attributes to return.
+				List<string> attributeNames = new();
+				if (returnedAttributes != null)
+				{
+					foreach (IdentityAttribute<object> returnedAttribute in returnedAttributes)
+					{
+						attributeNames.Add(returnedAttribute.Name);
+					}
+				}
+
+				// Search for entries that match the wildcarded attribute value supplied.
+				List<GraphGroup> searchResults = GetGraphGroupsByFilter(filter, attributeNames);
+
+				// Filter the list of entries returned so that only Users are returned.
+				List<Identity.Group> groups = new();
+				if (searchResults != null)
+				{
+					foreach (GraphGroup graphGroup in searchResults)
+					{
+						Group group = new(this, graphGroup);
+						groups.Add(group);
+					}
+				}
+
+				return groups;
+			}
+			else
+			{
+				throw new ArgumentNullException(nameof(filter));
+			}
+		}
+
+		/// <summary>
+		/// Gets Microsoft Graph Groups that match a given search filter.
+		/// </summary>
+		/// <param name="filter">The search filter.</param>
+		/// <param name="attributeNames">(Optional) The attributes that should be returned in the entry found. If not provided, all non-constructed attributes are returned. Constructed attributes must be explicitly defined.</param>
+		/// <returns>List of GraphGroup objects matching search filter.</returns>
+		public List<GraphGroup> GetGraphGroupsByFilter(string filter, List<string> attributeNames = null)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(filter))
+				{
+					//Check if custom list of attributes exists.
+					if (attributeNames == null || attributeNames.Count == 0)
+					{
+						attributeNames = DefaultUserAttributes.ToList();
+					}
+
+					// Create attribute string.
+					string selectedAttributes = string.Join(',', attributeNames);
+
+					// Create list to hold search results.
+					List<GraphGroup> groups = new();
+
+					// Query Graph Client for users matching search filter.
+					var req = gsc.Groups.Request();
+					req.QueryOptions.Add(new QueryOption("$count", "true"));
+					Task<IGraphServiceGroupsCollectionPage> response = req.Header("ConsistencyLevel", "eventual").Filter(filter).Select(selectedAttributes).GetAsync();
+					response.Wait();
+
+					groups.AddRange(response.Result.CurrentPage);
+
+					// Check for additional pages of data.
+					while (response.Result.NextPageRequest != null)
+					{
+						response = response.Result.NextPageRequest.GetAsync();
+						response.Wait();
+						groups.AddRange(response.Result.CurrentPage);
+					}
+
+					return groups;
+				}
+				// The attribute name or value provided is not valid.
+				return null;
+			}
+			catch (AggregateException e)
+			{
+				// An error occurred.
+				return null;
+			}
 		}
 
 		/// <summary>
