@@ -747,6 +747,28 @@ namespace Galactic.Identity.Okta
                 JsonRestResponse<UserJson[]> jsonResponse = rest.GetFromJson<UserJson[]>("/groups/" + uniqueId + "/users?limit=" + MAX_PAGE_SIZE);
                 if (jsonResponse != null)
                 {
+                    // Keep track of retry attempts.
+                    int retry = 0;
+
+                    // If response is "TooManyRequests", pause thread starting at 10s.
+                    while(jsonResponse.Message.StatusCode == HttpStatusCode.TooManyRequests)
+                    {
+                        // If more than 10 retry attempts, fail.
+                        if(retry > 10)
+                        {
+                            break;
+                        }
+
+                        // Increment retry counter.
+                        retry++;
+
+                        // Sleep. Gets progressively longer.
+                        System.Threading.Thread.Sleep(10000 * retry);
+
+                        // Try again
+                        jsonResponse = rest.GetFromJson<UserJson[]>("/groups/" + uniqueId + "/users?limit=" + MAX_PAGE_SIZE);
+                    }
+
                     // Convert to an OktaJsonRestResponse.
                     OktaJsonRestResponse<UserJson[]> oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
 
@@ -761,6 +783,28 @@ namespace Galactic.Identity.Okta
 
                         if (jsonResponse != null)
                         {
+                            // Keep track of retry attempts.
+                            retry = 0;
+
+                            // If response is "TooManyRequests", pause thread starting at 10s.
+                            while (jsonResponse.Message.StatusCode == HttpStatusCode.TooManyRequests)
+                            {
+                                // If more than 10 retry attempts, fail.
+                                if (retry > 10)
+                                {
+                                    break;
+                                }
+
+                                // Increment retry counter.
+                                retry++;
+
+                                // Sleep. Gets progressively longer.
+                                System.Threading.Thread.Sleep(10000 * retry);
+
+                                // Try again
+                                jsonResponse = rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+                            }
+
                             // Convert to OktaJsonRestResponse.
                             oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
 
