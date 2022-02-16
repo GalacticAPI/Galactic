@@ -685,7 +685,7 @@ namespace Galactic.Identity.Okta
             {
                 // Return the result.
                 JsonRestResponse<UserJson> jsonResponse = rest.GetFromJson<UserJson>("/users/" + WebUtility.UrlEncode(id));
-                if (jsonResponse != null)
+                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
                 {
                     // Convert to an OktaJsonRestResponse.
                     OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
