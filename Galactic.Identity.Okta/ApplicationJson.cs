@@ -102,7 +102,7 @@ namespace Galactic.Identity.Okta
         /// Discoverable resources related to the app.
         /// </summary>
         [JsonPropertyName(LINKS)]
-        public UserLinksJson Links { get; init; } = default!;
+        public string Links { get; init; } = default!;
 
         /// <summary>
         /// Access settings for app.

@@ -163,6 +163,50 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Assigns a group to an application.
+        /// </summary>
+        /// <param name="groupId">The unique id of the group to assign.</param>
+        /// <param name="applicationId">The unique id of the application to assign the group to.</param>
+        /// <returns>True if the group was assigned, false otherwise.</returns>
+        public bool AssignGroupToApplication(string groupId, string applicationId)
+        {
+            if (!string.IsNullOrWhiteSpace(groupId) && !string.IsNullOrWhiteSpace(applicationId))
+            {
+                EmptyRestResponse response = rest.Put("/apps/" + applicationId + "/groups/" + groupId);
+
+                if (response != null)
+                {
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The group was assigned.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The group was not assigned.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The group was not assigned.
+                    return false;
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(groupId))
+            {
+                throw new ArgumentNullException(nameof(groupId));
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(applicationId));
+            }
+        }
+
+        /// <summary>
         /// Create a new group within the directory system given its proposed name, its type, and other optional attributes.
         /// </summary>
         /// <param name="name">The proposed name of the group.</param>
@@ -559,6 +603,55 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets all applications in Okta.
+        /// </summary>
+        /// <returns>A list of all applications in Okta.</returns>
+        public List<Application> GetAllApplications()
+        {
+            // Return the result.
+            JsonRestResponse<ApplicationJson[]> jsonResponse = rest.GetFromJson<ApplicationJson[]>("/apps/?limit=" + MAX_PAGE_SIZE);
+            if (jsonResponse != null)
+            {
+                // Convert to an OktaJsonRestResponse.
+                OktaJsonRestResponse<ApplicationJson[]> oktaResponse = OktaJsonRestResponse<ApplicationJson[]>.FromJsonRestResponse(jsonResponse);
+
+                // Create the list of application JSON objects.
+                List<ApplicationJson> jsonList = new(oktaResponse.Value);
+
+                // Get additional pages.
+                while (oktaResponse.NextPage != null)
+                {
+                    // Get the next page, removing the base URI from the supplied URI.
+                    jsonResponse = rest.GetFromJson<ApplicationJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                    if (jsonResponse != null)
+                    {
+                        // Convert to OktaJsonRestResponse.
+                        oktaResponse = OktaJsonRestResponse<ApplicationJson[]>.FromJsonRestResponse(jsonResponse);
+
+                        // Add the additional applications to the list.
+                        jsonList.AddRange(oktaResponse.Value);
+                    }
+                }
+
+                // Create the list applications to return.
+                List<Application> applications = new();
+                foreach (ApplicationJson applicationJson in jsonList)
+                {
+                    applications.Add(new Application(this, applicationJson));
+                }
+
+                // Return the list of applications.
+                return applications;
+            }
+            else
+            {
+                // Nothing was returned.
+                return new();
+            }
+        }
+
+        /// <summary>
         /// Get's all groups in the directory system.
         /// </summary>
         /// <returns>A list of all groups in the directory system.</returns>
@@ -671,6 +764,132 @@ namespace Galactic.Identity.Okta
             {
                 // Nothing was returned.
                 return new();
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of groups assigned to the application.
+        /// </summary>
+        /// <param name="applicationId">The id that uniquely identifies the application in Okta.</param>
+        /// <returns>A list of groups assigned to the application, or an empty group if there was an error retrieving the list.</returns>
+        public  List<Identity.Group> GetApplicationGroupAssignments(string applicationId)
+        {
+            if (!string.IsNullOrEmpty(applicationId))
+            {
+                // Return the result.
+                JsonRestResponse<ApplicationApplicationGroupJson[]> jsonResponse = rest.GetFromJson<ApplicationApplicationGroupJson[]>("/apps/" + applicationId + "/groups?limit=" + MAX_PAGE_SIZE);
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<ApplicationApplicationGroupJson[]> oktaResponse = OktaJsonRestResponse<ApplicationApplicationGroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of user JSON objects.
+                    List<ApplicationApplicationGroupJson> jsonList = new(oktaResponse.Value);
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<ApplicationApplicationGroupJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<ApplicationApplicationGroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional users to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    // Create the list groups to return.
+                    List<Identity.Group> groups = new();
+                    foreach (ApplicationApplicationGroupJson appGroupJson in jsonList)
+                    {
+                        groups.Add(GetGroup(appGroupJson.Id));
+                    }
+
+                    // Return the list of groups.
+                    return groups;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // An application id was not supplied.
+                return new();
+            }
+        }
+
+        /// <summary>
+        /// Gets an Application from Okta given its ID.
+        /// </summary>
+        /// <param name="id">The ID of the application to retrieve from Okta.</param>
+        /// <returns>An Application object.</returns>
+        public Application GetApplication(string id)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                // Return the result.
+                JsonRestResponse<ApplicationJson> jsonResponse = rest.GetFromJson<ApplicationJson>("/apps/" + WebUtility.UrlEncode(id));
+                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<ApplicationJson> oktaResponse = OktaJsonRestResponse<ApplicationJson>.FromJsonRestResponse(jsonResponse);
+
+                    return new Application(this, oktaResponse.Value);
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+        }
+
+        /// <summary>
+        /// Gets an Application group assignment from Okta given the group and application id.
+        /// </summary>
+        /// <param name="applicationId">The ID of the application to retrieve the group assignment information about from Okta.</param>
+        /// <param name="groupId">The ID of the group to retrieve assignment information about from Okta.</param>
+        /// <returns>An ApplicationApplicationGroupJson object or null if not found or there was error.</returns>
+        public ApplicationApplicationGroupJson GetAssignedGroupForApplication(string applicationId, string groupId)
+        {
+            if (!string.IsNullOrWhiteSpace(applicationId) && !string.IsNullOrWhiteSpace(groupId))
+            {
+                // Return the result.
+                JsonRestResponse<ApplicationApplicationGroupJson> jsonResponse = rest.GetFromJson<ApplicationApplicationGroupJson>("/apps/" + WebUtility.UrlEncode(applicationId) + "/groups/" + WebUtility.UrlEncode(groupId));
+                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<ApplicationApplicationGroupJson> oktaResponse = OktaJsonRestResponse<ApplicationApplicationGroupJson>.FromJsonRestResponse(jsonResponse);
+
+                    return oktaResponse.Value;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return null;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(applicationId))
+                {
+                    throw new ArgumentNullException(nameof(applicationId));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(groupId));
+                }
             }
         }
 
@@ -1220,6 +1439,50 @@ namespace Galactic.Identity.Okta
             else
             {
                 throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
+        /// Removes a group assignment from an application.
+        /// </summary>
+        /// <param name="groupId">The unique id of the group to remove.</param>
+        /// <param name="groupId">The unique id of the application to remove the group from.</param>
+        /// <returns>True if the group was removed, false otherwise.</returns>
+        public bool RemoveGroupAssignmentFromApplication(string groupId, string applicationId)
+        {
+            if (!string.IsNullOrWhiteSpace(groupId) && !string.IsNullOrWhiteSpace(applicationId))
+            {
+                EmptyRestResponse response = rest.Delete("/apps/" + applicationId + "/groups/" + groupId);
+
+                if (response != null)
+                {
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The group was removed.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The group was not removed.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The group was not removed.
+                    return false;
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(groupId))
+            {
+                throw new ArgumentNullException(nameof(groupId));
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(applicationId));
             }
         }
 
