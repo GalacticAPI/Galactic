@@ -10,6 +10,7 @@ using System.Security;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
 using DSAD = System.DirectoryServices.ActiveDirectory;
 
 namespace Galactic.Identity.ActiveDirectory
@@ -1529,6 +1530,49 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Gets a group matching the supplied name.
+        /// </summary>
+        /// <param name="name">The name of the group.</param>
+        /// <returns>A Group matching the supplied name.</returns>
+        public Identity.Group GetGroupByName(string name)
+        {
+            // Validate that parameter is supplied.
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                // Create IdentityAttribute for group name.
+                IdentityAttribute<string> attribute = new IdentityAttribute<string>("samaccountname", name);
+
+                try
+                {
+                    List<Identity.Group> result = GetGroupsByAttribute(attribute);
+
+                    if (result.Count == 1)
+                    {
+                        return result[0];
+                    }
+                    else if(result.Count > 1)
+                    {
+                        // Multiple results found.
+                        return result.FirstOrDefault(x => x.Name == name);
+                    }
+                    else
+                    {
+                        // No results found.
+                        return null;
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the group.
+                    return null;
+                }
+            }
+
+            // Bad parameter. 
+            return null;
+        }
+
+        /// <summary>
         /// Gets a list of the types of groups supported by the directory system.
         /// </summary>
         /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
@@ -1694,6 +1738,31 @@ namespace Galactic.Identity.ActiveDirectory
             {
                 throw new ArgumentNullException(nameof(attribute));
             }
+        }
+
+        /// <summary>
+		/// Gets a user matching the supplied login.
+		/// </summary>
+		/// <param name="login">The login of the user.</param>
+		/// <returns>A User matching the supplied login.</returns>
+		public Identity.User GetUserByLogin(string login)
+        {
+            // Validate that parameter is supplied.
+            if (!string.IsNullOrWhiteSpace(login))
+            {
+                try
+                {
+                    return new User(this, GetGuidByAttribute("userprincipalname", login));
+                }
+                catch
+                {
+                    // There was an error retrieving the group.
+                    return null;
+                }
+            }
+
+            // Bad parameter. 
+            return null;
         }
 
         /// <summary>

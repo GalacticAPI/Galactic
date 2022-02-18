@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net;
 using System.Reflection;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Galactic.Identity.Okta
@@ -1061,6 +1062,49 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+		/// Gets a group matching the supplied name.
+		/// </summary>
+		/// <param name="name">The name of the group.</param>
+		/// <returns>A Group matching the supplied name.</returns>
+		public Identity.Group GetGroupByName(string name)
+        {
+            // Validate that parameter is supplied.
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                // Create IdentityAttribute for group name.
+                IdentityAttribute<string> attribute = new IdentityAttribute<string>("profile.name", name);
+
+                try
+                {
+                    List<Identity.Group> result = GetGroupsByAttribute(attribute);
+
+                    if (result.Count == 1)
+                    {
+                        return result[0];
+                    }
+                    else if (result.Count > 1)
+                    {
+                        // Multiple results found.
+                        return result.FirstOrDefault(x => x.Name == name);
+                    }
+                    else
+                    {
+                        // No results found.
+                        return null;
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the group.
+                    return null;
+                }
+            }
+
+            // Bad parameter. 
+            return null;
+        }
+
+        /// <summary>
         /// Gets IGroups that start with the attribute value in the supplied attribute.
         /// Note: Only searches Okta groups of type OKTA_GROUP.
         /// </summary>
@@ -1351,6 +1395,49 @@ namespace Galactic.Identity.Okta
                 // An attribute was not supplied.
                 return new ();
             }
+        }
+
+        /// <summary>
+		/// Gets a user matching the supplied login.
+		/// </summary>
+		/// <param name="login">The login of the user.</param>
+		/// <returns>A User matching the supplied login.</returns>
+		public Identity.User GetUserByLogin(string login)
+        {
+            // Validate that parameter is supplied.
+            if (!string.IsNullOrWhiteSpace(login))
+            {
+                // Create IdentityAttribute for group name.
+                IdentityAttribute<string> attribute = new IdentityAttribute<string>("profile.login", login);
+
+                try
+                {
+                    List<Identity.User> result = GetUsersByAttribute(attribute);
+
+                    if (result.Count == 1)
+                    {
+                        return result[0];
+                    }
+                    else if (result.Count > 1)
+                    {
+                        // Multiple results found.
+                        return result.FirstOrDefault(x => x.Login == login);
+                    }
+                    else
+                    {
+                        // No results found.
+                        return null;
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the group.
+                    return null;
+                }
+            }
+
+            // Bad parameter. 
+            return null;
         }
 
         /// <summary>
