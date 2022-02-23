@@ -33,6 +33,11 @@ namespace Galactic.Ldap
         /// </summary>
         public const int DEFAULT_QUERY_PAGE_SIZE = 500;
 
+        /// <summary>
+        /// The client side connection timeout (in seconds).
+        /// </summary>
+        public const int DEFAULT_CLIENT_TIMEOUT = 120;
+
         // ----- VARIABLES -----
 
         // The object that manages the connection with the LDAP server.
@@ -135,6 +140,8 @@ namespace Galactic.Ldap
                             connection = new LdapConnection(directoryIdentifier, credential, authType);
                         }
 
+                        // Set client side connection timeout. 
+                        connection.Timeout = new TimeSpan(0, 0, DEFAULT_CLIENT_TIMEOUT);
 
                         // Gather information about the LDAP server(s) from the RootDSE entry.
                         SearchResponse rootDSESearchResponse = (SearchResponse)connection.SendRequest(new SearchRequest(null, "(objectClass=*)", SearchScope.Base));
