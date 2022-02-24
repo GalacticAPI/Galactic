@@ -1835,6 +1835,15 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Indicates if this principal is a Group.
+        /// <param name="entry">The object to check.</param>
+        /// </summary>
+        public bool IsGroup(SearchResultEntry entry)
+        {
+            return IsObjectClass(entry, "group");
+        }
+
+        /// <summary>
         /// Checks whether the group name supplied conforms to the limitations imposed by Active Directory.
         /// Active Directory Group Name Limitations:
         /// 63 character length limit
@@ -1987,12 +1996,59 @@ namespace Galactic.Identity.ActiveDirectory
         }
 
         /// <summary>
+        /// Indicates if this object belongs to the designated object class.
+        /// Checks the "objectClass" attribute.
+        /// <param name="entry">The object to check.</param>
+        /// <param name="schemaClass">The schema class of the object to check for.</param>
+        /// </summary>
+        public bool IsObjectClass(SearchResultEntry entry, string schemaClass)
+        {
+            if (entry != null && !string.IsNullOrWhiteSpace(schemaClass))
+            {
+                // Get the schema classes associated with the object.
+                List<string> schemaClasses = GetStringAttributeValues("objectClass", entry);
+
+                if (schemaClasses != null)
+                {
+                    // Check if the object has the supplied schema class.
+                    if (schemaClasses.Contains(schemaClass))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // There was an error retrieving the schema classes.
+                    return false;
+                }
+            }
+            else
+            {
+                // Valid parameters were not provided.
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Indicates if this principal is a User.
         /// <param name="guid">The GUID of the object to check.</param>
         /// </summary>
         public bool IsUser(Guid guid)
         {
             return IsObjectClass(guid, "user");
+        }
+
+        /// <summary>
+        /// Indicates if this principal is a User.
+        /// <param name="entry">The object to check.</param>
+        /// </summary>
+        public bool IsUser(SearchResultEntry entry)
+        {
+            return IsObjectClass(entry, "user");
         }
 
         /// <summary>

@@ -575,22 +575,30 @@ namespace Galactic.Identity.ActiveDirectory
                     List<IdentityObject> objs = new();
                     foreach (string dn in dns)
                     {
-                        // Get the GUID of the member.
-                        Guid memberGuid = ad.GetGuidByDistinguishedName(dn);
+                        // Get the member object.
+                        SearchResultEntry result = null;
+                        try
+                        {
+                            result = ad.GetEntryByDistinguishedName(dn);
+                        }
+                        catch
+                        {
+                            // Error
+                        }
 
-                        // Verify that a GUID was returned.
-                        if (memberGuid != Guid.Empty)
+                        // Verify member object found.
+                        if (result != null)
                         {
                             // Check which type of object the member is, and add it as the correct type to the list.
-                            if (ad.IsGroup(memberGuid))
+                            if (ad.IsGroup(result))
                             {
                                 // The member is a group.
-                                objs.Add(new Group(ad, memberGuid));
+                                objs.Add(new Group(ad, result));
                             }
-                            else if (ad.IsUser(memberGuid))
+                            else if (ad.IsUser(result))
                             {
                                 // The member is a user.
-                                objs.Add(new User(ad, memberGuid));
+                                objs.Add(new User(ad, result));
                             }
                         }
                     }
