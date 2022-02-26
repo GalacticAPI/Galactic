@@ -1398,49 +1398,6 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
-		/// Gets a user matching the supplied login.
-		/// </summary>
-		/// <param name="login">The login of the user.</param>
-		/// <returns>A User matching the supplied login.</returns>
-		public Identity.User GetUserByLogin(string login)
-        {
-            // Validate that parameter is supplied.
-            if (!string.IsNullOrWhiteSpace(login))
-            {
-                // Create IdentityAttribute for group name.
-                IdentityAttribute<string> attribute = new IdentityAttribute<string>("profile.login", login);
-
-                try
-                {
-                    List<Identity.User> result = GetUsersByAttribute(attribute);
-
-                    if (result.Count == 1)
-                    {
-                        return result[0];
-                    }
-                    else if (result.Count > 1)
-                    {
-                        // Multiple results found.
-                        return result.FirstOrDefault(x => x.Login == login);
-                    }
-                    else
-                    {
-                        // No results found.
-                        return null;
-                    }
-                }
-                catch
-                {
-                    // There was an error retrieving the group.
-                    return null;
-                }
-            }
-
-            // Bad parameter. 
-            return null;
-        }
-
-        /// <summary>
         /// Gets a list of groups that the user is a member of.
         /// </summary>
         /// <param name="uniqueId">The unique id of the user.</param>
