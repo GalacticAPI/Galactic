@@ -41,6 +41,12 @@ namespace Galactic.Identity.Okta
         [DirectorySystemPropertyName(ApplicationJson.ID)]
         public string Id => json.Id;
 
+        /// <summary>
+        /// User defined display name for app.
+        /// </summary>
+        [DirectorySystemPropertyName(ApplicationJson.LABEL)]
+        public string Label => json.Label;
+
         // ----- CONSTRUCTORS -----
 
         /// <summary>

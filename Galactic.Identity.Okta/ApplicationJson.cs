@@ -102,7 +102,7 @@ namespace Galactic.Identity.Okta
         /// Discoverable resources related to the app.
         /// </summary>
         [JsonPropertyName(LINKS)]
-        public string Links { get; init; } = default!;
+        public ApplicationApplicationLinksJson Links { get; init; } = default!;
 
         /// <summary>
         /// Access settings for app.
@@ -124,10 +124,10 @@ namespace Galactic.Identity.Okta
 
         /// <summary>
         /// Enabled app features.
-        /// The value of this property is one of the constants in the ApplicationFeature record.
+        /// The value of this property is an array containing one or more of the constants in the ApplicationFeature record.
         /// </summary>
         [JsonPropertyName(FEATURES)]
-        public string Features { get; init; } = default!;
+        public string[] Features { get; init; } = default!;
 
         /// <summary>
         /// Unique key for app.

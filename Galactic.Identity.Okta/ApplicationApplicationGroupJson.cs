@@ -52,7 +52,7 @@ namespace Galactic.Identity.Okta
         /// Discoverable resources related to the app group.
         /// </summary>
         [JsonPropertyName(LINKS)]
-        public string Links { get; init; } = default!;
+        public ApplicationApplicationGroupLinksJson Links { get; init; } = default!;
 
         /// <summary>
         /// Unique key of the group.
@@ -76,6 +76,6 @@ namespace Galactic.Identity.Okta
         /// Valid JSON schema for specifying properties.
         /// </summary>
         [JsonPropertyName(PROFILE)]
-        public string Profile { get; init; } = default!;
+        public object Profile { get; init; } = default!;
     }
 }

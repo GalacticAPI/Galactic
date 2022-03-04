@@ -18,6 +18,11 @@ namespace Galactic.Identity.Okta
         public const string DEPRECATION = "deprecation";
 
         /// <summary>
+        /// Hints JSON property name.
+        /// </summary>
+        public const string HINTS = "hints";
+
+        /// <summary>
         /// Href JSON property name.
         /// </summary>
         public const string HREF = "href";
@@ -61,6 +66,12 @@ namespace Galactic.Identity.Okta
         /// </summary>
         [JsonPropertyName(DEPRECATION)]
         public string Deprecation { get; init; } = default!;
+
+        /// <summary>
+        /// (Optional) Indicates the allowed HTTP verb types for the link.
+        /// </summary>
+        [JsonPropertyName(HINTS)]
+        public LinkHintsJson Hints { get; init; } = default!;
 
         /// <summary>
         /// (Required) Its value is either a URI [RFC3986] or a URI Template [RFC6570].
