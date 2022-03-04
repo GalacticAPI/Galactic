@@ -1408,16 +1408,78 @@ namespace Galactic.Identity.Okta
             {
                 // Return the result.
                 JsonRestResponse<GroupJson[]> jsonResponse = rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups");
+
                 if (jsonResponse != null)
                 {
+                    // Keep track of retry attempts.
+                    int retry = 1;
+
+                    // If response is "TooManyRequests", pause thread starting at 10s.
+                    while (jsonResponse.Message.StatusCode == HttpStatusCode.TooManyRequests)
+                    {
+                        // If more than 10 retry attempts, fail.
+                        if (retry > 10)
+                        {
+                            break;
+                        }
+
+                        // Increment retry counter.
+                        retry++;
+
+                        // Sleep. Gets progressively longer.
+                        System.Threading.Thread.Sleep(10000 * retry);
+
+                        // Try again
+                        jsonResponse = rest.GetFromJson<GroupJson[]>("/users/" + uniqueId + "/groups");
+                    }
+
                     // Convert to OktaJsonRestResponse.
                     OktaJsonRestResponse<GroupJson[]> oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
 
-                    GroupJson[] jsonArray = oktaResponse.Value;
-                    if (jsonArray != default)
+                    List<GroupJson> jsonList = oktaResponse.Value.ToList();
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<GroupJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        // Keep track of retry attempts.
+                        retry = 1;
+
+                        // If response is "TooManyRequests", pause thread starting at 10s.
+                        while (jsonResponse.Message.StatusCode == HttpStatusCode.TooManyRequests)
+                        {
+                            // If more than 10 retry attempts, fail.
+                            if (retry > 10)
+                            {
+                                break;
+                            }
+
+                            // Increment retry counter.
+                            retry++;
+
+                            // Sleep. Gets progressively longer.
+                            System.Threading.Thread.Sleep(10000 * retry);
+
+                            // Try again
+                            jsonResponse = rest.GetFromJson<GroupJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+                        }
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional users to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    if (jsonList != null)
                     {
                         // Return the list of Groups.
-                        return new(jsonArray);
+                        return new(jsonList);
                     }
                     else
                     {
