@@ -144,6 +144,17 @@ namespace Galactic.Rest
         /// <returns>An object with the request response, or null if the request could not be completed.</returns>
         public EmptyRestResponse Delete(string path)
         {
+            return Delete(path, Guid.Empty);
+        }
+
+        /// <summary>
+        /// Sends a Delete request to a API endpoint at the supplied path.
+        /// </summary>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <param name="requestId">(Optional)A unique identifier for the request. Only necessary when making many related calls (for instance retries).</param>
+        /// <returns>An object with the request response, or null if the request could not be completed.</returns>
+        protected EmptyRestResponse Delete(string path, Guid requestId)
+        {
             if (!string.IsNullOrWhiteSpace(path))
             {
                 try
@@ -154,12 +165,68 @@ namespace Galactic.Rest
                     // Wait for the response to complete.
                     responseTask.Wait();
 
+                    // Check whether we've submitted too many requests.
+                    if (responseTask.Result.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                    {
+                        // Check how many retries we've already done.
+                        int numRetries = 0;
+                        if (requestId != Guid.Empty)
+                        {
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                numRetries = requestRetries[requestId];
+                            }
+                        }
+                        else
+                        {
+                            requestId = Guid.NewGuid();
+                        }
+
+                        // Retry if we haven't hit the limit.
+                        if (numRetries < MaxRetries)
+                        {
+                            // Wait the standoff time.
+                            Thread.Sleep(StandoffTimeInSecs * 1000);
+
+                            // Increment the number of retries.
+                            requestRetries[requestId] = ++numRetries;
+
+                            // Retry.
+                            return Delete(path, requestId);
+                        }
+                        else
+                        {
+                            // We've hit the limit.
+
+                            // Remove any associated retries for this request.
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                requestRetries.Remove(requestId);
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    // Remove any associated retries for this request.
+                    if (requestRetries.ContainsKey(requestId))
+                    {
+                        requestRetries.Remove(requestId);
+                    }
+
                     // Return the response.
                     return new(responseTask.Result);
                 }
                 catch
                 {
                     // There was an error sending the request.
+
+                    // Remove any associated retries for this request.
+                    if (requestRetries.ContainsKey(requestId))
+                    {
+                        requestRetries.Remove(requestId);
+                    }
+
                     return null;
                 }
             }
@@ -197,57 +264,48 @@ namespace Galactic.Rest
                     Task<HttpResponseMessage> responseTask = httpClient.GetAsync(httpClient.BaseAddress + path);
 
                     // Wait for the response to complete.
-                    try
+                    responseTask.Wait();
+
+                    // Check whether we've submitted too many requests.
+                    if (responseTask.Result.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                     {
-                        responseTask.Wait();
-                    }
-                    catch
-                    {
-                        // Check whether the task has faulted as part of the exception.
-                        if (responseTask.Status == TaskStatus.Faulted)
+                        // Check how many retries we've already done.
+                        int numRetries = 0;
+                        if (requestId != Guid.Empty)
                         {
-                            // Check whether we've submitted too many requests.
-                            if (responseTask.Result.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                            if (requestRetries.ContainsKey(requestId))
                             {
-                                // Check how many retries we've already done.
-                                int numRetries = 0;
-                                if (requestId != Guid.Empty)
-                                {
-                                    if (requestRetries.ContainsKey(requestId))
-                                    {
-                                        numRetries = requestRetries[requestId];
-                                    }
-                                }
-                                else
-                                {
-                                    requestId = Guid.NewGuid();
-                                }
-
-                                // Retry if we haven't hit the limit.
-                                if (numRetries < MaxRetries)
-                                {
-                                    // Wait the standoff time.
-                                    Thread.Sleep(StandoffTimeInSecs * 1000);
-
-                                    // Increment the number of retries.
-                                    requestRetries[requestId] = ++numRetries;
-
-                                    // Retry.
-                                    return GetFromJson<T>(path, requestId);
-                                }
-                                else
-                                {
-                                    // We've hit the limit.
-
-                                    // Remove any associated retries for this request.
-                                    if (requestRetries.ContainsKey(requestId))
-                                    {
-                                        requestRetries.Remove(requestId);
-                                    }
-
-                                    return null;
-                                }
+                                numRetries = requestRetries[requestId];
                             }
+                        }
+                        else
+                        {
+                            requestId = Guid.NewGuid();
+                        }
+
+                        // Retry if we haven't hit the limit.
+                        if (numRetries < MaxRetries)
+                        {
+                            // Wait the standoff time.
+                            Thread.Sleep(StandoffTimeInSecs * 1000);
+
+                            // Increment the number of retries.
+                            requestRetries[requestId] = ++numRetries;
+
+                            // Retry.
+                            return GetFromJson<T>(path, requestId);
+                        }
+                        else
+                        {
+                            // We've hit the limit.
+
+                            // Remove any associated retries for this request.
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                requestRetries.Remove(requestId);
+                            }
+
+                            return null;
                         }
                     }
 
@@ -286,6 +344,17 @@ namespace Galactic.Rest
         /// <returns>An object with the request response, or null if the request could not be completed.</returns>
         public EmptyRestResponse Post(string path)
         {
+            return Post(path, Guid.Empty);
+        }
+
+        /// <summary>
+        /// Posts to a API endpoint at the supplied path, where the body of the message isn't relevant.
+        /// </summary>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <param name="requestId">(Optional)A unique identifier for the request. Only necessary when making many related calls (for instance retries).</param>
+        /// <returns>An object with the request response, or null if the request could not be completed.</returns>
+        protected EmptyRestResponse Post(string path, Guid requestId)
+        {
             if (!string.IsNullOrWhiteSpace(path))
             {
                 try
@@ -296,12 +365,68 @@ namespace Galactic.Rest
                     // Wait for the response to complete.
                     responseTask.Wait();
 
+                    // Check whether we've submitted too many requests.
+                    if (responseTask.Result.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                    {
+                        // Check how many retries we've already done.
+                        int numRetries = 0;
+                        if (requestId != Guid.Empty)
+                        {
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                numRetries = requestRetries[requestId];
+                            }
+                        }
+                        else
+                        {
+                            requestId = Guid.NewGuid();
+                        }
+
+                        // Retry if we haven't hit the limit.
+                        if (numRetries < MaxRetries)
+                        {
+                            // Wait the standoff time.
+                            Thread.Sleep(StandoffTimeInSecs * 1000);
+
+                            // Increment the number of retries.
+                            requestRetries[requestId] = ++numRetries;
+
+                            // Retry.
+                            return Post(path, requestId);
+                        }
+                        else
+                        {
+                            // We've hit the limit.
+
+                            // Remove any associated retries for this request.
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                requestRetries.Remove(requestId);
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    // Remove any associated retries for this request.
+                    if (requestRetries.ContainsKey(requestId))
+                    {
+                        requestRetries.Remove(requestId);
+                    }
+
                     // Return the response.
                     return new(responseTask.Result);
                 }
                 catch
                 {
                     // There was an error sending the request.
+
+                    // Remove any associated retries for this request.
+                    if (requestRetries.ContainsKey(requestId))
+                    {
+                        requestRetries.Remove(requestId);
+                    }
+
                     return null;
                 }
             }
@@ -320,6 +445,19 @@ namespace Galactic.Rest
         /// <returns>An object with the request reponse, or null if the request could not be completed.</returns>
         public JsonRestResponse<T> PostAsJson<T>(string path, object content)
         {
+            return PostAsJson<T>(path, content, Guid.Empty);
+        }
+
+        /// <summary>
+        /// Posts to a JSON API endpoint at the supplied path.
+        /// </summary>
+        /// <typeparam name="T">The type of object returned.</typeparam>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <param name="content">An object that can be serialized to JSON and used as the content of the requst.</param>
+        /// <param name="requestId">(Optional)A unique identifier for the request. Only necessary when making many related calls (for instance retries).</param>
+        /// <returns>An object with the request reponse, or null if the request could not be completed.</returns>
+        protected JsonRestResponse<T> PostAsJson<T>(string path, object content, Guid requestId)
+        {
             if (!string.IsNullOrWhiteSpace(path) && content != null)
             {
                 // Send the POST request.
@@ -327,6 +465,55 @@ namespace Galactic.Rest
 
                 // Wait for the response to complete.
                 responseTask.Wait();
+
+                // Check whether we've submitted too many requests.
+                if (responseTask.Result.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                {
+                    // Check how many retries we've already done.
+                    int numRetries = 0;
+                    if (requestId != Guid.Empty)
+                    {
+                        if (requestRetries.ContainsKey(requestId))
+                        {
+                            numRetries = requestRetries[requestId];
+                        }
+                    }
+                    else
+                    {
+                        requestId = Guid.NewGuid();
+                    }
+
+                    // Retry if we haven't hit the limit.
+                    if (numRetries < MaxRetries)
+                    {
+                        // Wait the standoff time.
+                        Thread.Sleep(StandoffTimeInSecs * 1000);
+
+                        // Increment the number of retries.
+                        requestRetries[requestId] = ++numRetries;
+
+                        // Retry.
+                        return PostAsJson<T>(path, content, requestId);
+                    }
+                    else
+                    {
+                        // We've hit the limit.
+
+                        // Remove any associated retries for this request.
+                        if (requestRetries.ContainsKey(requestId))
+                        {
+                            requestRetries.Remove(requestId);
+                        }
+
+                        return null;
+                    }
+                }
+
+                // Remove any associated retries for this request.
+                if (requestRetries.ContainsKey(requestId))
+                {
+                    requestRetries.Remove(requestId);
+                }
 
                 // Check whether the response was successful.
                 if (responseTask.Result.IsSuccessStatusCode)
@@ -360,6 +547,17 @@ namespace Galactic.Rest
         /// <returns>An object with the request response, or null if the request could not be completed.</returns>
         public EmptyRestResponse Put(string path)
         {
+            return Put(path, Guid.Empty);
+        }
+
+        /// <summary>
+        /// Puts to a API endpoint at the supplied path, where the body of the message isn't relevant.
+        /// </summary>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <param name="requestId">(Optional)A unique identifier for the request. Only necessary when making many related calls (for instance retries).</param>
+        /// <returns>An object with the request response, or null if the request could not be completed.</returns>
+        protected EmptyRestResponse Put(string path, Guid requestId)
+        {
             if (!string.IsNullOrWhiteSpace(path))
             {
                 try
@@ -370,12 +568,68 @@ namespace Galactic.Rest
                     // Wait for the response to complete.
                     responseTask.Wait();
 
+                    // Check whether we've submitted too many requests.
+                    if (responseTask.Result.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                    {
+                        // Check how many retries we've already done.
+                        int numRetries = 0;
+                        if (requestId != Guid.Empty)
+                        {
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                numRetries = requestRetries[requestId];
+                            }
+                        }
+                        else
+                        {
+                            requestId = Guid.NewGuid();
+                        }
+
+                        // Retry if we haven't hit the limit.
+                        if (numRetries < MaxRetries)
+                        {
+                            // Wait the standoff time.
+                            Thread.Sleep(StandoffTimeInSecs * 1000);
+
+                            // Increment the number of retries.
+                            requestRetries[requestId] = ++numRetries;
+
+                            // Retry.
+                            return Put(path, requestId);
+                        }
+                        else
+                        {
+                            // We've hit the limit.
+
+                            // Remove any associated retries for this request.
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                requestRetries.Remove(requestId);
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    // Remove any associated retries for this request.
+                    if (requestRetries.ContainsKey(requestId))
+                    {
+                        requestRetries.Remove(requestId);
+                    }
+
                     // Return the response.
                     return new(responseTask.Result);
                 }
                 catch
                 {
                     // There was an error sending the request.
+
+                    // Remove any associated retries for this request.
+                    if (requestRetries.ContainsKey(requestId))
+                    {
+                        requestRetries.Remove(requestId);
+                    }
+
                     return null;
                 }
             }
@@ -394,6 +648,19 @@ namespace Galactic.Rest
         /// <returns>An object with the request reponse, or null if the request could not be completed.</returns>
         public JsonRestResponse<T> PutAsJson<T>(string path, object content)
         {
+            return PutAsJson<T>(path, content, Guid.Empty);
+        }
+
+        /// <summary>
+        /// Puts to a JSON API endpoint at the supplied path.
+        /// </summary>
+        /// <typeparam name="T">The type of object returned.</typeparam>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <param name="content">An object that can be serialized to JSON and used as the content of the requst.</param>
+        /// <param name="requestId">(Optional)A unique identifier for the request. Only necessary when making many related calls (for instance retries).</param>
+        /// <returns>An object with the request reponse, or null if the request could not be completed.</returns>
+        protected JsonRestResponse<T> PutAsJson<T>(string path, object content, Guid requestId)
+        {
             if (!string.IsNullOrWhiteSpace(path) && content != null)
             {
                 // Send the POST request.
@@ -401,6 +668,55 @@ namespace Galactic.Rest
 
                 // Wait for the response to complete.
                 responseTask.Wait();
+
+                // Check whether we've submitted too many requests.
+                if (responseTask.Result.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                {
+                    // Check how many retries we've already done.
+                    int numRetries = 0;
+                    if (requestId != Guid.Empty)
+                    {
+                        if (requestRetries.ContainsKey(requestId))
+                        {
+                            numRetries = requestRetries[requestId];
+                        }
+                    }
+                    else
+                    {
+                        requestId = Guid.NewGuid();
+                    }
+
+                    // Retry if we haven't hit the limit.
+                    if (numRetries < MaxRetries)
+                    {
+                        // Wait the standoff time.
+                        Thread.Sleep(StandoffTimeInSecs * 1000);
+
+                        // Increment the number of retries.
+                        requestRetries[requestId] = ++numRetries;
+
+                        // Retry.
+                        return PutAsJson<T>(path, content, requestId);
+                    }
+                    else
+                    {
+                        // We've hit the limit.
+
+                        // Remove any associated retries for this request.
+                        if (requestRetries.ContainsKey(requestId))
+                        {
+                            requestRetries.Remove(requestId);
+                        }
+
+                        return null;
+                    }
+                }
+
+                // Remove any associated retries for this request.
+                if (requestRetries.ContainsKey(requestId))
+                {
+                    requestRetries.Remove(requestId);
+                }
 
                 // Check whether the response was successful.
                 if (responseTask.Result.IsSuccessStatusCode)
