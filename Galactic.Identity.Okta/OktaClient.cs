@@ -1170,7 +1170,7 @@ namespace Galactic.Identity.Okta
                 JsonRestResponse<GroupJson[]> jsonResponse = null;
 
                 // Use a search request to search for the group.
-                jsonResponse = rest.GetFromJson<GroupJson[]>("/groups?search=" + Uri.EscapeDataString(filter) + "%22&limit=" + MAX_PAGE_SIZE);
+                jsonResponse = rest.GetFromJson<GroupJson[]>("/groups?search=" + Uri.EscapeDataString(filter) + "&limit=" + MAX_PAGE_SIZE);
 
                 if (jsonResponse != null)
                 {
