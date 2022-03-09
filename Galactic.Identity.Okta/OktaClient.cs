@@ -1348,7 +1348,7 @@ namespace Galactic.Identity.Okta
             if (!string.IsNullOrWhiteSpace(name))
             {
                 // Create IdentityAttribute for group name.
-                IdentityAttribute<string> attribute = new IdentityAttribute<string>("profile.name", name);
+                IdentityAttribute<string> attribute = new IdentityAttribute<string>("name", name);
 
                 try
                 {
@@ -1415,7 +1415,7 @@ namespace Galactic.Identity.Okta
                     // The name is a valid property named.
 
                     // Use a search request to search for the group.
-                    jsonResponse = rest.GetFromJson<GroupJson[]>("/groups?search=" + searchPropertyName + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                    jsonResponse = rest.GetFromJson<GroupJson[]>("/groups?search=" + searchPropertyName + "%20sw%20%22" + Uri.EscapeDataString(attribute.Value) + "%22&limit=" + MAX_PAGE_SIZE);
                 }
 
                 if (jsonResponse != null)
