@@ -131,6 +131,45 @@ namespace Galactic.Identity.Okta
         // ----- METHODS -----
 
         /// <summary>
+        /// Activates a group rule with the specified unique id in Okta.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the group rule to activate.</param>
+        /// <returns>True if the group rule was activated, false otherwise.</returns>
+        public bool ActivateGroupRule(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                EmptyRestResponse response = rest.Post("/groups/rules/" + uniqueId + "/lifecycle/activate");
+
+                if (response != null)
+                {
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The group rule was activated.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The group rule was not activated.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The group rule was not activated.
+                    return false;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Add a user to a group.
         /// </summary>
         /// <param name="userId">The unique id of the user to add.</param>
@@ -228,7 +267,7 @@ namespace Galactic.Identity.Okta
         /// <returns>The newly created group object, or null if it could not be created.</returns>
         public override Identity.Group CreateGroup(string name, string type, string parentUniqueId = null, List<IdentityAttribute<object>> additionalAttributes = null)
         {
-            if (!string.IsNullOrEmpty(name))
+            if (!string.IsNullOrWhiteSpace(name))
             {
                 try
                 {
@@ -276,6 +315,97 @@ namespace Galactic.Identity.Okta
             else
             {
                 // A name wasn't specified.
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Create a new group rule within Okta.
+        /// </summary>
+        /// <param name="name">The proposed name of the group rule.</param>
+        /// <param name="expression">The Okta expression that would result in a boolean value, defining the set of users / groups to include in the rule.</param>
+        /// <param name="assigmentGroups">A list of group Ids to assign the users to as a result of the rule.</param>
+        /// <param name="usersToExclude">(Optional) A list of Okta user Ids to exclude from the rule.</param>
+        /// <returns>The newly created group rule object, or null if it could not be created.</returns>
+        public GroupRule CreateGroupRule(string name, string expression, List<string> assignmentGroups, List<string> usersToExclude = null)
+        {
+            if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(expression) && assignmentGroups != null && assignmentGroups.Count > 0)
+            {
+                try
+                {
+                    // Create a group rule JSON objects to supply with the API call.
+                    GroupRuleAssignUserToGroupsJson assignUserToGroupsJson = new()
+                    {
+                        GroupIds = assignmentGroups.ToArray()
+                    };
+                    GroupRuleActionsJson actionsJson = new()
+                    {
+                        AssignUserToGroups = assignUserToGroupsJson
+                    };
+                    GroupRuleConditionsPeopleExcludeJson peopleUsersExcludeJson;
+                    if (usersToExclude != null)
+                    {
+                        // There are users to exclude.
+                        peopleUsersExcludeJson = new()
+                        {
+                            Exclude = usersToExclude.ToArray()
+                        };
+                    }
+                    else
+                    {
+                        // No users to exclude.
+                        peopleUsersExcludeJson = new();
+
+                    }
+                    GroupRuleConditionsPeopleExcludeJson peopleGroupsExcludeJson = new();
+                    GroupRuleConditionsPeopleJson peopleJson = new()
+                    {
+                        Groups = peopleGroupsExcludeJson,
+                        Users = peopleUsersExcludeJson
+                        
+                    };
+                    GroupRuleConditionsExpressionJson expressionJson = new()
+                    {
+                        Value = expression,
+                        Type = GroupRule.Type
+                    };
+                    GroupRuleConditionsJson conditionsJson = new()
+                    {
+                        Expression = expressionJson,
+                        People = peopleJson
+                    };
+                    GroupRuleCreateRequestJson json = new()
+                    {
+                        Actions = actionsJson,
+                        Conditions = conditionsJson,
+                        Name = name,
+                        Type = GroupRule.Type
+                    };
+
+                    // Send the POST request.
+                    JsonRestResponse<GroupRuleJson> jsonResponse = rest.PostAsJson<GroupRuleJson>("/groups/rules", json);
+                    if (jsonResponse != null)
+                    {
+                        // Convert to an OktaJsonRestResponse.
+                        OktaJsonRestResponse<GroupRuleJson> oktaResponse = OktaJsonRestResponse<GroupRuleJson>.FromJsonRestResponse(jsonResponse);
+
+                        return new GroupRule(this, oktaResponse.Value);
+                    }
+                    else
+                    {
+                        // The resquest wasn't successful.
+                        return null;
+                    }
+                }
+                catch
+                {
+                    // There was an error and the group was not created.
+                    return null;
+                }
+            }
+            else
+            {
+                // One or more parameters weren't properly supplied.
                 return null;
             }
         }
@@ -537,6 +667,45 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Deactivates a group rule with the specified unique id in Okta.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the group rule to deactivate.</param>
+        /// <returns>True if the group rule was deactivated, false otherwise.</returns>
+        public bool DeactivateGroupRule(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                EmptyRestResponse response = rest.Post("/groups/rules/" + uniqueId + "/lifecycle/deactivate");
+
+                if (response != null)
+                {
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The group rule was deactivated.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The group rule was not deactivated.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The group rule was not deactivated.
+                    return false;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Deletes a group with the specified unique id from the directory system.
         /// </summary>
         /// <param name="uniqueId">The unique id of the group to delete.</param>
@@ -546,6 +715,45 @@ namespace Galactic.Identity.Okta
             if (!string.IsNullOrWhiteSpace(uniqueId))
             {
                 EmptyRestResponse response = rest.Delete("/groups/" + uniqueId);
+
+                if (response != null)
+                {
+                    HttpResponseMessage message = response.Message;
+
+                    // Check that the request was a success.
+                    if (message.IsSuccessStatusCode)
+                    {
+                        // The request was successful. The group was deleted.
+                        return true;
+                    }
+                    else
+                    {
+                        // The request was not successful. The group was not deleted.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // The request was not successful. The group was not deleted.
+                    return false;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
+        /// Deletes a group rule with the specified unique id from Okta.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the group rule to delete.</param>
+        /// <returns>True if the group rule was deleted, false otherwise.</returns>
+        public bool DeleteGroupRule(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                EmptyRestResponse response = rest.Delete("/groups/rules/" + uniqueId);
 
                 if (response != null)
                 {
@@ -676,7 +884,7 @@ namespace Galactic.Identity.Okta
                 // Convert to an OktaJsonRestResponse.
                 OktaJsonRestResponse<GroupJson[]> oktaResponse = OktaJsonRestResponse<GroupJson[]>.FromJsonRestResponse(jsonResponse);
 
-                // Create the list of user JSON objects.
+                // Create the list of group JSON objects.
                 List<GroupJson> jsonList = new(oktaResponse.Value);
 
                 // Get additional pages.
@@ -710,6 +918,15 @@ namespace Galactic.Identity.Okta
                 // Nothing was returned.
                 return new();
             }
+        }
+
+        /// <summary>
+        /// Gets all group rules in Okta.
+        /// </summary>
+        /// <returns>A list of all group rules in Okta.</returns>
+        public List<GroupRule> GetAllGroupRules()
+        {
+            return GetGroupRules();
         }
 
         /// <summary>
@@ -1015,6 +1232,98 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets a Group Rule from Okta given its id.
+        /// </summary>
+        /// <param name="id">The id of the Group Rule to retrieve from Okta.</param>
+        /// <returns>A Group Rule object.</returns>
+        public GroupRule GetGroupRule(string id)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                // Return the result.
+                JsonRestResponse<GroupRuleJson> jsonResponse = rest.GetFromJson<GroupRuleJson>("/groups/rules/" + id);
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<GroupRuleJson> oktaResponse = OktaJsonRestResponse<GroupRuleJson>.FromJsonRestResponse(jsonResponse);
+
+                    return new GroupRule(this, oktaResponse.Value);
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+        }
+
+        /// <summary>
+        /// Gets group rules.
+        /// Optionally find those that match the supplied keyword.
+        /// Default: Supplying no keyword returns all group rules in Okta.
+        /// </summary>
+        /// <param name="keyword">(Optional)A keyword to search rules for.</param>
+        /// <returns>A list of group rules that contain the supplied keyword, all group rules if no keyword is supplied,
+        /// or an empty list no rules were found, or thre was an error retrieving them.</returns>
+        public List<GroupRule> GetGroupRules(string keyword = null)
+        {
+            JsonRestResponse<GroupRuleJson[]> jsonResponse;
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                // A keyword was supplied.
+                jsonResponse = rest.GetFromJson<GroupRuleJson[]>("/groups/rules?limit=" + MAX_PAGE_SIZE + "&search=" + keyword);
+            }
+            else
+            {
+                // No keyword was supplied. Get all group rules.
+                jsonResponse = rest.GetFromJson<GroupRuleJson[]>("/groups/rules?limit=" + MAX_PAGE_SIZE);
+            }
+            if (jsonResponse != null)
+            {
+                // Convert to an OktaJsonRestResponse.
+                OktaJsonRestResponse<GroupRuleJson[]> oktaResponse = OktaJsonRestResponse<GroupRuleJson[]>.FromJsonRestResponse(jsonResponse);
+
+                // Create the list of group rule JSON objects.
+                List<GroupRuleJson> jsonList = new(oktaResponse.Value);
+
+                // Get additional pages.
+                while (oktaResponse.NextPage != null)
+                {
+                    // Get the next page, removing the base URI from the supplied URI.
+                    jsonResponse = rest.GetFromJson<GroupRuleJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                    if (jsonResponse != null)
+                    {
+                        // Convert to OktaJsonRestResponse.
+                        oktaResponse = OktaJsonRestResponse<GroupRuleJson[]>.FromJsonRestResponse(jsonResponse);
+
+                        // Add the additional groups to the list.
+                        jsonList.AddRange(oktaResponse.Value);
+                    }
+                }
+
+                // Create the list group rules to return.
+                List<GroupRule> groupRules = new();
+                foreach (GroupRuleJson groupRuleJson in jsonList)
+                {
+                    groupRules.Add(new GroupRule(this, groupRuleJson));
+                }
+
+                // Return the list of group rules.
+                return groupRules;
+            }
+            else
+            {
+                // Nothing was returned.
+                return new();
+            }
+        }
+
+        /// <summary>
         /// Gets a list of the types of groups supported by the directory system.
         /// </summary>
         /// <returns>A list of strings with the names of the types of groups supported by the system.</returns>
@@ -1215,6 +1524,26 @@ namespace Galactic.Identity.Okta
             else
             {
                 // An attribute was not supplied.
+                return new();
+            }
+        }
+
+        /// <summary>
+        /// Gets group rules that match the supplied keyword.
+        /// </summary>
+        /// <param name="keyword">Keyword to search rules for.</param>
+        /// <returns>A list of group rules that contain the supplied keyword.</returns>
+        public List<GroupRule> GetGroupRulesByKeyword(string keyword)
+        {
+            // Check whether a keyword was supplied.
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                // A keyword was supplied.
+                return GetGroupRules(keyword);
+            }
+            else
+            {
+                // A keyword was not supplied.
                 return new();
             }
         }
@@ -1715,6 +2044,101 @@ namespace Galactic.Identity.Okta
             else
             {
                 // There was nothing to update.
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Updates a group rule within Okta.
+        /// Note: Only inactive group rules can be updated.
+        /// </summary>
+        /// <param name="name">The proposed name of the group rule.</param>
+        /// <param name="id">The id of the group rule to update.</param>
+        /// <param name="expression">The Okta expression that would result in a boolean value, defining the set of users / groups to include in the rule.</param>
+        /// <param name="assigmentGroups">A list of group Ids to assign the users to as a result of the rule.</param>
+        /// <param name="usersToExclude">(Optional) A list of Okta user Ids to exclude from the rule.</param>
+        /// <returns>The updated group rule object, or null if it could not be updated.</returns>
+        public GroupRule UpdateGroupRule(string name, string id, string expression, List<string> assignmentGroups, List<string> usersToExclude = null)
+        {
+            if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(expression) && assignmentGroups != null && assignmentGroups.Count > 0)
+            {
+                try
+                {
+                    // Create a group rule JSON objects to supply with the API call.
+                    GroupRuleAssignUserToGroupsJson assignUserToGroupsJson = new()
+                    {
+                        GroupIds = assignmentGroups.ToArray()
+                    };
+                    GroupRuleActionsJson actionsJson = new()
+                    {
+                        AssignUserToGroups = assignUserToGroupsJson
+                    };
+                    GroupRuleConditionsPeopleExcludeJson peopleUsersExcludeJson;
+                    if (usersToExclude != null)
+                    {
+                        // There are users to exclude.
+                        peopleUsersExcludeJson = new()
+                        {
+                            Exclude = usersToExclude.ToArray()
+                        };
+                    }
+                    else
+                    {
+                        // No users to exclude.
+                        peopleUsersExcludeJson = new();
+
+                    }
+                    GroupRuleConditionsPeopleExcludeJson peopleGroupsExcludeJson = new();
+                    GroupRuleConditionsPeopleJson peopleJson = new()
+                    {
+                        Groups = peopleGroupsExcludeJson,
+                        Users = peopleUsersExcludeJson
+
+                    };
+                    GroupRuleConditionsExpressionJson expressionJson = new()
+                    {
+                        Value = expression,
+                        Type = GroupRule.Type
+                    };
+                    GroupRuleConditionsJson conditionsJson = new()
+                    {
+                        Expression = expressionJson,
+                        People = peopleJson
+                    };
+                    GroupRuleUpdateRequestJson json = new()
+                    {
+                        Actions = actionsJson,
+                        Conditions = conditionsJson,
+                        Id = id,
+                        Name = name,
+                        Status = GroupRule.STATUS_INACTIVE,
+                        Type = GroupRule.Type
+                    };
+
+                    // Send the PUT request.
+                    JsonRestResponse<GroupRuleJson> jsonResponse = rest.PutAsJson<GroupRuleJson>("/groups/rules/" + id, json);
+                    if (jsonResponse != null)
+                    {
+                        // Convert to an OktaJsonRestResponse.
+                        OktaJsonRestResponse<GroupRuleJson> oktaResponse = OktaJsonRestResponse<GroupRuleJson>.FromJsonRestResponse(jsonResponse);
+
+                        return new GroupRule(this, oktaResponse.Value);
+                    }
+                    else
+                    {
+                        // The resquest wasn't successful.
+                        return null;
+                    }
+                }
+                catch
+                {
+                    // There was an error and the group was not created.
+                    return null;
+                }
+            }
+            else
+            {
+                // One or more parameters weren't properly supplied.
                 return null;
             }
         }
