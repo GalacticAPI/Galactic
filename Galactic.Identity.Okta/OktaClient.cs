@@ -290,9 +290,13 @@ namespace Galactic.Identity.Okta
                         Name = name,
                         Description = description
                     };
+                    GroupProfileRequestJson profileRequest = new()
+                    {
+                        Profile = profile
+                    };
 
                     // Send the POST request.
-                    JsonRestResponse<GroupJson> jsonResponse = rest.PostAsJson<GroupJson>("/groups", profile);
+                    JsonRestResponse<GroupJson> jsonResponse = rest.PostAsJson<GroupJson>("/groups", profileRequest);
                     if (jsonResponse != null)
                     {
                         // Convert to an OktaJsonRestResponse.
@@ -637,7 +641,11 @@ namespace Galactic.Identity.Okta
                     else
                     {
                         // Create a request with profile data only.
-                        jsonResponse = rest.PostAsJson<UserJson>("/users", profile);
+                        UserProfileRequestJson profileRequest = new()
+                        {
+                            Profile = profile
+                        };
+                        jsonResponse = rest.PostAsJson<UserJson>("/users", profileRequest);
                     }
 
                     if (jsonResponse != null)
@@ -1637,12 +1645,13 @@ namespace Galactic.Identity.Okta
                     if (filterableUserProperties.Contains(attribute.Name))
                     {
                         // Use a filter request to search for the user. (This uses the most up to date information in Okta.)
-                        jsonResponse = rest.GetFromJson<UserJson[]>("/users/?filter=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                        // Also can't search by starts with (sw) here must use equals (eq) as Okta doesn't support using starts with with filters.
+                        jsonResponse = rest.GetFromJson<UserJson[]>("/users/?filter=" + searchPropertyName + "%20eq%20%22" + Uri.EscapeDataString(attribute.Value) + "%22&limit=" + MAX_PAGE_SIZE);
                     }
                     else
                     {
                         // Use a search request to search for the user. (This uses a search index which may not contain the most up to date information in Okta.)
-                        jsonResponse = rest.GetFromJson<UserJson[]>("/users/?search=" + attribute.Name + "%20sw%20%22" + attribute.Value + "%22&limit=" + MAX_PAGE_SIZE);
+                        jsonResponse = rest.GetFromJson<UserJson[]>("/users/?search=" + searchPropertyName + "%20sw%20%22" + Uri.EscapeDataString(attribute.Value) + "%22&limit=" + MAX_PAGE_SIZE);
                     }
                 }
 
@@ -2023,7 +2032,12 @@ namespace Galactic.Identity.Okta
                 if (profile != null)
                 {
                     // Update the properties.
-                    JsonRestResponse<GroupJson> jsonResponse = rest.PostAsJson<GroupJson>("/groups/" + uniqueId, profile);
+                    GroupProfileRequestJson profileRequest = new()
+                    {
+                        Profile = profile
+                    };
+
+                    JsonRestResponse<GroupJson> jsonResponse = rest.PostAsJson<GroupJson>("/groups/" + uniqueId, profileRequest);
                     if (jsonResponse != null)
                     {
                         // Convert to an OktaJsonRestResponse.
@@ -2163,7 +2177,11 @@ namespace Galactic.Identity.Okta
                     if (profile != null)
                     {
                         // Update the properties.
-                        JsonRestResponse<UserJson> jsonResponse = rest.PostAsJson<UserJson>("/users/" + uniqueId, profile);
+                        UserProfileRequestJson profileRequest = new()
+                        {
+                            Profile = profile
+                        };
+                        JsonRestResponse<UserJson> jsonResponse = rest.PostAsJson<UserJson>("/users/" + uniqueId, profileRequest);
                         if (jsonResponse != null)
                         {
                             // Convert to an OktaJsonRestResponse.
