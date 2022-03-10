@@ -2064,83 +2064,143 @@ namespace Galactic.Identity.Okta
 
         /// <summary>
         /// Updates a group rule within Okta.
-        /// Note: Only inactive group rules can be updated.
+        /// Note: Automatically deactivates and reactivates active rules, unless told not to reactivate. Inactive rules are left inactive.
         /// </summary>
-        /// <param name="name">The proposed name of the group rule.</param>
         /// <param name="id">The id of the group rule to update.</param>
-        /// <param name="expression">The Okta expression that would result in a boolean value, defining the set of users / groups to include in the rule.</param>
-        /// <param name="assigmentGroups">A list of group Ids to assign the users to as a result of the rule.</param>
+        /// <param name="name">(Optional) The proposed name of the group rule.</param>
+        /// <param name="expression">(Optional) The Okta expression that would result in a boolean value, defining the set of users / groups to include in the rule.</param>
+        /// <param name="assigmentGroups">(Optional) A list of group Ids to assign the users to as a result of the rule.</param>
         /// <param name="usersToExclude">(Optional) A list of Okta user Ids to exclude from the rule.</param>
+        /// <param name="reactivate">(Optional) Whether to reactivate an active rule after updating it. Default = true;</param>
         /// <returns>The updated group rule object, or null if it could not be updated.</returns>
-        public GroupRule UpdateGroupRule(string name, string id, string expression, List<string> assignmentGroups, List<string> usersToExclude = null)
+        public GroupRule UpdateGroupRule(string id, string name = null, string expression = null, List<string> assignmentGroups = null, List<string> usersToExclude = null, bool reactivate = true)
         {
-            if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(expression) && assignmentGroups != null && assignmentGroups.Count > 0)
+            if (!string.IsNullOrWhiteSpace(id))
             {
                 try
                 {
-                    // Create a group rule JSON objects to supply with the API call.
-                    GroupRuleAssignUserToGroupsJson assignUserToGroupsJson = new()
+                    // Get the group rule to update.
+                    GroupRule rule = GetGroupRule(id);
+                    if (rule != null)
                     {
-                        GroupIds = assignmentGroups.ToArray()
-                    };
-                    GroupRuleActionsJson actionsJson = new()
-                    {
-                        AssignUserToGroups = assignUserToGroupsJson
-                    };
-                    GroupRuleConditionsPeopleExcludeJson peopleUsersExcludeJson;
-                    if (usersToExclude != null)
-                    {
-                        // There are users to exclude.
-                        peopleUsersExcludeJson = new()
+                        // Check if the rule is currently active.
+                        if (rule.Active)
                         {
-                            Exclude = usersToExclude.ToArray()
+                            // Deactivate the rule.
+                            if (!rule.Deactivate())
+                            {
+                                // Couldn't deactivate the rule.
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            // Ensure we don't reactivate the rule.
+                            reactivate = false;
+                        }
+
+                        // Update the rule.
+                        
+                        // Populate any unprovided values with values from the existing group rule.
+                        if (string.IsNullOrWhiteSpace(name))
+                        {
+                            name = rule.Name;
+                        }
+                        if (string.IsNullOrWhiteSpace(expression))
+                        {
+                            expression = rule.Expression;
+                        }
+                        if (assignmentGroups == null)
+                        {
+                            assignmentGroups = rule.AssignedGroupIds;
+                        }
+                        if (usersToExclude == null)
+                        {
+                            usersToExclude = rule.ExcludedUserIds;
+                        }
+
+                        // Create a group rule JSON objects to supply with the API call.
+                        GroupRuleAssignUserToGroupsJson assignUserToGroupsJson = new()
+                        {
+                            GroupIds = assignmentGroups.ToArray()
                         };
+                        GroupRuleActionsJson actionsJson = new()
+                        {
+                            AssignUserToGroups = assignUserToGroupsJson
+                        };
+                        GroupRuleConditionsPeopleExcludeJson peopleUsersExcludeJson;
+                        if (usersToExclude != null)
+                        {
+                            // There are users to exclude.
+                            peopleUsersExcludeJson = new()
+                            {
+                                Exclude = usersToExclude.ToArray()
+                            };
+                        }
+                        else
+                        {
+                            // No users to exclude.
+                            peopleUsersExcludeJson = new();
+
+                        }
+                        GroupRuleConditionsPeopleExcludeJson peopleGroupsExcludeJson = new();
+                        GroupRuleConditionsPeopleJson peopleJson = new()
+                        {
+                            Groups = peopleGroupsExcludeJson,
+                            Users = peopleUsersExcludeJson
+
+                        };
+                        GroupRuleConditionsExpressionJson expressionJson = new()
+                        {
+                            Value = expression,
+                            Type = GroupRule.Type
+                        };
+                        GroupRuleConditionsJson conditionsJson = new()
+                        {
+                            Expression = expressionJson,
+                            People = peopleJson
+                        };
+                        GroupRuleUpdateRequestJson json = new()
+                        {
+                            Actions = actionsJson,
+                            Conditions = conditionsJson,
+                            Id = id,
+                            Name = name,
+                            Status = GroupRule.STATUS_INACTIVE,
+                            Type = GroupRule.Type
+                        };
+
+                        // Send the PUT request.
+                        JsonRestResponse<GroupRuleJson> jsonResponse = rest.PutAsJson<GroupRuleJson>("/groups/rules/" + id, json);
+                        if (jsonResponse != null)
+                        {
+                            // Convert to an OktaJsonRestResponse.
+                            OktaJsonRestResponse<GroupRuleJson> oktaResponse = OktaJsonRestResponse<GroupRuleJson>.FromJsonRestResponse(jsonResponse);
+
+                            // Get the updated rule.
+                            GroupRule updatedRule = new (this, oktaResponse.Value);
+
+                            // Reactivate the rule if specified.
+                            if (reactivate)
+                            {
+                                updatedRule.Activate();
+
+                                // Get the rule with its updated status.
+                                updatedRule = GetGroupRule(updatedRule.Id);
+                            }
+
+                            // Will return the last known status of the rule (could be inactive if the status couldn't be update, or null if the group couldn't be gotten after reactivation.
+                            return updatedRule;
+                        }
+                        else
+                        {
+                            // The resquest wasn't successful.
+                            return null;
+                        }
                     }
                     else
                     {
-                        // No users to exclude.
-                        peopleUsersExcludeJson = new();
-
-                    }
-                    GroupRuleConditionsPeopleExcludeJson peopleGroupsExcludeJson = new();
-                    GroupRuleConditionsPeopleJson peopleJson = new()
-                    {
-                        Groups = peopleGroupsExcludeJson,
-                        Users = peopleUsersExcludeJson
-
-                    };
-                    GroupRuleConditionsExpressionJson expressionJson = new()
-                    {
-                        Value = expression,
-                        Type = GroupRule.Type
-                    };
-                    GroupRuleConditionsJson conditionsJson = new()
-                    {
-                        Expression = expressionJson,
-                        People = peopleJson
-                    };
-                    GroupRuleUpdateRequestJson json = new()
-                    {
-                        Actions = actionsJson,
-                        Conditions = conditionsJson,
-                        Id = id,
-                        Name = name,
-                        Status = GroupRule.STATUS_INACTIVE,
-                        Type = GroupRule.Type
-                    };
-
-                    // Send the PUT request.
-                    JsonRestResponse<GroupRuleJson> jsonResponse = rest.PutAsJson<GroupRuleJson>("/groups/rules/" + id, json);
-                    if (jsonResponse != null)
-                    {
-                        // Convert to an OktaJsonRestResponse.
-                        OktaJsonRestResponse<GroupRuleJson> oktaResponse = OktaJsonRestResponse<GroupRuleJson>.FromJsonRestResponse(jsonResponse);
-
-                        return new GroupRule(this, oktaResponse.Value);
-                    }
-                    else
-                    {
-                        // The resquest wasn't successful.
+                        // The rule wasn't found.
                         return null;
                     }
                 }
