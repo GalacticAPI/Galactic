@@ -523,6 +523,34 @@ namespace Galactic.FileSystem
         }
 
         /// <summary>
+        /// Moves current position to the end of the file stream. Use when you want to append data to the end of the file.
+        /// </summary>
+        /// <returns>True if operation was a success, false otherwise.</returns>
+        public bool MoveToEndOfFile()
+        {
+            // Check if fileStream is valid.
+            if(fileStream != null)
+            {
+                try
+                {
+                    // Move stream position to the end of the file.
+                    fileStream.Seek(fileStream.Length, SeekOrigin.Begin);
+                    return true;
+                }
+                catch
+                {
+                    // Error seeking
+                    return false;
+                }
+            }
+            else
+            {
+                // FileStream is null
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Opens a file at the supplied path location.
         /// </summary>
         /// <param name="path">The path to the location to open the file at.</param>
