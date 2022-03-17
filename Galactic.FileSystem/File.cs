@@ -353,6 +353,24 @@ namespace Galactic.FileSystem
         }
 
         /// <summary>
+        /// Check to see if the end of the file has been reached.
+        /// </summary>
+        /// <returns>True if end reached, false otherwise.</returns>
+        public bool EndOfFile()
+        {
+            if (reader != null)
+            {
+                return reader.EndOfStream;
+            }
+            else
+            {
+                reader = new StreamReader(fileStream);
+
+                return reader.EndOfStream;
+            }
+        }
+
+        /// <summary>
         /// Checks whether this file exists on the file system.
         /// </summary>
         /// <returns>True if it exists, false otherwise.</returns>
