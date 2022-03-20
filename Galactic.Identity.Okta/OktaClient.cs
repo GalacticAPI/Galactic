@@ -2288,5 +2288,102 @@ namespace Galactic.Identity.Okta
                 throw new ArgumentNullException(nameof(uniqueId));
             }
         }
+
+        /// <summary>
+        /// Updates a user's profile and/or credentials. If both are supplied, they will be updated in one request.
+        /// </summary>
+        /// <param name="user">The user object to update.</param>
+        /// <param name="attributes">(Optional) The list of attributes to update.</param>
+        /// <param name="creds">(Optional) The json representing the credentials that should be updated.</param>
+        /// <returns>A new UserJson object representing the new state of the user after the update, or null if the update was not completed.</returns>
+        public UserJson UpdateUser(User user, List<IdentityAttribute<string>> attributes = null, UserCredentialsJson creds = null)
+        {
+            if (user != null)
+            {
+                // TODO: Collapse these into a single request, if both aren't null.
+                if (attributes != null || creds != null)
+                {
+                    // The JSON object representing the updated user.
+                    UserJson userJson = null;
+
+                    // Existing UserProfileJson
+                    UserProfileJson profile = user.GetUserProfileJson();
+
+                    if (attributes != null && attributes.Count > 0)
+                    {
+                        // Update the UserProfileJson with new data from attribute list.
+                        var userProfileJsonType = profile.GetType();
+                        
+                        foreach(IdentityAttribute<string> attribute in attributes)
+                        {
+                            try
+                            {
+                                // Get property corresponding to attribute name.
+                                var property = userProfileJsonType.GetProperty(attribute.Name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+
+                                if (property != null)
+                                {
+                                    // Set value of property to value of supplied attribute.
+                                    property.SetValue(profile, attribute.Value);
+                                }
+                            }
+                            catch
+                            {
+                                // Error setting property.
+                            }
+                        }
+
+                        // Update the properties.
+                        UserProfileRequestJson profileRequest = new()
+                        {
+                            Profile = profile
+                        };
+                        JsonRestResponse<UserJson> jsonResponse = rest.PostAsJson<UserJson>("/users/" + user.Id, profileRequest);
+                        if (jsonResponse != null)
+                        {
+                            // Convert to an OktaJsonRestResponse.
+                            OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
+
+                            userJson = oktaResponse.Value;
+                        }
+                        else
+                        {
+                            // There was an error with the request.
+                            return null;
+                        }
+                    }
+
+                    if (creds != null)
+                    {
+                        // Update the credentials.
+                        JsonRestResponse<UserJson> jsonResponse = rest.PostAsJson<UserJson>("/users/" + user.Id, creds);
+                        if (jsonResponse != null)
+                        {
+                            // Convert to an OktaJsonRestResponse.
+                            OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
+
+                            userJson = oktaResponse.Value;
+                        }
+                        else
+                        {
+                            // There was an error with the request.
+                            return null;
+                        }
+                    }
+
+                    // Return the user's JSON object.
+                    return userJson;
+                }
+                else
+                {
+                    // There was nothing to update.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+        }
     }
 }
