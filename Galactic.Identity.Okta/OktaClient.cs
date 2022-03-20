@@ -2385,5 +2385,35 @@ namespace Galactic.Identity.Okta
                 throw new ArgumentNullException(nameof(user));
             }
         }
+
+        /// <summary>
+        /// Updates a single attribute in a user's profile.
+        /// </summary>
+        /// <param name="user">The user object to update.</param>
+        /// <param name="attribute">The attribute to update.</param>
+        /// <returns>>A new UserJson object representing the new state of the user after the update, or null if the update was not completed.</returns>
+        public UserJson UpdateUser(User user, IdentityAttribute<string> attribute)
+        {
+            if(user != null)
+            {
+                if(attribute != null)
+                {
+                    List<IdentityAttribute<string>> attributes = new()
+                    {
+                        attribute
+                    };
+
+                    return UpdateUser(user, attributes);
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(attribute));
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+        }
     }
 }

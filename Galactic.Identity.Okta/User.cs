@@ -38,14 +38,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.City;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    City = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.CITY, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -58,14 +55,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.CostCenter;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    CostCenter = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.COST_CENTER, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -78,14 +72,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.CountryCode;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    CountryCode = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.COUNTRY_CODE, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -112,14 +103,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.Department;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    Department = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.DEPARTMENT, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -132,14 +120,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.DisplayName;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    DisplayName = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.DISPLAY_NAME, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -152,14 +137,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.Division;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    Division = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.DIVISION, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -172,14 +154,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.Email;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    Email = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.EMAIL, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -218,14 +197,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.EmployeeNumber;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    EmployeeNumber = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.EMPLOYEE_NUMBER, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -239,14 +215,11 @@ namespace Galactic.Identity.Okta
             set
             {
                 {
-                    // Create the profile object with the value set.
-                    UserProfileJson profile = new UserProfileJson
-                    {
-                        FirstName = value
-                    };
+                    // Create the identity attribute object with the value set.
+                    IdentityAttribute<string> attribute = new(UserProfileJson.FIRST_NAME, value);
 
                     // Update the user with the new value.
-                    okta.UpdateUser(UniqueId, profile);
+                    okta.UpdateUser(this, attribute);
                 }
             }
         }
@@ -290,14 +263,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.HonorificPrefix;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    HonorificPrefix = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.HONORIFIC_PREFIX, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -310,14 +280,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.HonorificSuffix;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    HonorificSuffix = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.HONORIFIC_SUFFIX, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -361,14 +328,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.LastName;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    LastName = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.LAST_NAME, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -388,14 +352,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.Locale;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    Locale = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.LOCALE, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -408,14 +369,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.Login;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    Login = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.LOGIN, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -428,14 +386,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.Manager;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    Manager = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.MANAGER, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -448,14 +403,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.ManagerId;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    ManagerId = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.MANAGER_ID, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -473,14 +425,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.MiddleName;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    MiddleName = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.MIDDLE_NAME, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -493,14 +442,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.MobilePhone;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    MobilePhone = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.MOBILE_PHONE, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -513,14 +459,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.NickName;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    NickName = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.NICK_NAME, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -533,14 +476,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.Organization;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    Organization = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.ORGANIZATION, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -612,14 +552,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.PostalAddress;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    PostalAddress = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.POSTAL_ADDRESS, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -656,14 +593,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.PrimaryPhone;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    PrimaryPhone = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.PRIMARY_PHONE, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -676,14 +610,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.ProfileUrl;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    ProfileUrl = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.PROFILE_URL, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -697,14 +628,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.SecondEmail;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    SecondEmail = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.SECOND_EMAIL, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -717,14 +645,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.State;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    State = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.STATE, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -749,14 +674,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.StreetAddress;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                   StreetAddress = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.STREET_ADDRESS, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -769,14 +691,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.TimeZone;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    TimeZone = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.TIME_ZONE, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -820,14 +739,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.UserType;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                    UserType = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.USER_TYPE, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
@@ -840,14 +756,11 @@ namespace Galactic.Identity.Okta
             get => json.Profile.ZipCode;
             set
             {
-                // Create the profile object with the value set.
-                UserProfileJson profile = new UserProfileJson
-                {
-                   ZipCode = value
-                };
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.ZIP_CODE, value);
 
                 // Update the user with the new value.
-                okta.UpdateUser(UniqueId, profile);
+                okta.UpdateUser(this, attribute);
             }
         }
 
