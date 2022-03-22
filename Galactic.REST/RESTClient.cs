@@ -338,6 +338,105 @@ namespace Galactic.Rest
         }
 
         /// <summary>
+        /// Gets content from an API endpoint at the supplied path.
+        /// </summary>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <returns>Content of the request response, or null if the request could not be completed.</returns>
+        public HttpContent GetContent(string path)
+        {
+            return GetContent(path, Guid.Empty);
+        }
+
+        /// <summary>
+        /// Gets content from an API endpoint at the supplied path.
+        /// </summary>
+        /// <param name="path">The path to the endpoint from the baseUri.</param>
+        /// <param name="requestId">(Optional)A unique identifier for the request. Only necessary when making many related calls (for instance retries).</param>
+        /// <returns>Content of request response, or null if the request could not be completed.</returns>
+        protected HttpContent GetContent(string path, Guid requestId)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                try
+                {
+                    // Send the GET request.
+                    Task<HttpResponseMessage> responseTask = httpClient.GetAsync(httpClient.BaseAddress + path);
+
+                    // Wait for the response to complete.
+                    responseTask.Wait();
+
+                    // Check whether we've submitted too many requests.
+                    if (responseTask.Result.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                    {
+                        // Check how many retries we've already done.
+                        int numRetries = 0;
+                        if (requestId != Guid.Empty)
+                        {
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                numRetries = requestRetries[requestId];
+                            }
+                        }
+                        else
+                        {
+                            requestId = Guid.NewGuid();
+                        }
+
+                        // Retry if we haven't hit the limit.
+                        if (numRetries < MaxRetries)
+                        {
+                            // Wait the standoff time.
+                            Thread.Sleep(StandoffTimeInSecs * 1000);
+
+                            // Increment the number of retries.
+                            requestRetries[requestId] = ++numRetries;
+
+                            // Retry.
+                            return responseTask.Result.Content;
+                        }
+                        else
+                        {
+                            // We've hit the limit.
+
+                            // Remove any associated retries for this request.
+                            if (requestRetries.ContainsKey(requestId))
+                            {
+                                requestRetries.Remove(requestId);
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    // Remove any associated retries for this request.
+                    if (requestRetries.ContainsKey(requestId))
+                    {
+                        requestRetries.Remove(requestId);
+                    }
+
+                    // Return the result.
+                    return responseTask.Result.Content;
+                }
+                catch
+                {
+                    // There was an error and the endpoint couldn't be queried.
+
+                    // Remove any associated retries for this request.
+                    if (requestRetries.ContainsKey(requestId))
+                    {
+                        requestRetries.Remove(requestId);
+                    }
+
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+        }
+
+        /// <summary>
         /// Posts to a API endpoint at the supplied path, where the body of the message isn't relevant.
         /// </summary>
         /// <param name="path">The path to the endpoint from the baseUri.</param>
