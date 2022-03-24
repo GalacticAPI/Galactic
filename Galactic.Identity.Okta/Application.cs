@@ -25,6 +25,17 @@ namespace Galactic.Identity.Okta
         // ----- PROPERTIES -----
 
         /// <summary>
+        /// Gets list of Sign On Attribute Statements.
+        /// </summary>
+        public List<ApplicationSignOnAttributeStatementJson> AttributeStatements
+        {
+            get
+            {
+                return json.Settings.SignOn.AttributeStatements.ToList();
+            }
+        }
+
+        /// <summary>
         /// List of group assignments for an application.
         /// </summary>
         public List<Identity.Group> GroupAssignments

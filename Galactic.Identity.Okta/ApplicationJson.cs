@@ -170,7 +170,7 @@ namespace Galactic.Identity.Okta
         /// Note: This can't be managed via the API currently.
         /// </summary>
         [JsonPropertyName(SETTINGS)]
-        public object Settings { get; init; } = default!;
+        public ApplicationSettingsJson Settings { get; init; } = default!;
 
         /// <summary>
         /// The current status of the user.

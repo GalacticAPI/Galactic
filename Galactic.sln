@@ -43,6 +43,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Identity.AzureActi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Galactic.Identity.GoogleWorkspace", "Galactic.Identity.GoogleWorkspace\Galactic.Identity.GoogleWorkspace.csproj", "{FE86B59F-74B8-498E-8F7E-50B10F751719}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Galactic.EventLog.File", "Galactic.EventLog.File\Galactic.EventLog.File.csproj", "{BE503D4F-D5DC-460B-8B2D-347EF4BA5ABF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,6 +115,10 @@ Global
 		{FE86B59F-74B8-498E-8F7E-50B10F751719}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE86B59F-74B8-498E-8F7E-50B10F751719}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE86B59F-74B8-498E-8F7E-50B10F751719}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE503D4F-D5DC-460B-8B2D-347EF4BA5ABF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE503D4F-D5DC-460B-8B2D-347EF4BA5ABF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE503D4F-D5DC-460B-8B2D-347EF4BA5ABF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE503D4F-D5DC-460B-8B2D-347EF4BA5ABF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
