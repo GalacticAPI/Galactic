@@ -31,7 +31,14 @@ namespace Galactic.Identity.Okta
         {
             get
             {
-                return json.Settings.SignOn.AttributeStatements.ToList();
+                if(json.Settings != null && json.Settings.SignOn != null && json.Settings.SignOn.AttributeStatements != null)
+                {
+                    return json.Settings.SignOn.AttributeStatements.ToList();
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
