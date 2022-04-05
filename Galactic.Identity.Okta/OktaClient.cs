@@ -6,6 +6,7 @@ using System.Net;
 using System.Reflection;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
 
 namespace Galactic.Identity.Okta
 {
@@ -1005,6 +1006,47 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets all users as JsonObjects in the directory system.
+        /// </summary>
+        /// <returns>A list of JsonObjects representing all users in the directory system.</returns>
+        public List<JsonObject> GetAllUsersAsJsonObject()
+        {
+            // Return the result.
+            JsonRestResponse<JsonObject[]> jsonResponse = rest.GetFromJson<JsonObject[]>("/users/?limit=" + MAX_PAGE_SIZE);
+            if (jsonResponse != null)
+            {
+                // Convert to an OktaJsonRestResponse.
+                OktaJsonRestResponse<JsonObject[]> oktaResponse = OktaJsonRestResponse<JsonObject[]>.FromJsonRestResponse(jsonResponse);
+
+                // Create the list of user JSON objects.
+                List<JsonObject> jsonList = new(oktaResponse.Value);
+
+                // Get additional pages.
+                while (oktaResponse.NextPage != null)
+                {
+                    // Get the next page, removing the base URI from the supplied URI.
+                    jsonResponse = rest.GetFromJson<JsonObject[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                    if (jsonResponse != null)
+                    {
+                        // Convert to OktaJsonRestResponse.
+                        oktaResponse = OktaJsonRestResponse<JsonObject[]>.FromJsonRestResponse(jsonResponse);
+
+                        // Add the additional users to the list.
+                        jsonList.AddRange(oktaResponse.Value);
+                    }
+                }
+
+                return jsonList;
+            }
+            else
+            {
+                // Nothing was returned.
+                return new();
+            }
+        }
+
+        /// <summary>
         /// Gets the list of groups assigned to the application.
         /// </summary>
         /// <param name="applicationId">The id that uniquely identifies the application in Okta.</param>
@@ -1147,6 +1189,36 @@ namespace Galactic.Identity.Okta
                     OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
 
                     return new User(this, oktaResponse.Value);
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return null;
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+        }
+
+        /// <summary>
+        /// Gets a JsonObject with the user's from Okta given its ID or Login.
+        /// </summary>
+        /// <param name="id">The ID or login of the user to retrieve from Okta.</param>
+        /// <returns>A JsonObject containing the user's attributes.</returns>
+        public JsonObject GetUserAsJsonObject(string id)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                // Return the result.
+                JsonRestResponse<JsonObject> jsonResponse = rest.GetFromJson<JsonObject>("/users/" + WebUtility.UrlEncode(id));
+                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<JsonObject> oktaResponse = OktaJsonRestResponse<JsonObject>.FromJsonRestResponse(jsonResponse);
+
+                    return oktaResponse.Value;
                 }
                 else
                 {

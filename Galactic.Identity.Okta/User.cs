@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Text.Json.Nodes;
 
 namespace Galactic.Identity.Okta
 {
@@ -877,6 +878,15 @@ namespace Galactic.Identity.Okta
                 // No property name supplied.
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Gets a JsonObject containing the attributes for this user object.
+        /// </summary>
+        /// <returns>A JsonObject representing this user object.</returns>
+        public JsonObject GetUserAsJsonObject()
+        {
+            return okta.GetUserAsJsonObject(UniqueId);
         }
 
         /// <summary>
