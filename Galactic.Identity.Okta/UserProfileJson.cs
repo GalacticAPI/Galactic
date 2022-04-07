@@ -146,6 +146,11 @@ namespace Galactic.Identity.Okta
         public const string TIME_ZONE = "timezone";
 
         /// <summary>
+        /// Title JSON property name.
+        /// </summary>
+        public const string TITLE = "title";
+
+        /// <summary>
         /// UserType JSON property name.
         /// </summary>
         public const string USER_TYPE = "userType";
@@ -320,6 +325,12 @@ namespace Galactic.Identity.Okta
         /// </summary>
         [JsonPropertyName(TIME_ZONE)]
         public string TimeZone { get; init; } = default!;
+
+        /// <summary>
+        /// The user's title, such as "Vice President".
+        /// </summary>
+        [JsonPropertyName(TITLE)]
+        public string Title { get; init; } = default!;
 
         /// <summary>
         /// Used to describe the organization to user relationship such as "Employee"

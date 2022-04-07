@@ -703,12 +703,17 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// The user's title.
         /// </summary>
+        [DirectorySystemPropertyName(UserProfileJson.TITLE)]
         public override string Title
         {
-            get => HonorificPrefix;
+            get => json.Profile.Title;
             set
             {
-                HonorificPrefix = value;
+                // Create the identity attribute object with the value set.
+                IdentityAttribute<string> attribute = new(UserProfileJson.TITLE, value);
+
+                // Update the user with the new value.
+                okta.UpdateUser(this, attribute);
             }
         }
 
