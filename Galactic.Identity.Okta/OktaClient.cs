@@ -2109,7 +2109,7 @@ namespace Galactic.Identity.Okta
                         Profile = profile
                     };
 
-                    JsonRestResponse<GroupJson> jsonResponse = rest.PostAsJson<GroupJson>("/groups/" + uniqueId, profileRequest);
+                    JsonRestResponse<GroupJson> jsonResponse = rest.PutAsJson<GroupJson>("/groups/" + uniqueId, profileRequest);
                     if (jsonResponse != null)
                     {
                         // Convert to an OktaJsonRestResponse.
