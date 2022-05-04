@@ -70,7 +70,20 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// List of group Ids of the groups that this rule assigns users to.
         /// </summary>
-        public List<string> AssignedGroupIds => new(json.Actions.AssignUserToGroups.GroupIds);
+        public List<string> AssignedGroupIds
+        {
+            get
+            {
+                if (json.Actions != null && json.Actions.AssignUserToGroups != null && json.Actions.AssignUserToGroups.GroupIds != null)
+                {
+                    return new(json.Actions.AssignUserToGroups.GroupIds);
+                }
+                else
+                {
+                    return new();
+                }
+            }
+        }
 
         /// <summary>
         /// Conditions that apply to the rule.
@@ -85,12 +98,38 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// List of user Ids of users excluded from this rule.
         /// </summary>
-        public List<string> ExcludedUserIds => new(json.Conditions.People.Users.Exclude);
+        public List<string> ExcludedUserIds
+        {
+            get
+            {
+                if (json.Conditions != null && json.Conditions.People != null && json.Conditions.People.Users != null && json.Conditions.People.Users.Exclude != null)
+                {
+                    return new(json.Conditions.People.Users.Exclude);
+                }
+                else
+                {
+                    return new();
+                }
+            }
+        }
 
         /// <summary>
         /// The Okta Expression Language expression that assigns users to this rule.
         /// </summary>
-        public string Expression => json.Conditions.Expression.Value;
+        public string Expression
+        {
+            get
+            {
+                if (json.Conditions != null && json.Conditions.Expression != null)
+                {
+                    return json.Conditions.Expression.Value;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Unique key for the Group rule.

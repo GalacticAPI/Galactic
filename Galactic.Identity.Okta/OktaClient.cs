@@ -881,6 +881,64 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets all applications assinged to a group in Okta.
+        /// </summary>
+        /// <param name="uniqueId">The unique Id of the group to retrieve the assigned applications of.</param>
+        /// <returns>A list of all applications assigned to a group in Okta.</returns>
+        public List<Application> GetAllApplicationsAssignedToGroup(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                // Return the result.
+                JsonRestResponse<ApplicationJson[]> jsonResponse = rest.GetFromJson<ApplicationJson[]>("/groups/" + uniqueId + "/apps?limit=" + MAX_PAGE_SIZE);
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<ApplicationJson[]> oktaResponse = OktaJsonRestResponse<ApplicationJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of application JSON objects.
+                    List<ApplicationJson> jsonList = new(oktaResponse.Value);
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<ApplicationJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<ApplicationJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional applications to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    // Create the list applications to return.
+                    List<Application> applications = new();
+                    foreach (ApplicationJson applicationJson in jsonList)
+                    {
+                        applications.Add(new Application(this, applicationJson));
+                    }
+
+                    // Return the list of applications.
+                    return applications;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // A group unique Id was not supplied.
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Get's all groups in the directory system.
         /// </summary>
         /// <returns>A list of all groups in the directory system.</returns>

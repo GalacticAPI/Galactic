@@ -35,6 +35,11 @@ namespace Galactic.Identity.Okta
         public override List<string> AllUserMemberNames => UserMemberNames;
 
         /// <summary>
+        /// Gets the Applications assigned to this group. 
+        /// </summary>
+        public List<Application> AssignedApplications => okta.GetAllApplicationsAssignedToGroup(this.UniqueId);
+
+        /// <summary>
         /// Timestamp when Group was created.
         /// </summary>
         [DirectorySystemPropertyName(GroupJson.CREATED)]
