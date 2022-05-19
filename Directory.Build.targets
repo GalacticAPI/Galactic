@@ -3,6 +3,6 @@
 	  <ItemGroup>
 		  <NugetPackages Include="$(ProjectDir)bin/$(ConfigurationName)\*.nupkg" />
       </ItemGroup>
-	  <Copy SourceFiles="@(NugetPackages)" DestinationFolder="$(SolutionDir)NugetPackages\" SkipUnchangedFiles="true" />
+	  <Move SourceFiles="@(NugetPackages)" DestinationFolder="$(SolutionDir)NugetPackages\" />
 	</Target>
 </Project>
