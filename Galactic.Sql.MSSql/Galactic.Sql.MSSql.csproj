@@ -13,7 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
-    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="161.46521.71" />
+    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="161.47008.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Galactic.Sql\Galactic.Sql.csproj" />

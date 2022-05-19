@@ -11,7 +11,7 @@
     <None Remove="Oracle.ManagedDataAccess.Core" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.4" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.61" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Galactic.EventLog\Galactic.EventLog.csproj" />

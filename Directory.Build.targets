@@ -1,5 +1,9 @@
-<Project>
+﻿<Project>
 	<Target Name="PostBuild" AfterTargets="Pack">
-	  <Exec Command="move $(ProjectDir)bin\$(ConfigurationName)\*.nupkg $(SolutionDir)NugetPackages\" />
+	  <!--<Exec Command="cp $(ProjectDir)bin/$(ConfigurationName)/*.nupkg $(SolutionDir)NugetPackages/" />-->
+	  <ItemGroup>
+		  <NugetPackages Include="$(ProjectDir)bin/$(ConfigurationName)\*.nupkg" />
+      </ItemGroup>
+	  <Copy SourceFiles="@(NugetPackages)" DestinationFolder="$(SolutionDir)NugetPackages\" SkipUnchangedFiles="true" />
 	</Target>
 </Project>

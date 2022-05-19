@@ -11,7 +11,7 @@
     <None Remove="System.Management.Automation" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Management.Automation" Version="7.2.0" />
+    <PackageReference Include="System.Management.Automation" Version="7.2.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Galactic.EventLog\Galactic.EventLog.csproj" />

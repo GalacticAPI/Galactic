@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Apis.Admin.Directory.directory_v1" Version="1.55.0.2532" />
+    <PackageReference Include="Google.Apis.Admin.Directory.directory_v1" Version="1.57.0.2693" />
   </ItemGroup>
 
   <ItemGroup>

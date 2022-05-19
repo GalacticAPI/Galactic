@@ -14,10 +14,10 @@
     <None Remove="DnsClient" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.DirectoryServices.Protocols" Version="6.0.0" />
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="6.0.1" />
     <PackageReference Include="System.DirectoryServices" Version="6.0.0" />
     <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
-    <PackageReference Include="DnsClient" Version="1.5.0" />
+    <PackageReference Include="DnsClient" Version="1.6.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Galactic.Identity\Galactic.Identity.csproj" />
