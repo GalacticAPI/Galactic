@@ -1,6 +1,5 @@
 ﻿<Project>
 	<Target Name="PostBuild" AfterTargets="Pack">
-	  <!--<Exec Command="cp $(ProjectDir)bin/$(ConfigurationName)/*.nupkg $(SolutionDir)NugetPackages/" />-->
 	  <ItemGroup>
 		  <NugetPackages Include="$(ProjectDir)bin/$(ConfigurationName)\*.nupkg" />
       </ItemGroup>
