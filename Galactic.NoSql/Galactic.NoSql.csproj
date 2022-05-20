@@ -7,6 +7,9 @@
 	<PackageTags>Galactic;nosql</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Galactic.EventLog\Galactic.EventLog.csproj" />
   </ItemGroup>
