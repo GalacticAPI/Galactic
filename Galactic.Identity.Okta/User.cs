@@ -31,6 +31,36 @@ namespace Galactic.Identity.Okta
         public DateTime? Activated => json.Activated;
 
         /// <summary>
+        /// The list of applications that user is assigned to, either directly or via group membership.
+        /// </summary>
+        public  List<Application> Applications
+        {
+            get
+            {
+                // Retrieve the list of objects representing the app links.
+                List<UserAppLink> appLinks = okta.GetUserAppLinks(UniqueId);
+
+                if (appLinks != null)
+                {
+                    // Get application objects from the appLink instance ID.
+                    List<Application> apps = new();
+                    foreach (UserAppLink appLink in appLinks)
+                    {
+                        apps.Add(okta.GetApplication(appLink.AppInstanceId));
+                    }
+
+                    // Return the apps.
+                    return apps;
+                }
+                else
+                {
+                    // There was an error retrieving the list of apps.
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
         /// The user's city.
         /// </summary>
         [DirectorySystemPropertyName(UserProfileJson.CITY)]

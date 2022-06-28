@@ -1291,6 +1291,48 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+        /// Gets the user's assigned applications from Okta given its ID or Login.
+        /// </summary>
+        /// <param name="id">The ID or login of the user to retrieve from Okta.</param>
+        /// <returns>A list containing the user's applications.</returns>
+        public List<UserAppLink> GetUserAppLinks(string id)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                // Return the result.
+                JsonRestResponse<UserAppLinkJson[]> jsonResponse = rest.GetFromJson<UserAppLinkJson[]>("/users/" + WebUtility.UrlEncode(id) + "/appLinks");
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<UserAppLinkJson[]> oktaResponse = OktaJsonRestResponse<UserAppLinkJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of user JSON objects.
+                    List<UserAppLinkJson> jsonList = new(oktaResponse.Value);
+
+                    // Create the list app links to return.
+                    List<UserAppLink> apps = new();
+                    foreach (UserAppLinkJson userAppLinkJson in jsonList)
+                    {
+                        apps.Add(new UserAppLink(this, userAppLinkJson));
+                    }
+
+                    // Return the list of app links.
+                    return apps;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // No id supplied.
+                return new();
+            }
+        }
+
+        /// <summary>
         /// Gets a Group from Okta given its id.
         /// </summary>
         /// <param name="id">The id of the Group to retrieve from Okta.</param>
