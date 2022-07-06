@@ -65,6 +65,32 @@ namespace Galactic.Identity.Okta
         [DirectorySystemPropertyName(ApplicationJson.LABEL)]
         public string Label => json.Label;
 
+        /// <summary>
+        /// User defined display name for app.
+        /// </summary>
+        [DirectorySystemPropertyName(ApplicationJson.NAME)]
+        public string Name => json.Name;
+
+        /// <summary>
+        /// List of user assignments for an application.
+        /// </summary>
+        public List<Identity.User> UserAssignments
+        {
+            get
+            {
+                List<AppUserJson> appUsers = okta.GetApplicationUsers(Id);
+
+                List<Identity.User> users = new();
+
+                foreach(AppUserJson appUser in appUsers)
+                {
+                    users.Add(okta.GetUser(appUser.Id));
+                }
+
+                return users;
+            }
+        }
+
         // ----- CONSTRUCTORS -----
 
         /// <summary>

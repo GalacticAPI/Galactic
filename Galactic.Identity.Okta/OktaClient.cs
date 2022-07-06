@@ -1231,6 +1231,221 @@ namespace Galactic.Identity.Okta
         }
 
         /// <summary>
+		/// Gets an app matching the supplied name.
+		/// </summary>
+		/// <param name="name">The name of the app.</param>
+		/// <returns>A app matching the supplied name.</returns>
+		public Application GetApplicationByLabel(string label)
+        {
+            // Validate that parameter is supplied.
+            if (!string.IsNullOrWhiteSpace(label))
+            {
+                try
+                {
+                    List<Application> result = GetApplicationsBySearchTerm(label);
+
+                    if (result.Count == 1)
+                    {
+                        return result[0];
+                    }
+                    else if (result.Count > 1)
+                    {
+                        // Multiple results found.
+                        return result.FirstOrDefault(x => x.Label == label);
+                    }
+                    else
+                    {
+                        // No results found.
+                        return null;
+                    }
+                }
+                catch
+                {
+                    // There was an error retrieving the group.
+                    return null;
+                }
+            }
+
+            // Bad parameter. 
+            return null;
+        }
+
+        /// <summary>
+        /// Gets Applications that match the supplied search filter.
+        /// </summary>
+        /// <param name="filter">Okta search filter.</param>
+        /// <returns>A list of apps that match the supplied search filter.</returns>
+        public List<Application> GetApplicationsByFilter(string filter)
+        {
+            // Check whether an attribute was supplied.
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                // An attribute was supplied.
+                JsonRestResponse<ApplicationJson[]> jsonResponse = null;
+
+                // Use a search request to search for the app.
+                jsonResponse = rest.GetFromJson<ApplicationJson[]>("/apps?filter=" + Uri.EscapeDataString(filter) + "&limit=" + MAX_PAGE_SIZE);
+
+                if (jsonResponse != null)
+                {
+                    // Creates an OktaJsonResponse object from the JSON one.
+                    OktaJsonRestResponse<ApplicationJson[]> oktaResponse = OktaJsonRestResponse<ApplicationJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of app JSON objects.
+                    List<ApplicationJson> jsonList = new(oktaResponse.Value);
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<ApplicationJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<ApplicationJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional apps to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    // Create the list apps to return.
+                    List<Application> apps = new();
+                    foreach (ApplicationJson appJson in jsonList)
+                    {
+                        apps.Add(new Application(this, appJson));
+                    }
+
+                    // Return the list of apps.
+                    return apps;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // An attribute was not supplied.
+                return new();
+            }
+        }
+
+        /// <summary>
+        /// Gets Applications that match the supplied search filter.
+        /// </summary>
+        /// <param name="filter">Okta search filter.</param>
+        /// <returns>A list of apps that match the supplied search filter.</returns>
+        public List<Application> GetApplicationsBySearchTerm(string searchTerm)
+        {
+            // Check whether an attribute was supplied.
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                // An attribute was supplied.
+                JsonRestResponse<ApplicationJson[]> jsonResponse = null;
+
+                // Use a search request to search for the app.
+                jsonResponse = rest.GetFromJson<ApplicationJson[]>("/apps?q=" + Uri.EscapeDataString(searchTerm) + "&limit=" + MAX_PAGE_SIZE);
+
+                if (jsonResponse != null)
+                {
+                    // Creates an OktaJsonResponse object from the JSON one.
+                    OktaJsonRestResponse<ApplicationJson[]> oktaResponse = OktaJsonRestResponse<ApplicationJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of app JSON objects.
+                    List<ApplicationJson> jsonList = new(oktaResponse.Value);
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<ApplicationJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<ApplicationJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional apps to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    // Create the list apps to return.
+                    List<Application> apps = new();
+                    foreach (ApplicationJson appJson in jsonList)
+                    {
+                        apps.Add(new Application(this, appJson));
+                    }
+
+                    // Return the list of apps.
+                    return apps;
+                }
+                else
+                {
+                    // Nothing was returned.
+                    return new();
+                }
+            }
+            else
+            {
+                // An attribute was not supplied.
+                return new();
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of users that have access to the application.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the application.</param>
+        /// <returns>A list of UserJsons objects representing each user that has access to the application</returns>
+        public List<AppUserJson> GetApplicationUsers(string uniqueId)
+        {
+            if (!string.IsNullOrWhiteSpace(uniqueId))
+            {
+                // Return the result.
+                JsonRestResponse<AppUserJson[]> jsonResponse = rest.GetFromJson<AppUserJson[]>("/apps/" + uniqueId + "/users?limit=" + MAX_PAGE_SIZE);
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<AppUserJson[]> oktaResponse = OktaJsonRestResponse<AppUserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                    // Create the list of UserJson objects to return.
+                    List<AppUserJson> jsonList = new(oktaResponse.Value);
+
+                    // Get additional pages.
+                    while (oktaResponse.NextPage != null)
+                    {
+                        // Get the next page, removing the base URI from the supplied URI.
+                        jsonResponse = rest.GetFromJson<AppUserJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
+
+                        if (jsonResponse != null)
+                        {
+                            // Convert to OktaJsonRestResponse.
+                            oktaResponse = OktaJsonRestResponse<AppUserJson[]>.FromJsonRestResponse(jsonResponse);
+
+                            // Add the additional users to the list.
+                            jsonList.AddRange(oktaResponse.Value);
+                        }
+                    }
+
+                    return jsonList;
+                }
+                else
+                {
+                    // Nothing was returned. Return an empty list.
+                    return new();
+                }
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(uniqueId));
+            }
+        }
+
+        /// <summary>
         /// Gets a User from Okta given its ID or Login.
         /// </summary>
         /// <param name="id">The ID or login of the user to retrieve from Okta.</param>
@@ -1924,55 +2139,6 @@ namespace Galactic.Identity.Okta
                 {
                     // There was an error with the request.
                     return null;
-                }
-            }
-            else
-            {
-                throw new ArgumentNullException(nameof(uniqueId));
-            }
-        }
-
-        /// <summary>
-        /// Gets a list of users that have access to the application.
-        /// </summary>
-        /// <param name="uniqueId">The unique id of the application.</param>
-        /// <returns>A list of UserJsons objects representing each user that has access to the application</returns>
-        public List<UserJson> GetApplicationUsers(string uniqueId)
-        {
-            if (!string.IsNullOrWhiteSpace(uniqueId))
-            {
-                // Return the result.
-                JsonRestResponse<UserJson[]> jsonResponse = rest.GetFromJson<UserJson[]>("/apps/" + uniqueId + "/users?limit=" + MAX_PAGE_SIZE);
-                if (jsonResponse != null)
-                {
-                    // Convert to an OktaJsonRestResponse.
-                    OktaJsonRestResponse<UserJson[]> oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
-
-                    // Create the list of UserJson objects to return.
-                    List<UserJson> jsonList = new(oktaResponse.Value);
-
-                    // Get additional pages.
-                    while (oktaResponse.NextPage != null)
-                    {
-                        // Get the next page, removing the base URI from the supplied URI.
-                        jsonResponse = rest.GetFromJson<UserJson[]>(oktaResponse.NextPage.ToString().Replace(rest.BaseUri, ""));
-
-                        if (jsonResponse != null)
-                        {
-                            // Convert to OktaJsonRestResponse.
-                            oktaResponse = OktaJsonRestResponse<UserJson[]>.FromJsonRestResponse(jsonResponse);
-
-                            // Add the additional users to the list.
-                            jsonList.AddRange(oktaResponse.Value);
-                        }
-                    }
-
-                    return jsonList;
-                }
-                else
-                {
-                    // Nothing was returned. Return an empty list.
-                    return new();
                 }
             }
             else
