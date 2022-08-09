@@ -207,7 +207,8 @@ namespace Galactic.Identity.GoogleWorkspace
             }
         }
 
-        public override List<string> GroupMemberNames => gws.GetGroupMembershipAsEmails(UniqueId, Member.TYPE_GROUP);
+        public override List<string> GroupMemberNames => (from member in GroupMembers
+                                                          select member.Name).ToList<string>();
 
         /// <summary>
         /// Unique key for Group.
