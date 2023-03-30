@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net;
 using System.Reflection;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Nodes;
 
@@ -1214,7 +1215,7 @@ namespace Galactic.Identity.Okta
             {
                 // Return the result.
                 JsonRestResponse<ApplicationJson> jsonResponse = rest.GetFromJson<ApplicationJson>("/apps/" + WebUtility.UrlEncode(id));
-                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
+                if (jsonResponse != null && (jsonResponse.Message.StatusCode == HttpStatusCode.Accepted || jsonResponse.Message.StatusCode == HttpStatusCode.OK))
                 {
                     // Convert to an OktaJsonRestResponse.
                     OktaJsonRestResponse<ApplicationJson> oktaResponse = OktaJsonRestResponse<ApplicationJson>.FromJsonRestResponse(jsonResponse);
@@ -1244,7 +1245,7 @@ namespace Galactic.Identity.Okta
             {
                 // Return the result.
                 JsonRestResponse<JsonObject> jsonResponse = rest.GetFromJson<JsonObject>("/apps/" + WebUtility.UrlEncode(id));
-                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
+                if (jsonResponse != null && (jsonResponse.Message.StatusCode == HttpStatusCode.Accepted || jsonResponse.Message.StatusCode == HttpStatusCode.OK))
                 {
                     // Convert to an OktaJsonRestResponse.
                     OktaJsonRestResponse<JsonObject> oktaResponse = OktaJsonRestResponse<JsonObject>.FromJsonRestResponse(jsonResponse);
@@ -1275,7 +1276,7 @@ namespace Galactic.Identity.Okta
             {
                 // Return the result.
                 JsonRestResponse<ApplicationApplicationGroupJson> jsonResponse = rest.GetFromJson<ApplicationApplicationGroupJson>("/apps/" + WebUtility.UrlEncode(applicationId) + "/groups/" + WebUtility.UrlEncode(groupId));
-                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
+                if (jsonResponse != null && (jsonResponse.Message.StatusCode == HttpStatusCode.Accepted || jsonResponse.Message.StatusCode == HttpStatusCode.OK))
                 {
                     // Convert to an OktaJsonRestResponse.
                     OktaJsonRestResponse<ApplicationApplicationGroupJson> oktaResponse = OktaJsonRestResponse<ApplicationApplicationGroupJson>.FromJsonRestResponse(jsonResponse);
@@ -1527,7 +1528,7 @@ namespace Galactic.Identity.Okta
             {
                 // Return the result.
                 JsonRestResponse<UserJson> jsonResponse = rest.GetFromJson<UserJson>("/users/" + WebUtility.UrlEncode(id));
-                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
+                if (jsonResponse != null && (jsonResponse.Message.StatusCode == HttpStatusCode.Accepted || jsonResponse.Message.StatusCode == HttpStatusCode.OK))
                 {
                     // Convert to an OktaJsonRestResponse.
                     OktaJsonRestResponse<UserJson> oktaResponse = OktaJsonRestResponse<UserJson>.FromJsonRestResponse(jsonResponse);
@@ -1557,7 +1558,7 @@ namespace Galactic.Identity.Okta
             {
                 // Return the result.
                 JsonRestResponse<JsonObject> jsonResponse = rest.GetFromJson<JsonObject>("/users/" + WebUtility.UrlEncode(id));
-                if (jsonResponse != null && jsonResponse.Message.StatusCode != HttpStatusCode.NotFound)
+                if (jsonResponse != null && (jsonResponse.Message.StatusCode == HttpStatusCode.Accepted || jsonResponse.Message.StatusCode == HttpStatusCode.OK))
                 {
                     // Convert to an OktaJsonRestResponse.
                     OktaJsonRestResponse<JsonObject> oktaResponse = OktaJsonRestResponse<JsonObject>.FromJsonRestResponse(jsonResponse);
@@ -2822,6 +2823,46 @@ namespace Galactic.Identity.Okta
             else
             {
                 throw new ArgumentNullException(nameof(user));
+            }
+        }
+
+        /// <summary>
+        /// Updates a user's profile using a generic JSON object that defines it.
+        /// All attributes must be supplied. Any missing attributes are deleted.
+        /// </summary>
+        /// <param name="uniqueId">The unique id of the user to update.</param>
+        /// <param name="json">The JSON object representing the user's profile.</param>
+        /// <returns>The updated JSON object representing the user profile</returns>
+        public JsonObject UpdateUserProfile(string uniqueId, JsonObject profile)
+        {
+            if (uniqueId != null && profile != null)
+            {
+                JsonObject request = new JsonObject();
+                request.Add(UserProfileRequestJson.PROFILE, JsonSerializer.Deserialize<JsonNode>(profile));
+                JsonRestResponse<JsonObject> jsonResponse = rest.PostAsJson<JsonObject>("/users/" + uniqueId, request);
+                if (jsonResponse != null)
+                {
+                    // Convert to an OktaJsonRestResponse.
+                    OktaJsonRestResponse<JsonObject> oktaResponse = OktaJsonRestResponse<JsonObject>.FromJsonRestResponse(jsonResponse);
+
+                    return oktaResponse.Value;
+                }
+                else
+                {
+                    // There was an error with the request.
+                    return null;
+                }
+            }
+            else
+            {
+                if (uniqueId == null)
+                {
+                    throw new ArgumentNullException(nameof(uniqueId));
+                }
+                else
+                {
+                    throw new ArgumentNullException(nameof(profile));
+                }
             }
         }
     }

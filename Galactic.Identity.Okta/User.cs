@@ -927,7 +927,7 @@ namespace Galactic.Identity.Okta
         /// <summary>
         /// Gets the UserProfileJson object. Needed for performing update operations.
         /// </summary>
-        /// <returns>The Users UserProfileJson object.</returns>
+        /// <returns>The User's UserProfileJson object.</returns>
         public UserProfileJson GetUserProfileJson()
         {
             return json.Profile;
