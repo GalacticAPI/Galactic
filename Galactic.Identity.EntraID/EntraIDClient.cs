@@ -2,13 +2,18 @@
 using Microsoft.Graph;
 using Azure.Identity;
 using System.Security.Cryptography.X509Certificates;
-using GraphUser = Microsoft.Graph.User;
-using GraphGroup = Microsoft.Graph.Group;
-using GraphDirectoryObject = Microsoft.Graph.DirectoryObject;
+using GraphUser = Microsoft.Graph.Models.User;
+using GraphGroup = Microsoft.Graph.Models.Group;
+using GraphDirectoryObject = Microsoft.Graph.Models.DirectoryObject;
+using Microsoft.Graph.Models;
+using Microsoft.Kiota.Abstractions;
+using System.Runtime.ConstrainedExecution;
+using Microsoft.Kiota.Abstractions.Extensions;
+using Microsoft.Graph.Contacts.Item.CheckMemberGroups;
 
-namespace Galactic.Identity.AzureActiveDirectory
+namespace Galactic.Identity.EntraID
 {
-	public class AzureActiveDirectoryClient : DirectorySystemClient
+	public class EntraIDClient : DirectorySystemClient
 	{
 		// ----- CONSTANTS -----
 
@@ -47,7 +52,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 
 		// ----- CONSTRUCTORS -----
 
-		public AzureActiveDirectoryClient(string tenantId, string clientId, string clientSecret)
+		public EntraIDClient(string tenantId, string clientId, string clientSecret)
 		{
 			// Validate arguments.
 			if (String.IsNullOrWhiteSpace(tenantId))
@@ -76,7 +81,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 
 		}
 
-		public AzureActiveDirectoryClient(string tenantId, string clientId, X509Certificate2 cert)
+		public EntraIDClient(string tenantId, string clientId, X509Certificate2 cert)
 		{
 			// Validate arguments.
 			if (String.IsNullOrWhiteSpace(tenantId))
@@ -109,20 +114,24 @@ namespace Galactic.Identity.AzureActiveDirectory
 
 		// ----- Organization Operations -----
 
-		public Organization GetOrganizationDetails()
+		public Organization? GetOrganizationDetails()
         {
-            try
-            {
-				Task<IGraphServiceOrganizationCollectionPage> response = gsc.Organization.Request().GetAsync();
+			try
+			{
+				Task<OrganizationCollectionResponse?> response = gsc.Organization.GetAsync();
 				response.Wait();
 
-				return response.Result.CurrentPage[0];
+				if (response.Result != null && response.Result.Value != null)
+					return response.Result.Value[0];
+				else
+					// No result returned.
+					return null;
 			}
-            catch
-            {
+			catch
+			{
 				// An error occured.
 				return null;
-            }
+			}
         }
 
 		// ----- User Operations -----
@@ -164,8 +173,8 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <returns>The newly created user object, or null if it could not be created.</returns>
 		public User CreateUser(string userPrincipalName, string displayName, string mailNickname, string password, bool accountEnabled = true)
         {
-            try
-            {
+			try
+			{
 				var graphUser = new GraphUser
 				{
 					AccountEnabled = accountEnabled,
@@ -179,16 +188,24 @@ namespace Galactic.Identity.AzureActiveDirectory
 					}
 				};
 
-				Task<GraphUser> response = gsc.Users.Request().AddAsync(graphUser);
+				Task<GraphUser?> response = gsc.Users.PostAsync(graphUser);
 				response.Wait();
 
-				return new User(this, response.Result);
+				if (response.Result != null)
+				{
+					return new User(this, response.Result);
+				}
+				else
+				{
+					// No result returned.
+					return null;
+				}
 			}
-            catch(AggregateException e)
-            {
+			catch (AggregateException e)
+			{
 				// An error occurred.
 				return null;
-            }
+			}
 		}
 
 		/// <summary>
@@ -200,13 +217,22 @@ namespace Galactic.Identity.AzureActiveDirectory
 		{
             try
             {
-				Task<GraphResponse> response = gsc.Users[uniqueId].Request().DeleteResponseAsync();
-
+				NativeResponseHandler nativeResponseHandler = new NativeResponseHandler();
+				Task response = gsc.Users[uniqueId].DeleteAsync(requestConfiguration => requestConfiguration.Options.Add(new ResponseHandlerOption() { ResponseHandler = nativeResponseHandler }));
 				response.Wait();
+				
 
-				if (response.Result.StatusCode == System.Net.HttpStatusCode.NoContent)
+				if (nativeResponseHandler.Value != null)
 				{
-					return true;
+					HttpResponseMessage responseMessage = nativeResponseHandler.Value as HttpResponseMessage;
+					if (responseMessage != null && responseMessage.StatusCode == System.Net.HttpStatusCode.NoContent)
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
 				}
 				else
 				{
@@ -259,18 +285,34 @@ namespace Galactic.Identity.AzureActiveDirectory
 		/// <returns>True if updated, false otherwise.</returns>
 		public bool UpdateUser(string id, GraphUser user)
 		{
-            try
-            {
-				Task<GraphUser> response = gsc.Users[id].Request().UpdateAsync(user);
+			try
+			{
+				NativeResponseHandler nativeResponseHandler = new NativeResponseHandler();
+				Task<GraphUser?> response = gsc.Users[id].PatchAsync(user, requestConfiguration => requestConfiguration.Options.Add(new ResponseHandlerOption() { ResponseHandler = nativeResponseHandler }));
 				response.Wait();
 
-				return true;
+				if (nativeResponseHandler.Value != null)
+				{
+					HttpResponseMessage responseMessage = nativeResponseHandler.Value as HttpResponseMessage;
+					if (responseMessage != null && responseMessage.StatusCode == System.Net.HttpStatusCode.NoContent)
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
 			}
-            catch(AggregateException e)
-            {
+			catch (AggregateException e)
+			{
 				// An error occured.
 				return false;
-            }
+			}
 		}
 
 		/// <summary>
@@ -301,27 +343,28 @@ namespace Galactic.Identity.AzureActiveDirectory
 		{
             try
             {
-				Task<IGraphServiceUsersCollectionPage> response = gsc.Users.Request().Select(string.Join(',', DefaultUserAttributes)).GetAsync();
-
+				Task<UserCollectionResponse?> response = gsc.Users.GetAsync(requestConfiguration => requestConfiguration.QueryParameters.Select = DefaultUserAttributes);
 				response.Wait();
 
-				List<GraphUser> users = new();
+				List<GraphUser> users = [];
 
-				users.AddRange(response.Result.CurrentPage);
-
-				while (response.Result.NextPageRequest != null)
+				if (response.Result == null)
 				{
-					response = response.Result.NextPageRequest.GetAsync();
-					response.Wait();
-					users.AddRange(response.Result.CurrentPage);
+					return [];
 				}
-
-				return users;
+				else if (response.Result.Value == null)
+				{
+					return [];
+				}
+				else
+				{
+					return response.Result.Value;
+				}
 			}
             catch(AggregateException e)
             {
 				// An error occurred.
-				return null;
+				return [];
             }
 		}
 
@@ -336,7 +379,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 			if (attribute != null && !String.IsNullOrWhiteSpace(attribute.Name) && attribute.Value != null)
 			{
 				// Get the names of any attributes to return.
-				List<string> attributeNames = new();
+				List<string> attributeNames = [];
 				if (returnedAttributes != null)
 				{
 					foreach (IdentityAttribute<object> returnedAttribute in returnedAttributes)
@@ -349,7 +392,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 				List<GraphUser> searchResults = GetGraphUsersByAttribute(attribute.Name, attribute.Value, attributeNames);
 
 				// Filter the list of entries returned so that only Users are returned.
-				List<Identity.User> users = new();
+				List<Identity.User> users = [];
 				if (searchResults != null)
 				{
 					foreach (GraphUser graphUser in searchResults)
@@ -452,27 +495,28 @@ namespace Galactic.Identity.AzureActiveDirectory
 					List<GraphUser> users = new();
 
 					//Query Graph Client for users matching search filter.
-					Task<IGraphServiceUsersCollectionPage> response = gsc.Users.Request().Header("ConsistencyLevel", "eventual").Filter(filter).Select(selectedAttributes).GetAsync();
+					Task<UserCollectionResponse?> response = gsc.Users.GetAsync(requestConfiguration => {
+						requestConfiguration.QueryParameters.Filter = filter;
+						requestConfiguration.Headers.Add("ConsistencyLevel", ["eventual"]);
+					});
 					response.Wait();
-					users.AddRange(response.Result.CurrentPage);
 
-					//Check for additional pages of data.
-					while (response.Result.NextPageRequest != null)
+					if (response.Result == null || response.Result.Value == null)
 					{
-						response = response.Result.NextPageRequest.GetAsync();
-						response.Wait();
-						users.AddRange(response.Result.CurrentPage);
+						return [];
 					}
-
-					return users;
+					else
+					{
+						return response.Result.Value;
+					}
 				}
 				// The attribute name or value provided is not valid.
-				return null;
+				return [];
 			}
             catch(AggregateException e)
             {
 				// An error occurred.
-				return null;
+				return [];
             }
 		}
 
@@ -532,14 +576,18 @@ namespace Galactic.Identity.AzureActiveDirectory
 						attributeNames = AllUserCollectionAttributes.ToList();
 					}
 
-					// Create attribute string.
-					string selectedAttributes = string.Join(',', attributeNames);
-
 					// Query Graph Client for user data.
-					Task<GraphUser> response = gsc.Users[id].Request().Select(selectedAttributes).GetAsync();
+					Task<GraphUser?> response = gsc.Users[id].GetAsync(requestConfiguration => requestConfiguration.QueryParameters.Select = attributeNames.AsArray());
 					response.Wait();
 
-					return response.Result;
+					if (response == null || response.Result == null)
+					{
+						return null;
+					}
+					else
+					{
+						return response.Result;
+					}
 				}
 				else
 				{
@@ -560,18 +608,25 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// <returns>Microsoft.Graph.User object of the users manager. Null if no manager.</returns>
 		public GraphUser GetUserManager(string id)
         {
-            try
-            {
-				Task<GraphDirectoryObject> response = gsc.Users[id].Manager.Request().GetAsync();
+			try
+			{
+				Task<DirectoryObject?> response = gsc.Users[id].Manager.GetAsync();
 				response.Wait();
 
-				return (GraphUser)response.Result;
+				if (response != null && response.Result != null)
+				{
+					return (GraphUser)response.Result;
+				}
+				else
+				{
+					return null;
+				}
 			}
-            catch(AggregateException e)
-            {
+			catch (AggregateException e)
+			{
 				// An error occurred.
 				return null;
-            }
+			}
         }
 
 		/// <summary>
@@ -584,10 +639,26 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             try
             {
-				Task<GraphResponse> response = gsc.Users[userId].Manager.Reference.Request().PutResponseAsync(managerId);
+				NativeResponseHandler nativeResponseHandler = new NativeResponseHandler();
+				Task response = gsc.Users[userId].Manager.Ref.PutAsync(new ReferenceUpdate{ OdataId = managerId });
 				response.Wait();
 
-				return true;
+				if (nativeResponseHandler.Value != null)
+				{
+					HttpResponseMessage responseMessage = nativeResponseHandler.Value as HttpResponseMessage;
+					if (responseMessage != null && responseMessage.StatusCode == System.Net.HttpStatusCode.NoContent)
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
 			}
             catch(AggregateException e)
             {
@@ -655,9 +726,16 @@ namespace Galactic.Identity.AzureActiveDirectory
 					}
 					};
 
-					Task<GraphGroup> response = gsc.Groups.Request().AddAsync(group);
+					Task<GraphGroup?> response = gsc.Groups.PostAsync(group);
 					response.Wait();
-					return new Group(this, response.Result);
+					if (response != null && response.Result != null)
+					{
+						return new Group(this, response.Result);
+					}
+					else
+					{
+						return null;
+					}
 				}
 				else
 				{
@@ -681,13 +759,21 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             try
             {
-				Task<GraphResponse> response = gsc.Groups[uniqueId].Request().DeleteResponseAsync();
-
+				NativeResponseHandler nativeResponseHandler = new NativeResponseHandler();
+				Task response = gsc.Groups[uniqueId].DeleteAsync();
 				response.Wait();
 
-				if (response.Result.StatusCode == System.Net.HttpStatusCode.NoContent)
+				if (nativeResponseHandler.Value != null)
 				{
-					return true;
+					HttpResponseMessage responseMessage = nativeResponseHandler.Value as HttpResponseMessage;
+					if (responseMessage != null && responseMessage.StatusCode == System.Net.HttpStatusCode.NoContent)
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
 				}
 				else
 				{
@@ -751,10 +837,26 @@ namespace Galactic.Identity.AzureActiveDirectory
 		{
 			try
 			{
-				Task<GraphGroup> response = gsc.Groups[id].Request().UpdateAsync(group);
+				NativeResponseHandler nativeResponseHandler = new NativeResponseHandler();
+				Task<GraphGroup?> response = gsc.Groups[id].PatchAsync(group);
 				response.Wait();
 
-				return true;
+				if (nativeResponseHandler.Value != null)
+				{
+					HttpResponseMessage responseMessage = nativeResponseHandler.Value as HttpResponseMessage;
+					if (responseMessage != null && responseMessage.StatusCode == System.Net.HttpStatusCode.NoContent)
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
 			}
 			catch(AggregateException e)
 			{
@@ -791,27 +893,22 @@ namespace Galactic.Identity.AzureActiveDirectory
 		{
 			try
 			{
-				Task<IGraphServiceGroupsCollectionPage> response = gsc.Groups.Request().GetAsync();
-
+				Task<GroupCollectionResponse?> response = gsc.Groups.GetAsync();
 				response.Wait();
 
-				List<GraphGroup> groups = new();
-
-				groups.AddRange(response.Result.CurrentPage);
-
-				while (response.Result.NextPageRequest != null)
+				if (response.Result != null && response.Result.Value != null)
 				{
-					response = response.Result.NextPageRequest.GetAsync();
-					response.Wait();
-					groups.AddRange(response.Result.CurrentPage);
+					return response.Result.Value;
 				}
-
-				return groups;
+				else
+				{
+					return [];
+				}
 			}
 			catch (AggregateException)
 			{
 				// An error occurred.
-				return null;
+				return [];
 			}
 		}
 
@@ -939,31 +1036,31 @@ namespace Galactic.Identity.AzureActiveDirectory
 					}
 
 					// Create list to hold search results.
-					List<GraphGroup> groups = new();
+					List<GraphGroup> groups = [];
 
-					// Query Graph Client for users matching search filter.
-					Task<IGraphServiceGroupsCollectionPage> response = gsc.Groups.Request().Header("ConsistencyLevel", "eventual").Filter(filter).Select(selectedAttributes).GetAsync();
+					// Query Graph Client for groups matching search filter.
+					Task<GroupCollectionResponse?> response = gsc.Groups.GetAsync(requestConfiguration => {
+						requestConfiguration.QueryParameters.Filter = filter;
+						requestConfiguration.Headers.Add("ConsistencyLevel", ["eventual"]);
+					});
 					response.Wait();
 
-					groups.AddRange(response.Result.CurrentPage);
-
-					// Check for additional pages of data.
-					while (response.Result.NextPageRequest != null)
+					if (response.Result == null || response.Result.Value == null)
 					{
-						response = response.Result.NextPageRequest.GetAsync();
-						response.Wait();
-						groups.AddRange(response.Result.CurrentPage);
+						return [];
 					}
-
-					return groups;
+					else
+					{
+						return response.Result.Value;
+					}
 				}
 				// The attribute name or value provided is not valid.
-				return null;
+				return [];
 			}
             catch(AggregateException e)
             {
 				// An error occurred.
-				return null;
+				return [];
             }
 		}
 
@@ -1033,31 +1130,30 @@ namespace Galactic.Identity.AzureActiveDirectory
 					// Create list to hold search results.
 					List<GraphGroup> groups = new();
 
-					// Query Graph Client for users matching search filter.
-					var req = gsc.Groups.Request();
-					req.QueryOptions.Add(new QueryOption("$count", "true"));
-					Task<IGraphServiceGroupsCollectionPage> response = req.Header("ConsistencyLevel", "eventual").Filter(filter).Select(selectedAttributes).GetAsync();
+					// Query Graph Client for groups matching search filter.
+					Task<GroupCollectionResponse?> response = gsc.Groups.GetAsync(requestConfiguration => {
+						requestConfiguration.QueryParameters.Filter = filter;
+						requestConfiguration.QueryParameters.Count = true;
+						requestConfiguration.Headers.Add("ConsistencyLevel", ["eventual"]);
+					});
 					response.Wait();
 
-					groups.AddRange(response.Result.CurrentPage);
-
-					// Check for additional pages of data.
-					while (response.Result.NextPageRequest != null)
+					if (response.Result == null || response.Result.Value == null)
 					{
-						response = response.Result.NextPageRequest.GetAsync();
-						response.Wait();
-						groups.AddRange(response.Result.CurrentPage);
+						return [];
 					}
-
-					return groups;
+					else
+					{
+						return response.Result.Value;
+					}
 				}
 				// The attribute name or value provided is not valid.
-				return null;
+				return [];
 			}
 			catch (AggregateException e)
 			{
 				// An error occurred.
-				return null;
+				return [];
 			}
 		}
 
@@ -1073,52 +1169,36 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
 				if (!String.IsNullOrWhiteSpace(id))
 				{
-					List<DirectoryObject> groups = new();
-					List<GraphGroup> gg = new();
+					List<DirectoryObject> groups = [];
+					List<GraphGroup> gg = [];
 
 					if (recursive)
 					{
 						// Perform recursive membership lookup.
-						Task<IUserTransitiveMemberOfCollectionWithReferencesPage> response = gsc.Users[id].TransitiveMemberOf.Request().GetAsync();
-						try
-						{
-							response.Wait();
-						}
-						catch
-						{
-							return null;
-						}
+						Task<DirectoryObjectCollectionResponse?> response = gsc.Users[id].TransitiveMemberOf.GetAsync();
+						response.Wait();
 
-						groups.AddRange(response.Result.CurrentPage);
-
-						//Check for additional pages of data.
-						while (response.Result.NextPageRequest != null)
+						if (response.Result != null && response.Result.Value != null)
 						{
-							response = response.Result.NextPageRequest.GetAsync();
-							response.Wait();
-							groups.AddRange(response.Result.CurrentPage);
+							groups = response.Result.Value;
 						}
 					}
 					else
 					{
 						// Only list explicit membership.
-						Task<IUserMemberOfCollectionWithReferencesPage> response = gsc.Users[id].MemberOf.Request().GetAsync();
+						Task<DirectoryObjectCollectionResponse?> response = gsc.Users[id].MemberOf.GetAsync();
 						response.Wait();
-						groups.AddRange(response.Result.CurrentPage);
-
-						//Check for additional pages of data.
-						while (response.Result.NextPageRequest != null)
+						
+						if (response.Result != null && response.Result.Value != null)
 						{
-							response = response.Result.NextPageRequest.GetAsync();
-							response.Wait();
-							groups.AddRange(response.Result.CurrentPage);
+							groups = response.Result.Value;
 						}
 					}
 
 					foreach (var obj in groups)
 					{
 						// Fix later when directory roles are implemented.
-						if (obj.ODataType == "#microsoft.graph.group")
+						if (obj.OdataType == "#microsoft.graph.group")
 						{
 							gg.Add((GraphGroup)obj);
 						}
@@ -1127,12 +1207,12 @@ namespace Galactic.Identity.AzureActiveDirectory
 					return gg.ConvertAll(graphGroup => (Identity.Group)new Group(this, graphGroup));
 				}
 
-				return null;
+				return [];
 			}
             catch(AggregateException)
             {
 				// An error occurred.
-				return null;
+				return [];
             }
 			
 		}
@@ -1153,7 +1233,7 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
 				foreach (GraphDirectoryObject obj in objects)
 				{
-					if (obj.ODataType == "#microsoft.graph.user")
+					if (obj.OdataType == "#microsoft.graph.user")
 					{
 						users.Add(new User(this, (GraphUser)obj));
 					}
@@ -1179,7 +1259,7 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
 				foreach (GraphDirectoryObject obj in objects)
 				{
-					if (obj.ODataType == "#microsoft.graph.group")
+					if (obj.OdataType == "#microsoft.graph.group")
 					{
 						groups.Add(new Group(this, (GraphGroup)obj));
 					}
@@ -1201,48 +1281,36 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
 				if (!String.IsNullOrWhiteSpace(id))
 				{
-					List<GraphDirectoryObject> objects = new();
-
 					if (recursive)
 					{
 						// Perform recursive membership lookup.
-						Task<IGroupTransitiveMembersCollectionWithReferencesPage> response = gsc.Groups[id].TransitiveMembers.Request().GetAsync();
+						Task<DirectoryObjectCollectionResponse?> response = gsc.Groups[id].TransitiveMembers.GetAsync();
 						response.Wait();
-						objects.AddRange(response.Result.CurrentPage);
 
-						//Check for additional pages of data.
-						while (response.Result.NextPageRequest != null)
+						if (response.Result != null && response.Result.Value != null)
 						{
-							response = response.Result.NextPageRequest.GetAsync();
-							response.Wait();
-							objects.AddRange(response.Result.CurrentPage);
+							return response.Result.Value;
 						}
 					}
 					else
 					{
 						// Only list explicit membership.
-						Task<IGroupMembersCollectionWithReferencesPage> response = gsc.Groups[id].Members.Request().GetAsync();
+						Task<DirectoryObjectCollectionResponse?> response = gsc.Groups[id].Members.GetAsync();
 						response.Wait();
-						objects.AddRange(response.Result.CurrentPage);
-
-						//Check for additional pages of data.
-						while (response.Result.NextPageRequest != null)
+						
+						if (response.Result != null && response.Result.Value != null)
 						{
-							response = response.Result.NextPageRequest.GetAsync();
-							response.Wait();
-							objects.AddRange(response.Result.CurrentPage);
+							return response.Result.Value;
 						}
 					}
-
-					return objects;
 				}
 
-				return null;
+				return [];
 			}
             catch(AggregateException e)
             {
 				// An error occured.
-				return null;
+				return [];
             }
 		}
 
@@ -1258,19 +1326,26 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
 				if (!string.IsNullOrEmpty(objectId) && groupIds != null && groupIds.Count > 0)
 				{
-					Task<IDirectoryObjectCheckMemberGroupsCollectionPage> response = gsc.DirectoryObjects[objectId].CheckMemberGroups(groupIds).Request().PostAsync();
+                    Task<Microsoft.Graph.DirectoryObjects.Item.CheckMemberGroups.CheckMemberGroupsPostResponse?> response = gsc.DirectoryObjects[objectId].CheckMemberGroups.PostAsCheckMemberGroupsPostResponseAsync(new() { GroupIds = groupIds });
 					response.Wait();
 
-					return response.Result.CurrentPage;
+					if (response.Result != null && response.Result.Value != null)
+					{
+						return response.Result.Value;
+					}
+					else
+					{
+						return [];
+					}
 				}
 
 				// Bad arguments
-				return null;
+				return [];
 			}
             catch(AggregateException e)
             {
 				// An error occurred.
-				return null;
+				return [];
             }
         }
 
@@ -1287,12 +1362,21 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
 				if (!String.IsNullOrEmpty(objectId) && !String.IsNullOrEmpty(groupId))
 				{
-					Task<GraphResponse> response = gsc.Groups[groupId].Members[objectId].Reference.Request().DeleteResponseAsync();
+					NativeResponseHandler nativeResponseHandler = new NativeResponseHandler();
+					Task response = gsc.Groups[groupId].Members[objectId].Ref.DeleteAsync();
 					response.Wait();
 
-					if (response.Result.StatusCode == System.Net.HttpStatusCode.NoContent)
+					if (nativeResponseHandler.Value != null)
 					{
-						return true;
+						HttpResponseMessage responseMessage = nativeResponseHandler.Value as HttpResponseMessage;
+						if (responseMessage != null && responseMessage.StatusCode == System.Net.HttpStatusCode.NoContent)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
 					}
 					else
 					{
@@ -1324,17 +1408,21 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
 				if (!String.IsNullOrEmpty(objectId) && !String.IsNullOrEmpty(groupId))
 				{
-					GraphDirectoryObject obj = new DirectoryObject
-					{
-						Id = objectId
-					};
-
-					Task<GraphResponse> response = gsc.Groups[groupId].Members.References.Request().AddResponseAsync(obj);
+					NativeResponseHandler nativeResponseHandler = new NativeResponseHandler();
+					Task response = gsc.Groups[groupId].Members.Ref.PostAsync(new() { OdataId = objectId });
 					response.Wait();
 
-					if (response.Result.StatusCode == System.Net.HttpStatusCode.NoContent)
+					if (nativeResponseHandler.Value != null)
 					{
-						return true;
+						HttpResponseMessage responseMessage = nativeResponseHandler.Value as HttpResponseMessage;
+						if (responseMessage != null && responseMessage.StatusCode == System.Net.HttpStatusCode.NoContent)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
 					}
 					else
 					{
@@ -1405,20 +1493,18 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
 				if (!string.IsNullOrWhiteSpace(id))
 				{
-					// Check if custom list of attributes exists.
-					if (attributeNames == null | attributeNames.Count == 0)
-					{
-						//attributeNames = AllUserCollectionAttributes.ToList();
-					}
-
-					// Create attribute string.
-					string selectedAttributes = string.Join(',', attributeNames);
-
 					// Query Graph Client for user data.
-					Task<GraphGroup> response = gsc.Groups[id].Request().Select(selectedAttributes).GetAsync();
+					Task<GraphGroup?> response = gsc.Groups[id].GetAsync(requestConfiguration => requestConfiguration.QueryParameters.Select = attributeNames.AsArray());
 					response.Wait();
 
-					return response.Result;
+					if (response.Result != null)
+					{
+						return response.Result;
+					}
+					else
+					{
+						return null;
+					}
 				}
 				else
 				{

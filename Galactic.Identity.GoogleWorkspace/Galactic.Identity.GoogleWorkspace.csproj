@@ -1,16 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Description>A robust class library that allows you to easily query and manipulate users and groups in Google Workspace.</Description>
 	<PackageTags>Galactic;identity;directory system;group;user;google workspace;google;workspace;gsuite</PackageTags>
-	<ReleaseVersion>2.0.0.0</ReleaseVersion>
+	<ReleaseVersion>2.1.0.0</ReleaseVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Apis.Admin.Directory.directory_v1" Version="1.57.0.2693" />
+    <PackageReference Include="Google.Apis.Admin.Directory.directory_v1" Version="1.70.0.3840" />
   </ItemGroup>
 
   <ItemGroup>

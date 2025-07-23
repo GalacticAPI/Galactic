@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ReleaseVersion>2.0.0.0</ReleaseVersion>
+    <TargetFramework>net9.0</TargetFramework>
+    <ReleaseVersion>2.1.0.0</ReleaseVersion>
 	<Description>A class library for querying and manipulating Microsoft SQL databases.</Description>
 	<PackageTags>Galactic;sql;database;mssql</PackageTags>
   </PropertyGroup>
@@ -12,8 +12,8 @@
     <None Remove="Microsoft.SqlServer.SqlManagementObjects" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
-    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="161.47008.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="172.76.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Galactic.Sql\Galactic.Sql.csproj" />

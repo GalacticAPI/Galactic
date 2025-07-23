@@ -25,14 +25,52 @@ namespace Galactic.Cryptography
         /// Generates a hash of the supplied input string using the the designated algorithm.
         /// </summary>
         /// <param name="input">String to create the hash of.</param>
-        /// <param name="algorithmName">The name of the algorithm to use for the hash.</param>
+        /// <param name="algorithmName">The name of the algorithm to use for the hash. Defaults to SHA3-256.</param>
         /// <returns>A hash of the string.</returns>
         static public string GetHash(string input, HashAlgorithmName algorithmName)
         {
             if (input != null)
             {
                 // Generate a hash from the data using the supplied algorithm.
-                HashAlgorithm hasher = HashAlgorithm.Create(algorithmName.Name);
+                HashAlgorithm hasher = null;
+                if (algorithmName.Equals(HashAlgorithmName.MD5))
+                {
+                    hasher = MD5.Create();
+                }
+                else if (algorithmName.Equals(HashAlgorithmName.SHA1))
+                {
+                    hasher = SHA1.Create();
+                }
+                else if (algorithmName.Equals(HashAlgorithmName.SHA256))
+                {
+                    hasher = SHA256.Create();
+                }
+                else if (algorithmName.Equals(HashAlgorithmName.SHA384))
+                {
+                    hasher = SHA384.Create();
+                }
+                else if (algorithmName.Equals(HashAlgorithmName.SHA3_256))
+                {
+                    hasher = SHA3_256.Create();
+                }
+                else if (algorithmName.Equals(HashAlgorithmName.SHA3_384))
+                {
+                    hasher = SHA3_384.Create();
+                }
+                else if (algorithmName.Equals(HashAlgorithmName.SHA3_512))
+                {
+                    hasher = SHA3_512.Create();
+                }
+                else if (algorithmName.Equals(HashAlgorithmName.SHA512))
+                {
+                    hasher = SHA512.Create();
+                }
+                else
+                {
+                    // Default algorithm.
+                    hasher = SHA3_256.Create();
+                }
+                
 
                 // Convert the input string to a byte array and compute the hash.
                 byte[] data = hasher.ComputeHash(Encoding.Default.GetBytes(input));

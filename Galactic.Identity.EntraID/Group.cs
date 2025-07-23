@@ -1,7 +1,7 @@
-﻿using GraphGroup = Microsoft.Graph.Group;
-using GraphUser = Microsoft.Graph.User;
+﻿using GraphGroup = Microsoft.Graph.Models.Group;
+using GraphUser = Microsoft.Graph.Models.User;
 
-namespace Galactic.Identity.AzureActiveDirectory
+namespace Galactic.Identity.EntraID
 {
     public class Group : Identity.Group
     {
@@ -9,7 +9,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 
         // ----- VARIABLES -----
 
-        protected AzureActiveDirectoryClient aad = null;
+        protected EntraIDClient entraId = null;
 
         protected GraphGroup graphGroup = null;
 
@@ -22,7 +22,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return aad.GetUserMembers(UniqueId, true);
+                return entraId.GetUserMembers(UniqueId, true);
             }
         }
 
@@ -35,11 +35,11 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
                 List<string> names = new List<string>();
 
-                List<Microsoft.Graph.DirectoryObject> members = aad.GetMembers(UniqueId, true);
+                List<Microsoft.Graph.Models.DirectoryObject> members = entraId.GetMembers(UniqueId, true);
 
-                foreach (Microsoft.Graph.DirectoryObject member in members)
+                foreach (Microsoft.Graph.Models.DirectoryObject member in members)
                 {
-                    if (member.ODataType == "#microsoft.graph.user")
+                    if (member.OdataType == "#microsoft.graph.user")
                     {
                         GraphUser user = (GraphUser)member;
 
@@ -58,7 +58,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return aad.GetGroupMembers(UniqueId, false);
+                return entraId.GetGroupMembers(UniqueId, false);
             }
         }
 
@@ -71,9 +71,9 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
                 List<string> names = new List<string>();
 
-                foreach (Microsoft.Graph.DirectoryObject member in DirectoryObjectMembers)
+                foreach (Microsoft.Graph.Models.DirectoryObject member in DirectoryObjectMembers)
                 {
-                    if (member.ODataType == "#microsoft.graph.group")
+                    if (member.OdataType == "#microsoft.graph.group")
                     {
                         GraphGroup group = (GraphGroup)member;
 
@@ -110,17 +110,17 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
                 List<string> names = new List<string> ();
 
-                //List<Microsoft.Graph.DirectoryObject> results = aad.GetMembers(UniqueId, false);
+                //List<Microsoft.Graph.DirectoryObject> results = entraId.GetMembers(UniqueId, false);
 
-                foreach(Microsoft.Graph.DirectoryObject member in DirectoryObjectMembers)
+                foreach(Microsoft.Graph.Models.DirectoryObject member in DirectoryObjectMembers)
                 {
-                    if (member.ODataType == "#microsoft.graph.user")
+                    if (member.OdataType == "#microsoft.graph.user")
                     {
                         GraphUser user = (GraphUser)member;
 
                         names.Add(user.UserPrincipalName);
                     }
-                    else if(member.ODataType == "#microsoft.graph.group")
+                    else if(member.OdataType == "#microsoft.graph.group")
                     {
                         GraphGroup group = (GraphGroup)member;
 
@@ -148,7 +148,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return aad.GetUserMembers(UniqueId, false);
+                return entraId.GetUserMembers(UniqueId, false);
             }
         }
 
@@ -161,9 +161,9 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
                 List<string> names = new List<string>();
 
-                foreach (Microsoft.Graph.DirectoryObject member in DirectoryObjectMembers)
+                foreach (Microsoft.Graph.Models.DirectoryObject member in DirectoryObjectMembers)
                 {
-                    if (member.ODataType == "#microsoft.graph.user")
+                    if (member.OdataType == "#microsoft.graph.user")
                     {
                         GraphUser user = (GraphUser)member;
 
@@ -194,7 +194,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return aad.GetGroupMembership(UniqueId, true);
+                return entraId.GetGroupMembership(UniqueId, true);
             }
         }
 
@@ -238,7 +238,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     Description = value
                 };
 
-                aad.UpdateGroup(UniqueId, group);
+                entraId.UpdateGroup(UniqueId, group);
             }
         }
 
@@ -259,7 +259,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     DisplayName = value
                 };
 
-                aad.UpdateGroup(UniqueId, group);
+                entraId.UpdateGroup(UniqueId, group);
             }
         }
 
@@ -324,7 +324,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     MailNickname = value
                 };
 
-                aad.UpdateGroup(UniqueId, group);
+                entraId.UpdateGroup(UniqueId, group);
             }
         }
 
@@ -364,31 +364,31 @@ namespace Galactic.Identity.AzureActiveDirectory
         }
 
         // ----- Private Properties -----
-        private List<Microsoft.Graph.DirectoryObject> DirectoryObjectMembers
+        private List<Microsoft.Graph.Models.DirectoryObject> DirectoryObjectMembers
         {
             get
             {
-                return aad.GetMembers(UniqueId, false);
+                return entraId.GetMembers(UniqueId, false);
             }
         }
 
         // ----- CONSTRUCTORS -----
 
-        public Group(AzureActiveDirectoryClient aad, GraphGroup graphGroup)
+        public Group(EntraIDClient entraId, GraphGroup graphGroup)
         {
-            if (aad != null && graphGroup != null)
+            if (entraId != null && graphGroup != null)
             {
                 // Initialize the client.
-                this.aad = aad;
+                this.entraId = entraId;
 
                 // Initialize the source GraphUser data.
                 this.graphGroup = graphGroup;
             }
             else
             {
-                if (aad == null)
+                if (entraId == null)
                 {
-                    throw new ArgumentNullException(nameof(aad));
+                    throw new ArgumentNullException(nameof(entraId));
                 }
                 else
                 {
@@ -404,7 +404,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// </summary>
         public void Refresh()
         {
-            graphGroup = aad.GetGraphGroup(UniqueId);
+            graphGroup = entraId.GetGraphGroup(UniqueId);
         }
 
         /// <summary>
@@ -418,10 +418,10 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
                 foreach(IdentityObject member in members)
                 {
-                    // Skip non-AAD IdentityObjects.
+                    // Skip non-Entra ID IdentityObjects.
                     if (member is Group || member is User)
                     {
-                        if (!aad.AddObjectToGroup(member.UniqueId, UniqueId))
+                        if (!entraId.AddObjectToGroup(member.UniqueId, UniqueId))
                         {
                             return false;
                         }
@@ -446,7 +446,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 
             foreach(var attribute in attributes)
             {
-                results.Add(new IdentityAttribute<bool>(attribute.Name, aad.UpdateGroup(UniqueId, new List<IdentityAttribute<object>> { attribute })));
+                results.Add(new IdentityAttribute<bool>(attribute.Name, entraId.UpdateGroup(UniqueId, new List<IdentityAttribute<object>> { attribute })));
             }
 
             return results;
@@ -463,10 +463,10 @@ namespace Galactic.Identity.AzureActiveDirectory
             {
                 foreach (IdentityObject member in members)
                 {
-                    // Skip non-AAD members.
+                    // Skip non-Entra ID members.
                     if (member is Group || member is User)
                     {
-                        if (!aad.DeleteObjectFromGroup(member.UniqueId, UniqueId))
+                        if (!entraId.DeleteObjectFromGroup(member.UniqueId, UniqueId))
                         {
                             return false;
                         }

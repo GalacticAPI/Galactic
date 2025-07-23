@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ReleaseVersion>2.0.0.0</ReleaseVersion>
+    <TargetFramework>net9.0</TargetFramework>
+    <ReleaseVersion>2.1.0.0</ReleaseVersion>
 	<Description>A class library for querying and manipulating Oracle databases.</Description>
 	<PackageTags>Galactic;sql;database;oracle</PackageTags>
   </PropertyGroup>
@@ -11,7 +11,7 @@
     <None Remove="Oracle.ManagedDataAccess.Core" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.61" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Galactic.EventLog\Galactic.EventLog.csproj" />

@@ -1,7 +1,7 @@
 ﻿
-using GraphUser = Microsoft.Graph.User;
+using GraphUser = Microsoft.Graph.Models.User;
 
-namespace Galactic.Identity.AzureActiveDirectory
+namespace Galactic.Identity.EntraID
 {
 	public class User : Identity.User
 	{
@@ -11,7 +11,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 
         // ----- VARIABLES -----
 
-        protected AzureActiveDirectoryClient aad = null;
+        protected EntraIDClient entraId = null;
 
         protected GraphUser graphUser = null;
 
@@ -40,7 +40,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     City = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -61,7 +61,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     Country = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -82,7 +82,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     Department = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -103,7 +103,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     DisplayName = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -124,7 +124,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     EmployeeId = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -145,7 +145,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     GivenName = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -178,7 +178,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     Surname = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -199,7 +199,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     UserPrincipalName = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -210,7 +210,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                var manager = aad.GetUserManager(UniqueId);
+                var manager = entraId.GetUserManager(UniqueId);
 
                 return manager.Id;
             }
@@ -227,7 +227,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                var manager = aad.GetUserManager(UniqueId);
+                var manager = entraId.GetUserManager(UniqueId);
 
                 return manager.DisplayName;
             }
@@ -266,7 +266,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     MobilePhone = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -287,7 +287,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     CompanyName = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -345,7 +345,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     OfficeLocation = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -366,7 +366,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     StreetAddress = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -387,7 +387,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     PostalCode = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -424,7 +424,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     State = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -445,7 +445,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     JobTitle = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -468,7 +468,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             get
             {
-                return aad.GetGroupMembership(UniqueId, true);
+                return entraId.GetGroupMembership(UniqueId, true);
             }
         }
 
@@ -530,7 +530,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     Mail = value
                 };
 
-                aad.UpdateUser(UniqueId, user);
+                entraId.UpdateUser(UniqueId, user);
             }
         }
 
@@ -547,21 +547,21 @@ namespace Galactic.Identity.AzureActiveDirectory
 
         // ----- CONSTRUCTORS -----
 
-        public User(AzureActiveDirectoryClient aad, GraphUser graphUser)
+        public User(EntraIDClient entraId, GraphUser graphUser)
         {
-            if (aad != null && graphUser != null)
+            if (entraId != null && graphUser != null)
             {
                 // Initialize the client.
-                this.aad = aad;
+                this.entraId = entraId;
 
                 // Initialize the source GraphUser data.
                 this.graphUser = graphUser;
             }
             else
             {
-                if (aad == null)
+                if (entraId == null)
                 {
-                    throw new ArgumentNullException(nameof(aad));
+                    throw new ArgumentNullException(nameof(entraId));
                 }
                 else
                 {
@@ -577,7 +577,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         /// </summary>
         public void Refresh()
         {
-            graphUser = aad.GetGraphUser(UniqueId);
+            graphUser = entraId.GetGraphUser(UniqueId);
         }
 
         /// <summary>
@@ -593,7 +593,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     AccountEnabled = false
                 };
 
-                return aad.UpdateUser(UniqueId, user);
+                return entraId.UpdateUser(UniqueId, user);
             }
             else
             {
@@ -615,7 +615,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                     AccountEnabled = true
                 };
 
-                return aad.UpdateUser(UniqueId, user);
+                return entraId.UpdateUser(UniqueId, user);
             }
             else
             {
@@ -640,7 +640,7 @@ namespace Galactic.Identity.AzureActiveDirectory
                 }
             };
 
-            return aad.UpdateUser(UniqueId, user);
+            return entraId.UpdateUser(UniqueId, user);
         }
 
         /// <summary>
@@ -661,7 +661,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             if (group != null)
             {
-                if (!aad.AddObjectToGroup(UniqueId, group.UniqueId))
+                if (!entraId.AddObjectToGroup(UniqueId, group.UniqueId))
                 {
                     return false;
                 }
@@ -684,7 +684,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             if (group != null && group is Group)
             {
-                IList<string> results = aad.CheckGroupMembership(UniqueId, new List<string> { group.UniqueId });
+                IList<string> results = entraId.CheckGroupMembership(UniqueId, new List<string> { group.UniqueId });
 
                 if(results != null && results.Count == 1)
                 {
@@ -710,7 +710,7 @@ namespace Galactic.Identity.AzureActiveDirectory
         {
             if (group != null && group is Group)
             {
-                return aad.DeleteObjectFromGroup(UniqueId, group.UniqueId);
+                return entraId.DeleteObjectFromGroup(UniqueId, group.UniqueId);
             }
             return false;
         }
@@ -726,7 +726,7 @@ namespace Galactic.Identity.AzureActiveDirectory
 
             foreach (var attribute in attributes)
             {
-                results.Add(new IdentityAttribute<bool>(attribute.Name, aad.UpdateUser(UniqueId, new List<IdentityAttribute<object>> { attribute })));
+                results.Add(new IdentityAttribute<bool>(attribute.Name, entraId.UpdateUser(UniqueId, new List<IdentityAttribute<object>> { attribute })));
             }
 
             return results;

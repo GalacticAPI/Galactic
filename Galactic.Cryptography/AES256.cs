@@ -13,9 +13,6 @@ namespace Galactic.Cryptography
     {
         // ----- CONSTANTS -----
 
-        // The name of the algorithm to use when creating the Aes object.
-        private const string ALGORITHM_NAME = "AesManaged";
-
         // The size of the key in bits to use with the algorithm.
         private const int KEY_SIZE = 256;
 
@@ -37,7 +34,7 @@ namespace Galactic.Cryptography
             // Generate a random initialization vector.
             try
             {
-                Aes aes = Aes.Create(ALGORITHM_NAME);
+                Aes aes = AesCng.Create();
                 aes.KeySize = KEY_SIZE;
                 aes.GenerateIV();
                 return aes.IV;
@@ -126,7 +123,7 @@ namespace Galactic.Cryptography
             // Generate a random key.
             try
             {
-                Aes aes = Aes.Create(ALGORITHM_NAME);
+                Aes aes = AesCng.Create();
                 aes.KeySize = KEY_SIZE;
                 aes.GenerateKey();
                 return aes.Key;
@@ -171,7 +168,7 @@ namespace Galactic.Cryptography
             try
             {
                 // Create an Aes object with the specified key and IV.
-                aes = Aes.Create(ALGORITHM_NAME);
+                aes = AesCng.Create();
                 aes.KeySize = KEY_SIZE;
                 try
                 {
@@ -326,7 +323,7 @@ namespace Galactic.Cryptography
             try
             {
                 // Create an Aes object with the specified key and IV.
-                aes = Aes.Create(ALGORITHM_NAME);
+                aes = AesCng.Create();
                 aes.KeySize = KEY_SIZE;
                 try
                 {

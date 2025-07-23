@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="GalacticAPIIcon128.png" />
+    <File Path="LICENSE" />
+    <File Path="README" />
+  </Folder>
+  <Project Path="Galactic.Cryptography/Galactic.Cryptography.csproj" />
+  <Project Path="Galactic.EventLog.File/Galactic.EventLog.File.csproj" />
+  <Project Path="Galactic.EventLog.Sql/Galactic.EventLog.Sql.csproj" />
+  <Project Path="Galactic.EventLog/Galactic.EventLog.csproj" />
+  <Project Path="Galactic.FileSystem/Galactic.FileSystem.csproj" />
+  <Project Path="Galactic.Identity.ActiveDirectory/Galactic.Identity.ActiveDirectory.csproj" />
+  <Project Path="Galactic.Identity.EntraID/Galactic.Identity.EntraID.csproj" />
+  <Project Path="Galactic.Identity.GoogleWorkspace/Galactic.Identity.GoogleWorkspace.csproj" />
+  <Project Path="Galactic.Identity.Okta/Galactic.Identity.Okta.csproj" />
+  <Project Path="Galactic.Identity/Galactic.Identity.csproj" />
+  <Project Path="Galactic.Ldap/Galactic.Ldap.csproj" />
+  <Project Path="Galactic.NoSql/Galactic.NoSql.csproj" />
+  <Project Path="Galactic.PowerShell/Galactic.PowerShell.csproj" />
+  <Project Path="Galactic.Rest/Galactic.Rest.csproj" />
+  <Project Path="Galactic.Sql.MSSql/Galactic.Sql.MSSql.csproj" />
+  <Project Path="Galactic.Sql.Oracle/Galactic.Sql.Oracle.csproj" />
+  <Project Path="Galactic.Sql/Galactic.Sql.csproj" />
+</Solution>

@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ReleaseVersion>2.0.0.0</ReleaseVersion>
+    <TargetFramework>net9.0</TargetFramework>
+    <ReleaseVersion>2.1.0.0</ReleaseVersion>
 	<Description>A robust class library that allows you to easily query and manipulate users and groups in Okta.</Description>
 	<PackageTags>Galactic;identity;directory system;group;user;okta</PackageTags>
   </PropertyGroup>
