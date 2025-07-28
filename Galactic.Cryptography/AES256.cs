@@ -20,6 +20,11 @@ namespace Galactic.Cryptography
 
         // ----- PROPERTIES -----
 
+        // <summary>
+        // The maximum allowable length for use in the BytesToString() method.
+        // <summary>
+        public static int BytesToStringMaxLength => (new StringBuilder().MaxCapacity / 2) + 1;
+
         // ----- CONSTRUCTORS -----
 
         // ----- METHODS -----
@@ -42,7 +47,7 @@ namespace Galactic.Cryptography
             catch
             {
                 // There was an error generating the IV.
-                return new byte[0];
+                return [];
             }
         }
 
@@ -67,6 +72,11 @@ namespace Galactic.Cryptography
                     catch (ArgumentOutOfRangeException)
                     {
                         // Enlarging the value of the builder instance would exceed MaxCapacity.
+                        return null;
+                    }
+                    catch (OutOfMemoryException)
+                    {
+                        // The array of bytes supplied exceeds the size that the system's memory can hold.
                         return null;
                     }
                 }
@@ -99,12 +109,12 @@ namespace Galactic.Cryptography
                         catch (FormatException)
                         {
                             // strings[i] is not of the correct format.
-                            return new byte[0];
+                            return [];
                         }
                         catch (OverflowException)
                         {
                             // strings[i[ represents a number less than MinValue or greater than MaxValue.
-                            return new byte[0];
+                            return [];
                         }
                     }
                 }
@@ -131,7 +141,7 @@ namespace Galactic.Cryptography
             catch
             {
                 // There was an error generating the key.
-                return new byte[0];
+                return [];
             }
         }
 

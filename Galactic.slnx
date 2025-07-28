@@ -6,6 +6,7 @@
     <File Path="LICENSE" />
     <File Path="README" />
   </Folder>
+  <Project Path="Galactic.Cryptography.Test/Galactic.Cryptography.Test.csproj" />
   <Project Path="Galactic.Cryptography/Galactic.Cryptography.csproj" />
   <Project Path="Galactic.EventLog.File/Galactic.EventLog.File.csproj" />
   <Project Path="Galactic.EventLog.Sql/Galactic.EventLog.Sql.csproj" />
